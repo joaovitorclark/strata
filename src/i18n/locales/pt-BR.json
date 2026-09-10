@@ -1,0 +1,5 @@
+{
+  "app": { "name": "Strata" },
+  "theme": { "dark": "Escuro", "light": "Claro" },
+  "common": { "cancel": "Cancelar", "save": "Salvar", "close": "Fechar" }
+}
