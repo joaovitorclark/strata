@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Strata">
+  <title>Strata</title>
+  <!--
+    Three offset strata, read top-down: the layer you work in is solid, the
+    ones beneath recede. Inherits `color` — set it to hsl(var(--primary)) so
+    the mark picks up Latte mauve (#8839ef) or Macchiato mauve (#c6a0f6).
+  -->
+  <g fill="currentColor" color="#c6a0f6">
+    <path d="M16 4.4 30 8 16 11.6 2 8Z" />
+    <path d="M16 12.4 30 16 16 19.6 2 16Z" opacity="0.72" />
+    <path d="M16 20.4 30 24 16 27.6 2 24Z" opacity="0.45" />
+  </g>
+</svg>

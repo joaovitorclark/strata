@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 32" width="148" height="32" role="img" aria-label="Strata">
+  <title>Strata</title>
+  <!--
+    Horizontal lockup. Mark inherits `color`; wordmark uses --foreground so it
+    stays legible on either flavor. Optical gap between mark and word is 10px.
+    Minimum clear space all round = the height of one stratum (8px at this size).
+  -->
+  <g fill="currentColor" color="#c6a0f6">
+    <path d="M16 4.4 30 8 16 11.6 2 8Z" />
+    <path d="M16 12.4 30 16 16 19.6 2 16Z" opacity="0.72" />
+    <path d="M16 20.4 30 24 16 27.6 2 24Z" opacity="0.45" />
+  </g>
+  <text x="40" y="22"
+        font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+        font-size="19" font-weight="600" letter-spacing="-0.4"
+        fill="#cad3f5">Strata</text>
+</svg>
