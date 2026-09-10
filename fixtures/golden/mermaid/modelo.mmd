@@ -1,0 +1,13 @@
+erDiagram
+  loja_cliente {
+    bigint id PK
+    string nome
+    string email
+  }
+  loja_pedido {
+    bigint id PK
+    bigint cliente_id
+    decimal total
+    timestamp criado_em
+  }
+  loja_cliente ||--o{ loja_pedido : "cliente_id"
