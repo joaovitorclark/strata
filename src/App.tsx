@@ -1,3 +1,5 @@
+import { AppShell } from "@/features/shell/AppShell";
+
 export default function App() {
-  return <div>Strata</div>;
+  return <AppShell />;
 }

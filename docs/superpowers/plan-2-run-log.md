@@ -69,3 +69,11 @@ Linhas do inventário: 0 checadas de 54 Canvas
 Decisões que tomei sozinho: `enableMapSet` já ligado — não dupliquei. `meta.strata.pinned` só no tipo; export dbt não alterado (evitei round-trip novo).
 Preocupações: pins não sobrevivem reload; Ctrl-click também pina
 Bloqueio: —
+
+## Task 18 — DONE_WITH_CONCERNS
+Commit: (pending-18)
+Portões que EU rodei: shell 9 testes; typecheck 0; format:check 0; App.tsx 5 linhas
+Linhas do inventário: 0
+Decisões que tomei sozinho: slot canvas vazio (Canvas exige props de documento). Tema dark/light sem next-themes (matchMedia quebra jsdom).
+Preocupações: navbar/statusbar auto=0px até 19–22
+Bloqueio: —
