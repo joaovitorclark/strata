@@ -71,7 +71,7 @@ Preocupações: pins não sobrevivem reload; Ctrl-click também pina
 Bloqueio: —
 
 ## Task 18 — DONE_WITH_CONCERNS
-Commit: (pending-18)
+Commit: `89b1485`
 Portões que EU rodei: shell 9 testes; typecheck 0; format:check 0; App.tsx 5 linhas
 Linhas do inventário: 0
 Decisões que tomei sozinho: slot canvas vazio (Canvas exige props de documento). Tema dark/light sem next-themes (matchMedia quebra jsdom).
