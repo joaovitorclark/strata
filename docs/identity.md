@@ -136,8 +136,9 @@ That consistency is how you scan a 200-table model.
 - **Elevation** six steps, all tinted with the flavour's own `crust` — never neutral black, which
   would break the cozy feel. `--shadow-glow` is the focus/selection halo and is the only shadow
   carrying the accent.
-- **Node row heights** are tokens (`--row-compact: 22px`, `--row-cozy: 28px`) because the density
-  toggle is a first-class control, not a preference buried in settings.
+- **Node row heights** are tokens (`--row-compact: 21px`, `--row-cozy: 25px`; 25px cozy / 21px
+  compact) because the density toggle is a first-class control, not a preference buried in settings.
+  These match `COLUMN_VIRTUAL_ROW_H` in `scaleLimits.ts`; the constant is the source of truth.
 
 ---
 
@@ -182,7 +183,7 @@ columns, and this is where Strata separates from every ERD tool.
 | --- | --- | --- | --- |
 | **Sigil** | zoom < 55%, or manual collapse | 34px | layer edge · table name · column count · relation count |
 | **Keys** | zoom 55–110% *(default)* | ~150px | PK, every FK, pinned columns, then `+N more columns` |
-| **Full** | zoom > 110%, or on select | ≤ 420px | virtualised list, sticky header, in-node filter, section groups |
+| **Full** | zoom > 110%, or on select | 34 header + 14 × 25 rows + 26 footer = 410px | virtualised list, sticky header, in-node filter, section groups |
 
 The state is driven by zoom by default and can be pinned per node. Edges attach to the **node body**
 in Sigil and to the **column handle** in Keys/Full, so relationships never dangle.
@@ -199,7 +200,7 @@ in Sigil and to the **column handle** in Keys/Full, so relationships never dangl
   table reads as five sections instead of one wall.
 - **Honest overflow.** Nothing is ever silently clipped. Hidden columns are always a real, counted,
   clickable `+187 more columns` control.
-- **Density.** Compact (22px rows) / Cozy (28px rows), toggled from the status bar.
+- **Density.** Compact (21px rows) / Cozy (25px rows), toggled from the status bar.
 
 ### Anatomy
 
