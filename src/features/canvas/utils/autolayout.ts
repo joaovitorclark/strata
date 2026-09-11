@@ -63,8 +63,11 @@ function sortTablesForPack(
   return sorted;
 }
 
-function layoutMetrics(compact: boolean): NodeMetricsOpts {
-  return { compact, layout: true };
+function layoutMetrics(
+  compact: boolean,
+  density: NodeMetricsOpts["density"] = "cozy",
+): NodeMetricsOpts {
+  return { compact, layout: true, density };
 }
 
 function layerForTable(t: TableView, layerMap: Record<string, string>): string | undefined {
@@ -636,8 +639,11 @@ function countAllOverlaps(positions: Positions, tables: TableView[], metrics: No
  * Layout para modo linhagem: faixas por camada (bronze→prata→ouro), TableGroups compactos
  * empilhados na faixa, maiores à esquerda dentro de cada grupo. Usa altura real das tabelas.
  */
-export function autolayoutLineagePositions(parsed: ParseResult): Positions {
-  const metrics = layoutMetrics(false);
+export function autolayoutLineagePositions(
+  parsed: ParseResult,
+  density: NodeMetricsOpts["density"] = "cozy",
+): Positions {
+  const metrics = layoutMetrics(false, density);
   const layerMap = tableLayerMap(parsed.layerGroups);
   const tables = parsed.tables;
   if (!tables.length) return {};
@@ -714,8 +720,12 @@ export function autolayoutLineagePositions(parsed: ParseResult): Positions {
 }
 
 /** Autolayout por cluster (TableGroup → Layer/schema → default), sem sobreposição. */
-export function autolayoutPositions(parsed: ParseResult, compact = false): Positions {
-  const metrics = layoutMetrics(compact);
+export function autolayoutPositions(
+  parsed: ParseResult,
+  compact = false,
+  density: NodeMetricsOpts["density"] = "cozy",
+): Positions {
+  const metrics = layoutMetrics(compact, density);
   const layerMap = tableLayerMap(parsed.layerGroups);
 
   const byCluster = new Map<string, TableView[]>();

@@ -24,26 +24,26 @@ export function needsScrollAwareHandles(data: TableNodeData | undefined): boolea
   return !!data?.columns && data.columns.length > COLUMN_VIRTUALIZE_THRESHOLD;
 }
 
-export function columnScrollViewport(data: TableNodeData): { top: number; bottom: number; center: number } {
+export function columnScrollViewport(data: TableNodeData, rowH = COLUMN_VIRTUAL_ROW_H): { top: number; bottom: number; center: number } {
   const top = TABLE_HEADER_H + (data.externalLinks?.length ? TABLE_EXTERNAL_BAR_H : 0);
-  const bottom = top + COLUMN_SCROLL_VIEW_H;
+  const bottom = top + COLUMN_VIRTUAL_VIEW_ROWS * rowH;
   return { top, bottom, center: top + (bottom - top) / 2 };
 }
 
-export function tableBodyHeight(data: TableNodeData): number {
+export function tableBodyHeight(data: TableNodeData, rowH = COLUMN_VIRTUAL_ROW_H): number {
   if (needsScrollAwareHandles(data)) {
     return (
       TABLE_HEADER_H
       + (data.externalLinks?.length ? TABLE_EXTERNAL_BAR_H : 0)
-      + COLUMN_SCROLL_VIEW_H
+      + COLUMN_VIRTUAL_VIEW_ROWS * rowH
       + TABLE_FOOTER_H
     );
   }
-  return nodeHeight(data);
+  return nodeHeight(data, { rowH });
 }
 
-function clampLocalY(data: TableNodeData, y: number): number {
-  const maxY = tableBodyHeight(data) - TABLE_FOOTER_H - PORT_INSET;
+function clampLocalY(data: TableNodeData, y: number, rowH = COLUMN_VIRTUAL_ROW_H): number {
+  const maxY = tableBodyHeight(data, rowH) - TABLE_FOOTER_H - PORT_INSET;
   const minY = TABLE_HEADER_H + (data.externalLinks?.length ? TABLE_EXTERNAL_BAR_H : 0) + PORT_INSET;
   return Math.max(minY, Math.min(maxY, y));
 }
@@ -53,41 +53,43 @@ export function columnAnchorY(
   data: TableNodeData,
   columnName: string,
   scrollTop: number,
+  rowH = COLUMN_VIRTUAL_ROW_H,
 ): { y: number; kind: ColumnAnchorKind } | null {
   const idx = data.columns.findIndex((c) => c.name === columnName);
   if (idx < 0) return null;
 
-  const { top, bottom } = columnScrollViewport(data);
+  const { top, bottom } = columnScrollViewport(data, rowH);
 
   if (!needsScrollAwareHandles(data)) {
-    const y = top + idx * COLUMN_VIRTUAL_ROW_H + COLUMN_VIRTUAL_ROW_H / 2;
-    return { y: clampLocalY(data, y), kind: 'row' };
+    const y = top + idx * rowH + rowH / 2;
+    return { y: clampLocalY(data, y, rowH), kind: 'row' };
   }
 
-  const raw = top + idx * COLUMN_VIRTUAL_ROW_H - scrollTop + COLUMN_VIRTUAL_ROW_H / 2;
+  const raw = top + idx * rowH - scrollTop + rowH / 2;
   const minY = top + PORT_INSET;
   const maxY = bottom - PORT_INSET;
 
   // Coluna acima da área visível: a ligação fica encostada na borda de cima,
   // esperando o usuário rolar para cima. Abaixo: encostada na borda de baixo.
   if (raw < minY) {
-    return { y: clampLocalY(data, minY), kind: 'above' };
+    return { y: clampLocalY(data, minY, rowH), kind: 'above' };
   }
   if (raw > maxY) {
-    return { y: clampLocalY(data, maxY), kind: 'below' };
+    return { y: clampLocalY(data, maxY, rowH), kind: 'below' };
   }
-  return { y: clampLocalY(data, raw), kind: 'row' };
+  return { y: clampLocalY(data, raw, rowH), kind: 'row' };
 }
 
 export function sidePortFlowPoint(
   node: InternalNode<Node<TableNodeData>>,
   side: 'source' | 'target',
+  rowH = COLUMN_VIRTUAL_ROW_H,
 ): { x: number; y: number; kind: ColumnAnchorKind } {
-  const { center } = columnScrollViewport(node.data);
+  const { center } = columnScrollViewport(node.data, rowH);
   const origin = node.internals.positionAbsolute;
   const w = node.measured?.width ?? nodeWidth(node.data) ?? 230;
   const xLocal = side === 'source' ? w : 0;
-  const yLocal = clampLocalY(node.data, center);
+  const yLocal = clampLocalY(node.data, center, rowH);
   return { x: origin.x + xLocal, y: origin.y + yLocal, kind: 'row' };
 }
 
@@ -96,8 +98,9 @@ export function columnHandleFlowPoint(
   columnName: string,
   side: 'source' | 'target',
   scrollTop: number,
+  rowH = COLUMN_VIRTUAL_ROW_H,
 ): { x: number; y: number; kind: ColumnAnchorKind } | null {
-  const anchor = columnAnchorY(node.data, columnName, scrollTop);
+  const anchor = columnAnchorY(node.data, columnName, scrollTop, rowH);
   if (!anchor) return null;
 
   const origin = node.internals.positionAbsolute;

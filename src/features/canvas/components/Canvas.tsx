@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   ReactFlow,
   Controls,
@@ -23,6 +23,7 @@ import { EdgeMarkers } from "./EdgeMarkers";
 import { GroupNode } from "./GroupNode";
 import { ExternalGroupNode } from "./ExternalGroupNode";
 import { SelectionBar } from "@/features/panels/SelectionBar";
+import { CanvasDensityContext } from "../hooks/useCanvasDensity";
 import {
   aggregateCrossLinks,
   type CrossPageRef,
@@ -49,7 +50,11 @@ import {
   focusFieldMappingInView,
   focusTableInView,
 } from "../utils/focusTableView";
-import { MINIMAP_MAX_TABLES, SKIP_INITIAL_FIT_TABLES } from "../utils/scaleLimits";
+import {
+  MINIMAP_MAX_TABLES,
+  SKIP_INITIAL_FIT_TABLES,
+  type CanvasDensity,
+} from "../utils/scaleLimits";
 import { cn } from "@/lib/utils";
 
 const isMacOs = () =>
@@ -170,6 +175,8 @@ type Props = {
   externalStubs?: ExternalGroupStub[];
   /** FKs que cruzam a fronteira da página ativa. */
   crossRefs?: CrossPageRef[];
+  /** StatusBar density — cozy 25px / compact 21px row height. */
+  density?: CanvasDensity;
 };
 
 function fitDiagram(
@@ -294,6 +301,7 @@ export function Canvas(props: Props) {
     fitViewTrigger,
     externalStubs = [],
     crossRefs = [],
+    density = "cozy",
   } = props;
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -430,6 +438,7 @@ export function Canvas(props: Props) {
       dimmedTables: dimmed,
       groupColors,
       onToggleGroup,
+      density,
     };
   }, [
     parsed.tables,
@@ -439,6 +448,7 @@ export function Canvas(props: Props) {
     layerDimMode,
     layerOf,
     onToggleGroup,
+    density,
   ]);
 
   useCanvasNodes(
@@ -683,112 +693,115 @@ export function Canvas(props: Props) {
   const showMiniMap = tableCount <= MINIMAP_MAX_TABLES;
 
   return (
-    <div
-      className={cn(
-        "canvas-wrap relative h-full w-full",
-        related?.size ? "canvas-wrap--focus" : undefined,
-      )}
-    >
-      <style data-canvas-shell="">{SHELL_CSS}</style>
-      <CanvasFocusStyles focus={focusSet} related={related} columnFocus={!!selectedColumn} />
-      {staleWarning && (
-        <div
-          className="absolute left-2 right-2 top-2 z-10 ml-auto max-w-[420px] rounded-md border border-warning bg-card px-3 py-2 text-xs text-foreground shadow-md"
-          role="status"
-        >
-          Canvas mostra último modelo válido — corrija o DBML no editor
-        </div>
-      )}
-      <SelectionBar onRemoveTables={onRemoveTables} />
-      <EdgeMarkers />
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
-        onNodesDelete={onNodesDelete}
-        onEdgesChange={onEdgesChange}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDrag={onNodeDrag}
-        onNodeDragStop={onNodeDragStop}
-        onConnect={onConnect}
-        onConnectStart={lineageMode ? () => setConnecting(true) : undefined}
-        onConnectEnd={() => setConnecting(false)}
-        isValidConnection={isValidConnection}
-        connectionMode={lineageMode ? ConnectionMode.Loose : ConnectionMode.Strict}
-        connectionRadius={lineageMode ? 56 : 24}
-        nodesConnectable
-        connectOnClick={false}
-        edgesReconnectable={!lineageMode}
+    <CanvasDensityContext.Provider value={density}>
+      <div
         className={cn(
-          "strata-canvas",
-          lineageMode && "canvas--lineage-mode",
-          lineageMode && connecting && "canvas--lineage-connecting",
+          "canvas-wrap relative h-full w-full",
+          related?.size ? "canvas-wrap--focus" : undefined,
         )}
-        onEdgesDelete={onEdgesDelete}
-        onReconnect={onReconnect}
-        deleteKeyCode={["Delete", "Backspace"]}
-        onNodeMouseEnter={(_, n) => {
-          if (n.type === "table") setHovered(n.id);
-        }}
-        onNodeMouseLeave={() => setHovered(null)}
-        onEdgeMouseEnter={(_, e) => useInteraction.getState().peekEdge(e.id)}
-        onEdgeMouseLeave={() => useInteraction.getState().peekEdge(null)}
-        onNodeClick={(event, n) => {
-          if (n.type === "group") selectGroup(n.id.replace(/^group:/, ""));
-          else if (n.type === "table") {
-            // Cliques originados em uma linha de coluna (.col-row) NÃO devem disparar
-            // onTableClick (pan/foco da tabela). O TableColumnList usa onPointerUp
-            // com stopPropagation, mas o d3-drag do React Flow escuta em DOM direto
-            // e dispara onNodeClick mesmo assim. Guard aqui evita pan espúrio ao
-            // selecionar coluna (regressão introduzida pelo DBML scroll-to-column).
-            const target = event.target as HTMLElement | null;
-            if (target?.closest?.(".col-row")) return;
-            onTableClick?.(n.id);
-          }
-        }}
-        // Clique/arrasto no pane NÃO desseleciona a coluna: o usuário pode arrastar o
-        // canvas para seguir uma ligação. A coluna sai com Esc, outra coluna ou outra seleção.
-        onPaneClick={() => {
-          clearCanvasSelection();
-        }}
-        onSelectionChange={onSelectionChange}
-        selectionOnDrag
-        selectionMode={SelectionMode.Partial}
-        multiSelectionKeyCode={isMacOs() ? "Meta" : "Control"}
-        elementsSelectable
-        edgesFocusable
-        // Tolerância de jitter do mouse (Windows): até 4px de movimento ainda é clique
-        // de coluna, não drag do nó — sem isso o onClick da coluna nunca dispara.
-        nodeDragThreshold={4}
-        minZoom={0.25}
-        onlyRenderVisibleElements
+        style={{ "--row-h": `var(--row-${density})` } as CSSProperties}
       >
-        <InitialFitHelper tableCount={tableCount} />
-        <AutolayoutFitHelper trigger={fitViewTrigger} />
-        <FocusTableHelper
-          tableId={focusTableId}
-          focusNonce={focusNonce}
-          onDone={onFocusTableDone}
-        />
-        <FocusFieldMappingHelper />
-        <Controls />
-        {showMiniMap ? (
-          <MiniMap
-            pannable
-            zoomable
-            nodeStrokeWidth={0}
-            bgColor="hsl(var(--card))"
-            maskColor="hsl(var(--background) / 0.65)"
-            nodeColor={(n) =>
-              n.type === "group"
-                ? "transparent"
-                : ((n.data as { headerColor?: string })?.headerColor ?? MINIMAP_FALLBACK)
+        <style data-canvas-shell="">{SHELL_CSS}</style>
+        <CanvasFocusStyles focus={focusSet} related={related} columnFocus={!!selectedColumn} />
+        {staleWarning && (
+          <div
+            className="absolute left-2 right-2 top-2 z-10 ml-auto max-w-[420px] rounded-md border border-warning bg-card px-3 py-2 text-xs text-foreground shadow-md"
+            role="status"
+          >
+            Canvas mostra último modelo válido — corrija o DBML no editor
+          </div>
+        )}
+        <SelectionBar onRemoveTables={onRemoveTables} />
+        <EdgeMarkers />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodesChange={onNodesChange}
+          onNodesDelete={onNodesDelete}
+          onEdgesChange={onEdgesChange}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStop={onNodeDragStop}
+          onConnect={onConnect}
+          onConnectStart={lineageMode ? () => setConnecting(true) : undefined}
+          onConnectEnd={() => setConnecting(false)}
+          isValidConnection={isValidConnection}
+          connectionMode={lineageMode ? ConnectionMode.Loose : ConnectionMode.Strict}
+          connectionRadius={lineageMode ? 56 : 24}
+          nodesConnectable
+          connectOnClick={false}
+          edgesReconnectable={!lineageMode}
+          className={cn(
+            "strata-canvas",
+            lineageMode && "canvas--lineage-mode",
+            lineageMode && connecting && "canvas--lineage-connecting",
+          )}
+          onEdgesDelete={onEdgesDelete}
+          onReconnect={onReconnect}
+          deleteKeyCode={["Delete", "Backspace"]}
+          onNodeMouseEnter={(_, n) => {
+            if (n.type === "table") setHovered(n.id);
+          }}
+          onNodeMouseLeave={() => setHovered(null)}
+          onEdgeMouseEnter={(_, e) => useInteraction.getState().peekEdge(e.id)}
+          onEdgeMouseLeave={() => useInteraction.getState().peekEdge(null)}
+          onNodeClick={(event, n) => {
+            if (n.type === "group") selectGroup(n.id.replace(/^group:/, ""));
+            else if (n.type === "table") {
+              // Cliques originados em uma linha de coluna (.col-row) NÃO devem disparar
+              // onTableClick (pan/foco da tabela). O TableColumnList usa onPointerUp
+              // com stopPropagation, mas o d3-drag do React Flow escuta em DOM direto
+              // e dispara onNodeClick mesmo assim. Guard aqui evita pan espúrio ao
+              // selecionar coluna (regressão introduzida pelo DBML scroll-to-column).
+              const target = event.target as HTMLElement | null;
+              if (target?.closest?.(".col-row")) return;
+              onTableClick?.(n.id);
             }
+          }}
+          // Clique/arrasto no pane NÃO desseleciona a coluna: o usuário pode arrastar o
+          // canvas para seguir uma ligação. A coluna sai com Esc, outra coluna ou outra seleção.
+          onPaneClick={() => {
+            clearCanvasSelection();
+          }}
+          onSelectionChange={onSelectionChange}
+          selectionOnDrag
+          selectionMode={SelectionMode.Partial}
+          multiSelectionKeyCode={isMacOs() ? "Meta" : "Control"}
+          elementsSelectable
+          edgesFocusable
+          // Tolerância de jitter do mouse (Windows): até 4px de movimento ainda é clique
+          // de coluna, não drag do nó — sem isso o onClick da coluna nunca dispara.
+          nodeDragThreshold={4}
+          minZoom={0.25}
+          onlyRenderVisibleElements
+        >
+          <InitialFitHelper tableCount={tableCount} />
+          <AutolayoutFitHelper trigger={fitViewTrigger} />
+          <FocusTableHelper
+            tableId={focusTableId}
+            focusNonce={focusNonce}
+            onDone={onFocusTableDone}
           />
-        ) : null}
-      </ReactFlow>
-    </div>
+          <FocusFieldMappingHelper />
+          <Controls />
+          {showMiniMap ? (
+            <MiniMap
+              pannable
+              zoomable
+              nodeStrokeWidth={0}
+              bgColor="hsl(var(--card))"
+              maskColor="hsl(var(--background) / 0.65)"
+              nodeColor={(n) =>
+                n.type === "group"
+                  ? "transparent"
+                  : ((n.data as { headerColor?: string })?.headerColor ?? MINIMAP_FALLBACK)
+              }
+            />
+          ) : null}
+        </ReactFlow>
+      </div>
+    </CanvasDensityContext.Provider>
   );
 }

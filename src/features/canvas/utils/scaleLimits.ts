@@ -1,8 +1,17 @@
 /** Limiar: virtualizar lista de colunas no TableNode. */
 export const COLUMN_VIRTUALIZE_THRESHOLD = 48;
 
-/** Altura de linha (px) — alinhada a nodeMetrics.ROW_H e CSS .col-row. */
+/** Altura de linha (px) — alinhada a nodeMetrics.ROW_H e CSS .col-row. Cozy default. */
 export const COLUMN_VIRTUAL_ROW_H = 25;
+
+/** Compact StatusBar density — matches `--row-compact` (21px). */
+export const COLUMN_COMPACT_ROW_H = 21;
+
+export type CanvasDensity = "compact" | "cozy";
+
+export function rowHeightForDensity(density: CanvasDensity = "cozy"): number {
+  return density === "compact" ? COLUMN_COMPACT_ROW_H : COLUMN_VIRTUAL_ROW_H;
+}
 
 /** Linhas visíveis no viewport virtual (scroll interno). */
 export const COLUMN_VIRTUAL_VIEW_ROWS = 14;

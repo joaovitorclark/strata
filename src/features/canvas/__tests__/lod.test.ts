@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { keyColumns, resolveLod } from "@/features/canvas/utils/lod";
+import { keyColumns, lodHeight, resolveLod, SIGIL_H } from "@/features/canvas/utils/lod";
+import { COLUMN_VIRTUAL_ROW_H } from "@/features/canvas/utils/scaleLimits";
 
 describe("resolveLod", () => {
   it("collapses to a sigil when zoomed out", () => {
@@ -51,5 +52,29 @@ describe("keyColumns", () => {
       meta: { pks: [], fks: [] },
     } as never;
     expect(keyColumns(data).map((c) => c.name)).toEqual(["dia", "regiao"]);
+  });
+});
+
+describe("lodHeight", () => {
+  const data = {
+    columns: [{ name: "id" }, { name: "cliente_id" }, { name: "total_brl" }, { name: "nota" }],
+    meta: { pks: ["id"], fks: [{ column: "cliente_id", ref: "vendas.cliente.id" }] },
+  } as never;
+
+  it("uses compact row height 21 instead of cozy 25", () => {
+    const cozy = lodHeight(data, "full");
+    const compact = lodHeight(data, "full", [], 21);
+    expect(cozy).not.toBe(compact);
+    expect(cozy).toBe(lodHeight(data, "full", [], COLUMN_VIRTUAL_ROW_H));
+    expect(cozy - compact).toBe(4 * (25 - 21));
+  });
+
+  it("applies the same row height in keys state", () => {
+    expect(lodHeight(data, "keys", [], 21)).not.toBe(lodHeight(data, "keys", [], 25));
+  });
+
+  it("keeps sigil height independent of row density", () => {
+    expect(lodHeight(data, "sigil", [], 21)).toBe(SIGIL_H);
+    expect(lodHeight(data, "sigil", [], 25)).toBe(SIGIL_H);
   });
 });

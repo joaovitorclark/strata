@@ -53,6 +53,7 @@ export function lodHeight(
   data: TableNodeData,
   state: LodState,
   pinned: readonly string[] = [],
+  rowH: number = COLUMN_VIRTUAL_ROW_H,
 ): number {
   if (state === "sigil") return SIGIL_H;
   const shown = state === "keys" ? keyColumns(data, pinned).length : data.columns.length;
@@ -60,5 +61,5 @@ export function lodHeight(
     state === "keys"
       ? shown + (data.columns.length > shown ? 1 : 0) // +1 for the "+N more" control
       : Math.min(data.columns.length, COLUMN_VIRTUAL_VIEW_ROWS);
-  return TABLE_HEADER_H + rows * COLUMN_VIRTUAL_ROW_H + TABLE_FOOTER_H;
+  return TABLE_HEADER_H + rows * rowH + TABLE_FOOTER_H;
 }

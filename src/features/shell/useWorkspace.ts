@@ -570,8 +570,8 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     const lineageMode = useSchemaStore.getState().lineageMode;
     const layoutModel = activePageIds.includes(ALL_PAGE_ID) ? canvasBaseModel : canvasActiveModel;
     const base = lineageMode
-      ? autolayoutLineagePositions(layoutModel)
-      : autolayoutPositions(layoutModel, false);
+      ? autolayoutLineagePositions(layoutModel, density)
+      : autolayoutPositions(layoutModel, false, density);
     const next = canvasStubs.length ? layoutExternalStubsOnTop(base, canvasStubs) : base;
     useSchemaStore.getState().setPositions(next);
     setFitViewTrigger((n) => n + 1);
@@ -583,7 +583,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
           : `Canvas reorganizado (${layoutModel.tables.length} tabelas)`,
     );
     useSchemaStore.getState().setSaveState("dirty");
-  }, [activePageIds, canvasBaseModel, canvasActiveModel, canvasStubs, pushStatus]);
+  }, [activePageIds, canvasBaseModel, canvasActiveModel, canvasStubs, density, pushStatus]);
 
   const lineage = useMemo<LineageLink[]>(() => {
     const out: LineageLink[] = [];

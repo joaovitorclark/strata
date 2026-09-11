@@ -7,6 +7,7 @@ import type { ExternalLinkBadge, TableMeta, TableNodeData } from '../actions';
 import type { ExternalGroupStub } from '../utils/pageFilter';
 import type { TableSize } from '@/infrastructure/api';
 import { nodeHeight, nodeWidth } from '../utils/nodeMetrics';
+import type { CanvasDensity } from '../utils/scaleLimits';
 export type Positions = Record<string, { x: number; y: number }>;
 
 export type NodeExtra = {
@@ -29,6 +30,7 @@ export type NodeOpts = {
   dimmedTables: Set<string>; // esmaecidas (camada em modo esmaecer)
   groupColors: Record<string, string>; // cor por TableGroup (nome -> hex)
   onToggleGroup: (name: string) => void;
+  density?: CanvasDensity;
 };
 
 const SEP1 = '\u0001';
@@ -83,7 +85,7 @@ function groupNodes(
   opts: NodeOpts,
   compact: boolean,
 ): Node[] {
-  const metrics = { compact };
+  const metrics = { compact, density: opts.density };
   const byGroup = new Map<string, { x: number; y: number; w: number; h: number }[]>();
   tables.forEach((t, i) => {
     if (!t.group) return;

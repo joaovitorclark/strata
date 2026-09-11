@@ -162,6 +162,7 @@ export function Workspace(props: WorkspaceProps) {
                 fitViewTrigger={ws.fitViewTrigger}
                 externalStubs={ws.canvasStubs}
                 crossRefs={ws.canvasView.crossRefs}
+                density={ws.density}
               />
               <EditorChrome
                 past={ws.past.length}

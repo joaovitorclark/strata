@@ -5,13 +5,12 @@ import { ColumnRow, type ColumnRowProps } from "@/features/canvas/components/Col
 import { computeVirtualWindow } from "@/features/canvas/hooks/useVirtualWindow";
 import { useTableScrollStore } from "@/features/canvas/store/tableScrollStore";
 import { keyColumns, type LodState } from "@/features/canvas/utils/lod";
+import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
 import {
-  COLUMN_VIRTUAL_ROW_H,
   COLUMN_VIRTUALIZE_THRESHOLD,
   COLUMN_VIRTUAL_VIEW_ROWS,
 } from "@/features/canvas/utils/scaleLimits";
 
-const VIEW_H_FALLBACK = COLUMN_VIRTUAL_VIEW_ROWS * COLUMN_VIRTUAL_ROW_H;
 const OVERSCAN = 5;
 
 // Alturas reservadas dentro do nó da tabela (para o header, botão de adicionar
@@ -21,11 +20,11 @@ const NODE_ADD_BTN_H = 30;
 const NODE_PADDING = 8;
 const VIEWPORT_MIN_H = 120;
 
-function scrollToColumnIndex(el: HTMLDivElement, index: number): void {
+function scrollToColumnIndex(el: HTMLDivElement, index: number, rowH: number): void {
   if (index < 0) return;
-  const rowTop = index * COLUMN_VIRTUAL_ROW_H;
-  const rowBottom = rowTop + COLUMN_VIRTUAL_ROW_H;
-  const viewportH = el.clientHeight || VIEW_H_FALLBACK;
+  const rowTop = index * rowH;
+  const rowBottom = rowTop + rowH;
+  const viewportH = el.clientHeight || COLUMN_VIRTUAL_VIEW_ROWS * rowH;
   if (rowTop < el.scrollTop) el.scrollTop = rowTop;
   else if (rowBottom > el.scrollTop + viewportH) el.scrollTop = rowBottom - viewportH;
 }
@@ -83,6 +82,8 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
   const setScrollTop = useTableScrollStore((s) => s.setScrollTop);
   const [scrollTop, setScrollTopLocal] = useState(0);
   const [nodeH, setNodeH] = useState<number | null>(null);
+  const rowH = useCanvasRowH();
+  const viewHFallback = COLUMN_VIRTUAL_VIEW_ROWS * rowH;
 
   useEffect(() => {
     if (!scrollable || !nodeId) return;
@@ -99,7 +100,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
 
   const viewportH = nodeH
     ? Math.max(VIEWPORT_MIN_H, nodeH - NODE_HEADER_H - NODE_ADD_BTN_H - NODE_PADDING)
-    : VIEW_H_FALLBACK;
+    : viewHFallback;
 
   const publishScroll = useCallback(
     (next: number) => {
@@ -117,9 +118,9 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
       const el = scrollRef.current;
       if (!el || !columnName) return;
       const idx = columns.findIndex((c) => c.name === columnName);
-      scrollToColumnIndex(el, idx);
+      scrollToColumnIndex(el, idx, rowH);
     },
-    [columns],
+    [columns, rowH],
   );
 
   useEffect(() => {
@@ -166,7 +167,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
           <button
             type="button"
             className="nodrag nopan w-full px-2 text-left font-mono text-2xs text-muted-foreground hover:bg-surface-hover hover:text-foreground"
-            style={{ height: COLUMN_VIRTUAL_ROW_H }}
+            style={{ height: rowH }}
             onClick={(e) => {
               e.stopPropagation();
               onShowMore?.();
@@ -191,7 +192,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
 
   const win = computeVirtualWindow({
     totalItems: columns.length,
-    itemHeight: COLUMN_VIRTUAL_ROW_H,
+    itemHeight: rowH,
     viewportHeight: viewportH,
     scrollTop,
     overscan: OVERSCAN,

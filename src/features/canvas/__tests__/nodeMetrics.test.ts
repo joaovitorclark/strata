@@ -27,4 +27,15 @@ describe('nodeHeight', () => {
     expect(capped).toBe(virtual);
     expect(capped).toBeLessThan(full);
   });
+
+  it("usa altura de linha compacta 21 diferente da cozy 25", () => {
+    const t = tableWithCols(10);
+    expect(nodeHeight(t, { density: "compact" })).not.toBe(nodeHeight(t, { density: "cozy" }));
+    expect(nodeHeight(t, { rowH: 21 })).not.toBe(nodeHeight(t, { rowH: 25 }));
+    expect(nodeHeight(t)).toBe(nodeHeight(t, { rowH: COLUMN_VIRTUAL_ROW_H }));
+    expect(nodeHeight(t, { density: "compact" })).toBe(nodeHeight(t, { rowH: 21 }));
+    expect(nodeHeight(t, { state: "full", density: "compact" })).not.toBe(
+      nodeHeight(t, { state: "full", density: "cozy" }),
+    );
+  });
 });

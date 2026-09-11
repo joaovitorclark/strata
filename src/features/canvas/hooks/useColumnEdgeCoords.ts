@@ -9,6 +9,7 @@ import {
   sidePortFlowPoint,
 } from '../utils/columnHandleGeometry';
 import { useTableScrollStore } from '../store/tableScrollStore';
+import { useCanvasRowH } from './useCanvasDensity';
 
 export type ColumnEdgeCoords = {
   sourceX: number;
@@ -22,9 +23,10 @@ function resolveEndpoint(
   column: string,
   side: 'source' | 'target',
   scrollTop: number,
+  rowH: number,
 ) {
   return (
-    columnHandleFlowPoint(node, column, side, scrollTop) ?? sidePortFlowPoint(node, side)
+    columnHandleFlowPoint(node, column, side, scrollTop, rowH) ?? sidePortFlowPoint(node, side, rowH)
   );
 }
 
@@ -44,6 +46,7 @@ export function useColumnEdgeCoords(
 ): ColumnEdgeCoords {
   const version = useTableScrollStore((s) => s.version);
   const scrollFor = useTableScrollStore((s) => s.byNode);
+  const rowH = useCanvasRowH();
 
   const sourceNode = useInternalNode<Node<TableNodeData>>(source);
   const targetNode = useInternalNode<Node<TableNodeData>>(target);
@@ -57,14 +60,14 @@ export function useColumnEdgeCoords(
 
     const src = parse(sourceHandle);
     if (src && sourceNode && needsScrollAwareHandles(sourceNode.data)) {
-      const pt = resolveEndpoint(sourceNode, src.column, 'source', scrollFor[source] ?? 0);
+      const pt = resolveEndpoint(sourceNode, src.column, 'source', scrollFor[source] ?? 0, rowH);
       sx = pt.x;
       sy = pt.y;
     }
 
     const tgt = parse(targetHandle);
     if (tgt && targetNode && needsScrollAwareHandles(targetNode.data)) {
-      const pt = resolveEndpoint(targetNode, tgt.column, 'target', scrollFor[target] ?? 0);
+      const pt = resolveEndpoint(targetNode, tgt.column, 'target', scrollFor[target] ?? 0, rowH);
       tx = pt.x;
       ty = pt.y;
     }
@@ -84,5 +87,6 @@ export function useColumnEdgeCoords(
     targetNode,
     scrollFor,
     version,
+    rowH,
   ]);
 }

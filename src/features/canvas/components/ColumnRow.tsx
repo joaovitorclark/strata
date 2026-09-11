@@ -4,7 +4,7 @@ import { Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TableMeta } from "@/features/canvas/actions";
 import type { ColumnView } from "@/features/schema/model/parse";
-import { COLUMN_VIRTUAL_ROW_H } from "@/features/canvas/utils/scaleLimits";
+import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
 
 export type ColumnRowProps = {
   column: ColumnView;
@@ -44,6 +44,7 @@ function ColumnRowImpl({
   const isFk = (meta.fks ?? []).some((f) => f.column === c.name);
   const isPinned = pinned.includes(c.name);
   const isUnique = Boolean((c as ColumnView & { unique?: boolean }).unique);
+  const rowH = useCanvasRowH();
 
   const downPos = useRef<{ x: number; y: number } | null>(null);
   const isInteractiveChild = useCallback(
@@ -72,7 +73,7 @@ function ColumnRowImpl({
   return (
     <div
       className={cn("relative flex items-center gap-1.5 px-2", isSel && "bg-surface-hover")}
-      style={{ height: COLUMN_VIRTUAL_ROW_H }}
+      style={{ height: rowH }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >

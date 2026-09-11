@@ -3,15 +3,15 @@ import type { TableNodeData } from '../actions';
 import { lodHeight, type LodState } from './lod';
 import {
   COLUMN_VIRTUALIZE_THRESHOLD,
-  COLUMN_VIRTUAL_ROW_H,
   COLUMN_VIRTUAL_VIEW_ROWS,
+  rowHeightForDensity,
+  type CanvasDensity,
 } from './scaleLimits';
 
 const BASE_W = 230;
 const MAX_W = 320;
 const COMPACT_INNER_MIN = 168;
 const HEADER_H = 34;
-const ROW_H = COLUMN_VIRTUAL_ROW_H;
 const FOOTER_H = 26;
 /** Padding do shell em modo linhagem (.table-node-shell--lineage). */
 const LINEAGE_SHELL_PAD = 10;
@@ -20,7 +20,18 @@ const LAYOUT_SAFETY = 16;
 const CHAR_W = 7;
 const HEADER_LINE_H = 20;
 
-export type NodeMetricsOpts = { compact?: boolean; /** Inclui folga para autolayout anti-colisão. */ layout?: boolean; state?: LodState };
+export type NodeMetricsOpts = {
+  compact?: boolean;
+  /** Inclui folga para autolayout anti-colisão. */
+  layout?: boolean;
+  state?: LodState;
+  density?: CanvasDensity;
+  rowH?: number;
+};
+
+function resolveRowH(opts: NodeMetricsOpts): number {
+  return opts.rowH ?? rowHeightForDensity(opts.density ?? 'cozy');
+}
 
 function compactInnerWidth(t: TableView, layout: boolean): number {
   const byChars = t.id.length * CHAR_W + 56;
@@ -53,8 +64,9 @@ export function nodeWidth(t: TableView, opts: NodeMetricsOpts = {}): number {
 
 /** Altura estimada do cartão. */
 export function nodeHeight(t: TableView, opts: NodeMetricsOpts = {}): number {
+  const rowH = resolveRowH(opts);
   if (opts.state) {
-    let h = lodHeight(t as TableNodeData, opts.state);
+    let h = lodHeight(t as TableNodeData, opts.state, [], rowH);
     if (opts.layout) h += LAYOUT_SAFETY;
     return h;
   }
@@ -64,7 +76,7 @@ export function nodeHeight(t: TableView, opts: NodeMetricsOpts = {}): number {
       t.columns.length > COLUMN_VIRTUALIZE_THRESHOLD
         ? COLUMN_VIRTUAL_VIEW_ROWS
         : t.columns.length;
-    let h = HEADER_H + colRows * ROW_H + FOOTER_H;
+    let h = HEADER_H + colRows * rowH + FOOTER_H;
     if (opts.layout) h += LAYOUT_SAFETY;
     return h;
   }
