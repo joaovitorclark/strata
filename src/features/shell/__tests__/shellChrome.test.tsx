@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import "@/i18n";
@@ -91,13 +91,21 @@ describe("shell chrome", () => {
     }
   });
 
-  it("does not port pickTooltipSide, hex literals, flavour names, or an exporter registry", () => {
+  it("does not port pickTooltipSide, hex literals, or flavour names", () => {
     for (const path of CHROME_FILES) {
       const src = readFileSync(path, "utf8");
       expect(src, path).not.toMatch(/pickTooltipSide/);
       expect(src, path).not.toMatch(/#[0-9a-fA-F]{3,8}/);
       expect(src, path).not.toMatch(/macchiato|latte/i);
-      expect(src, path).not.toMatch(/EXPORTERS|spark-ddl|oracle-ddl|ExportMenu/);
     }
+  });
+
+  it("Navbar export menu lists EXPORTERS (10 entries)", () => {
+    const onExportOption = vi.fn();
+    render(<Navbar onExportOption={onExportOption} />);
+    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
+    expect(document.querySelectorAll("[data-export-id]").length).toBe(10);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Exportar dbt" }));
+    expect(onExportOption).toHaveBeenCalledWith("dbt", undefined);
   });
 });

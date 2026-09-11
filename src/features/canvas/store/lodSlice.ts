@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { LodState } from "@/features/canvas/utils/lod";
 import type { InteractionSlice } from "@/features/schema/store/interactionSlice";
+import type { DocumentSlice } from "@/features/schema/store/documentSlice";
 
 const EMPTY_PINS: readonly string[] = [];
 
@@ -21,7 +22,7 @@ export type LodSlice = {
 };
 
 export const createLodSlice: StateCreator<
-  InteractionSlice & LodSlice,
+  InteractionSlice & LodSlice & DocumentSlice,
   [["zustand/immer", never]],
   [],
   LodSlice

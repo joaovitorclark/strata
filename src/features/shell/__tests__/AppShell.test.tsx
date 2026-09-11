@@ -1,7 +1,46 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render } from "@testing-library/react";
+import "@/i18n";
 import App from "@/App";
 import { AppShell, resolveTheme, shellColumns } from "@/features/shell/AppShell";
+import { useSchemaStore } from "@/features/schema/store";
+import * as api from "@/infrastructure/api";
+
+vi.mock("@/features/canvas", () => ({
+  Canvas: () => <div data-testid="canvas-stub" />,
+  nodeTypes: {},
+  edgeTypes: {},
+}));
+
+vi.mock("@/infrastructure/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/infrastructure/api")>();
+  return {
+    ...actual,
+    listProjects: vi.fn().mockResolvedValue({ activeId: "", projects: [] }),
+    loadProjectById: vi.fn().mockResolvedValue({ dbml: "", canvas: {} }),
+    loadProject: vi.fn().mockResolvedValue({ dbml: "", canvas: {} }),
+    getMeta: vi.fn().mockResolvedValue({
+      root: "",
+      dataDir: "",
+      inputDir: "",
+      port: 0,
+      pinnedProject: null,
+      pinnedProjectId: null,
+    }),
+    saveProject: vi.fn().mockResolvedValue(undefined),
+    saveProjectById: vi.fn().mockResolvedValue(undefined),
+    exportFormat: vi.fn().mockResolvedValue({ files: [] }),
+    getGitStatus: vi.fn().mockResolvedValue({
+      hasGit: false,
+      branch: "main",
+      ahead: 0,
+      behind: 0,
+      dirty: false,
+      files: [],
+      branches: ["main"],
+    }),
+  };
+});
 
 const SLOTS = ["navbar", "rail", "tree", "canvas", "inspector", "drawer", "statusbar"] as const;
 
@@ -83,6 +122,11 @@ describe("AppShell", () => {
 });
 
 describe("App", () => {
+  beforeEach(() => {
+    useSchemaStore.setState(useSchemaStore.getInitialState(), true);
+    vi.mocked(api.listProjects).mockResolvedValue({ activeId: "", projects: [] });
+  });
+
   afterEach(() => {
     cleanup();
     document.documentElement.classList.remove("dark");

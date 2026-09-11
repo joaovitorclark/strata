@@ -1,5 +1,7 @@
-import { AppShell } from "@/features/shell/AppShell";
+import { Workspace, type WorkspaceProps } from "@/features/shell/Workspace";
 
-export default function App() {
-  return <AppShell />;
+export type AppProps = WorkspaceProps;
+
+export default function App(props: AppProps = {}) {
+  return <Workspace {...props} />;
 }

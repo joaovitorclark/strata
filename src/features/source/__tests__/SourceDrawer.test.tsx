@@ -93,4 +93,20 @@ Ref: pedidos.id > clientes.id
     expect(screen.getByRole("button", { name: "Aplicar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Manter separado" })).toBeTruthy();
   });
+
+  it("Diff toggles the saved-vs-working overlay", () => {
+    render(
+      <SourceDrawer
+        open
+        value="Table a { id int }"
+        savedValue="Table a { id bigint }"
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.queryByRole("dialog", { name: "Diff DBML" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Diff" }));
+    expect(screen.getByRole("dialog", { name: "Diff DBML" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(screen.queryByRole("dialog", { name: "Diff DBML" })).toBeNull();
+  });
 });

@@ -16,7 +16,12 @@ import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export type SourceDrawerHandle = EditorHandle & { commit: () => void };
+export type SourceDrawerCommitResult = {
+  openedModal: boolean;
+  reconciledDbml: string | null;
+};
+
+export type SourceDrawerHandle = EditorHandle & { commit: () => SourceDrawerCommitResult };
 
 export type SourceDrawerProps = {
   open: boolean;
@@ -33,6 +38,7 @@ export type SourceDrawerProps = {
   onCursorLine?: (line0: number) => void;
   onGoToError?: () => void;
   onCommit?: () => void;
+  onRenameModalOpenChange?: (open: boolean) => void;
 };
 
 type PendingRename = { impacts: RenameImpact[]; buffer: string; committed: string };
@@ -79,6 +85,7 @@ export const SourceDrawer = forwardRef<SourceDrawerHandle, SourceDrawerProps>(fu
     onCursorLine,
     onGoToError,
     onCommit,
+    onRenameModalOpenChange,
   },
   ref,
 ) {
@@ -96,20 +103,22 @@ export const SourceDrawer = forwardRef<SourceDrawerHandle, SourceDrawerProps>(fu
     [value, onChange, onCommitted, onCommit],
   );
 
-  const commit = useCallback(() => {
+  const commit = useCallback((): SourceDrawerCommitResult => {
     const committed = committedValue;
     if (committed == null || committed === value) {
       onCommit?.();
-      return;
+      return { openedModal: false, reconciledDbml: null };
     }
     const impacts = analyzeRenames(committed, value);
     if (impacts.some((i) => i.affectsRefs)) {
       setPendingRename({ impacts, buffer: value, committed });
-      return;
+      onRenameModalOpenChange?.(true);
+      return { openedModal: true, reconciledDbml: null };
     }
     const out = applyRenameImpacts(value, impacts, propagateKeyRename, onTableRenamed);
     finish(out);
-  }, [committedValue, value, onCommit, onTableRenamed, finish]);
+    return { openedModal: false, reconciledDbml: out };
+  }, [committedValue, value, onCommit, onTableRenamed, finish, onRenameModalOpenChange]);
 
   useImperativeHandle(
     ref,
@@ -180,6 +189,7 @@ export const SourceDrawer = forwardRef<SourceDrawerHandle, SourceDrawerProps>(fu
               onTableRenamed,
             );
             setPendingRename(null);
+            onRenameModalOpenChange?.(false);
             finish(out);
           }}
           onKeepSeparate={() => {
@@ -190,9 +200,13 @@ export const SourceDrawer = forwardRef<SourceDrawerHandle, SourceDrawerProps>(fu
               onTableRenamed,
             );
             setPendingRename(null);
+            onRenameModalOpenChange?.(false);
             finish(out);
           }}
-          onClose={() => setPendingRename(null)}
+          onClose={() => {
+            setPendingRename(null);
+            onRenameModalOpenChange?.(false);
+          }}
         />
       )}
     </div>
