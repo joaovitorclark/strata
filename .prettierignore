@@ -19,6 +19,11 @@ src/features/schema/model/
 src/features/schema/__tests__/
 src/infrastructure/api/client.ts
 src/infrastructure/api/types.ts
+src/features/canvas/utils/
+src/features/canvas/hooks/
+src/features/canvas/store/
+src/features/canvas/actions.ts
+src/features/canvas/__tests__/
 # Cópia de design-system/globals.css (proveniência + valores). Não reformatar.
 src/index.css
 
