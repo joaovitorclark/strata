@@ -31,7 +31,7 @@ Preocupações: —
 Bloqueio: —
 
 ## Task 13 — DONE_WITH_CONCERNS
-Commit: (pending)
+Commit: `6384fe0`
 Portões que EU rodei: `npm run test -- src/features/canvas` → 14/72; typecheck 0; format:check 0; build 0
 Linhas do inventário: 0 checadas de 54 Canvas (sem canvas ao vivo; LOD só em teste)
 Decisões que tomei sozinho: `keyColumns` une `compositePks.flat()` — `tableMeta` só lê `ColumnView.pk`, o teste Step 7 falhou até o union (era o segundo caminho).
