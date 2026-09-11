@@ -1,5 +1,13 @@
 {
   "app": { "name": "Strata" },
   "theme": { "dark": "Escuro", "light": "Claro" },
-  "common": { "cancel": "Cancelar", "save": "Salvar", "close": "Fechar" }
+  "common": { "cancel": "Cancelar", "save": "Salvar", "close": "Fechar" },
+  "canvas": {
+    "edges": {
+      "removeRelation": "Remover relação",
+      "removeLineage": "Remover linhagem",
+      "derivedFrom": "derivado de",
+      "externalLinks": "{{count}} ligações → {{label}}"
+    }
+  }
 }
