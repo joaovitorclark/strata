@@ -22,6 +22,7 @@ import { FieldLineageEdge } from "./FieldLineageEdge";
 import { EdgeMarkers } from "./EdgeMarkers";
 import { GroupNode } from "./GroupNode";
 import { ExternalGroupNode } from "./ExternalGroupNode";
+import { SelectionBar } from "@/features/panels/SelectionBar";
 import {
   aggregateCrossLinks,
   type CrossPageRef,
@@ -698,7 +699,7 @@ export function Canvas(props: Props) {
           Canvas mostra último modelo válido — corrija o DBML no editor
         </div>
       )}
-      {/* TODO(Task 23): SelectionBar */}
+      <SelectionBar onRemoveTables={onRemoveTables} />
       <EdgeMarkers />
       <ReactFlow
         nodes={nodes}
