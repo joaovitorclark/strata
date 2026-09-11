@@ -47,7 +47,7 @@ Preocupações: `useCanvasEdges` ainda seta `animated` em FK; o CSS é que corta
 Bloqueio: —
 
 ## Task 15 — DONE_WITH_CONCERNS
-Commit: (pending-15)
+Commit: `709aaa3`
 Portões que EU rodei: canvas 14/72; typecheck 0; format:check 0; build 0; hex vazio
 Linhas do inventário: 0 checadas de 54 Canvas
 Decisões que tomei sozinho: `TABLE_COLORS` de `@/features/canvas/tableColors`; fallback de grupo `--layer-raw`.
