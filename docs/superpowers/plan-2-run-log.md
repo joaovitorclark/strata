@@ -246,7 +246,7 @@ Preocupações: suíte 855 vs 842 no fechamento do Plano 2 — testes novos das 
 Bloqueio: —
 
 ## Task 34b — VERDE
-Commit: (após o commit, se pedido)
+Commit: `90b8d29`
 Portões que EU rodei: 20 dsl (144 testes, asserções originais) · pinsRoundtrip · dbtMetaRoundtrip · suíte completa · typecheck · format:check
 Linhas do inventário: n/a (interop DBML)
 Decisões que tomei sozinho: `meta.strata.pinned` só é emitido quando o bloco `Pins {}` tem colunas daquela tabela — lista vazia deixa de existir. Golden dbt volta aos hashes da Task 2b (`schema.yml` `6b158f55…c83e7b`, `sources.yml` `0099e7f1…023858`). LDB :5175 não entende `Pins {}`; a regeneração usou `modelToDbtFiles` (o mesmo caminho de `/api/export`). `canvas.json.pinnedByTable` só migra na carga para o DBML; o save não escreve mais. `renameTable`/`renameColumnAllRefs` já substituem o token qualificado, então as linhas de Pins acompanham.
