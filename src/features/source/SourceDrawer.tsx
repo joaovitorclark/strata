@@ -143,6 +143,7 @@ export const SourceDrawer = forwardRef<SourceDrawerHandle, SourceDrawerProps>(fu
   return (
     <div
       data-source-drawer
+      data-testid="source-drawer"
       className={cn(
         "flex h-[40vh] w-full flex-col border-t border-border bg-card text-card-foreground",
         "animate-drawer-up shadow-lg",

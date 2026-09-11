@@ -43,6 +43,7 @@ export function IconRail({ active = "tables", onSelect }: IconRailProps = {}) {
     <TooltipProvider delayDuration={300}>
       <div
         data-chrome="rail"
+        data-testid="icon-rail"
         className={
           "flex h-full min-h-0 w-full flex-col items-center gap-1 " +
           "border-r border-sidebar-border bg-sidebar py-2"

@@ -103,6 +103,7 @@ export function Navbar({
     <TooltipProvider delayDuration={300}>
       <div
         data-chrome="navbar"
+        data-testid="navbar"
         className={
           "flex h-10 items-center gap-3 border-b border-border bg-sidebar px-3 " +
           "text-sidebar-foreground"
@@ -200,7 +201,7 @@ export function Navbar({
                   </span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-64">
+              <DropdownMenuContent align="end" className="min-w-64" data-testid="export-menu">
                 {EXPORTERS.map((exporter) => (
                   <DropdownMenuItem
                     key={exporterCommandId(exporter)}

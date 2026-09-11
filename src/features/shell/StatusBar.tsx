@@ -74,6 +74,7 @@ export function StatusBar({
     <TooltipProvider delayDuration={300}>
       <div
         data-chrome="statusbar"
+        data-testid="status-bar"
         className={
           "flex h-8 items-center gap-2 border-t border-border bg-sidebar px-3 " +
           "text-xs text-sidebar-foreground"

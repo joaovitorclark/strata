@@ -103,6 +103,7 @@ export function Inspector({
   return (
     <div
       data-inspector="root"
+      data-testid="inspector"
       className="flex h-full min-h-0 w-64 flex-col border-l border-sidebar-border bg-sidebar text-sidebar-foreground"
     >
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-2">
