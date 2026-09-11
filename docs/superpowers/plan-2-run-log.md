@@ -238,7 +238,7 @@ Preocupações: `grep LocalDrawDB src/` ainda encontra o nome do formato, coment
 Bloqueio: —
 
 ## Task 34 — VERDE
-Commit: (este commit)
+Commit: `9e82234`
 Portões que EU rodei: `npm run test` → 123 files / 855 tests; `npm run typecheck` → 0; `npm run format:check` → 0
 Linhas do inventário: placar após 29 = 202/56/2; após 30 linha 193 = 201/57/2
 Decisões que tomei sozinho: inventário 181+193 no commit de log (orquestrador); commits 30–33 separados por arquivo.
