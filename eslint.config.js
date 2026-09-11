@@ -4,7 +4,16 @@ import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "fixtures", "cypress", "cypress.config.ts"] },
+  {
+    ignores: [
+      "dist",
+      "node_modules",
+      "fixtures",
+      "cypress",
+      "cypress.config.ts",
+      "cypress.stress.config.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

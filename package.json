@@ -20,7 +20,7 @@
     "e2e:serve": "cross-env STRATA_DATA_DIR=cypress/fixtures/data STRATA_DOMAIN=local PORT=5174 npm run start",
     "cy:open": "cypress open",
     "cy:run": "cypress run --spec 'cypress/e2e/!(stress-)*.cy.ts'",
-    "cy:run:stress": "cypress run --spec 'cypress/e2e/stress-*.cy.ts'"
+    "cy:run:stress": "cypress run --config-file cypress.stress.config.ts"
   },
   "repository": {
     "type": "git",

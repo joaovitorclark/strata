@@ -11,5 +11,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["./**/*.ts", "../cypress.config.ts"]
+  "include": ["./**/*.ts", "../cypress.config.ts", "../cypress.stress.config.ts"],
+  "exclude": ["./support/nodeHeightCli.ts"]
 }
