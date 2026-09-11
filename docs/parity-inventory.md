@@ -8,47 +8,46 @@ unimportant — mark it deliberately dropped, with a reason, and it becomes a de
 review.
 
 Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
-
 | # | Area | Behaviour | Source | Verified |
 |---|------|-----------|--------|----------|
-| 1 | Palette | Open the command palette from the toolbar "Buscar" button | src/App.tsx:1634 | ☐ |
-| 2 | Palette | Type in the palette search box to filter tables, columns, and actions (limit 12) | src/palette/CommandPalette.tsx:87 | ☐ |
-| 3 | Palette | Arrow Up/Down moves the highlighted result | src/palette/CommandPalette.tsx:56 | ☐ |
-| 4 | Palette | Enter runs the highlighted command and closes the palette | src/palette/CommandPalette.tsx:66 | ☐ |
-| 5 | Palette | Click a result runs that command and closes the palette | src/palette/CommandPalette.tsx:110 | ☐ |
-| 6 | Palette | Escape closes the palette | src/palette/CommandPalette.tsx:51 | ☐ |
-| 7 | Palette | Click outside the palette closes it | src/palette/CommandPalette.tsx:33 | ☐ |
-| 8 | Palette | "Salvar" (Cmd/Ctrl+S) reconciles editor edits then saves; if a rename modal opens, save is blocked | src/App.tsx:1470 | ☐ |
-| 9 | Palette | "Organizar DBML" rewrites the document as tables → refs → records | src/App.tsx:1477 | ☐ |
-| 10 | Palette | "Organizar canvas" runs autolayout (lineage stack when lineage mode is on) and fits the view | src/App.tsx:1483 | ☐ |
-| 11 | Palette | "Exportar LocalDrawDB (Spark)" runs export format `localdrawdb` with dialect `spark` | src/App.tsx:1489 | ☐ |
-| 12 | Palette | "Exportar LocalDrawDB (Oracle)" runs export format `localdrawdb` with dialect `oracle` | src/App.tsx:1489 | ☐ |
-| 13 | Palette | "Exportar Spark DDL" runs export format `spark-ddl` | src/App.tsx:1489 | ☐ |
-| 14 | Palette | "Exportar Oracle DDL" runs export format `oracle-ddl` | src/App.tsx:1489 | ☐ |
-| 15 | Palette | "Exportar PostgreSQL DDL" runs export format `postgres-ddl` | src/App.tsx:1489 | ☐ |
-| 16 | Palette | "Exportar erwin (ANSI)" runs export format `erwin` | src/App.tsx:1489 | ☐ |
-| 17 | Palette | "Exportar dbt" runs export format `dbt` | src/App.tsx:1489 | ☐ |
-| 18 | Palette | "Exportar Mermaid" runs export format `mermaid` | src/App.tsx:1489 | ☐ |
-| 19 | Palette | "Exportar Dicionário de dados (XLSX)" runs export format `xlsx` | src/App.tsx:1489 | ☐ |
-| 20 | Palette | "Exportar Contexto para LLM (Markdown+JSON)" runs export format `llm-context` | src/App.tsx:1489 | ☐ |
-| 21 | Palette | "Importar (input/)" merges SQL from the project's `input/` into the DBML and may open the page wizard | src/App.tsx:1495 | ☐ |
-| 22 | Palette | "Undo" (Cmd/Ctrl+Z) restores the previous document/canvas snapshot | src/App.tsx:1501 | ☐ |
-| 23 | Palette | "Redo" (Cmd/Ctrl+Shift+Z) restores the next document/canvas snapshot | src/App.tsx:1508 | ☐ |
-| 24 | Palette | "Ligar Auto-save" / "Desligar Auto-save" toggles autosave (label depends on current state) | src/App.tsx:1515 | ☐ |
-| 25 | Palette | "Alternar modo linhagem" toggles lineage-edit mode on the canvas | src/App.tsx:1521 | ☐ |
-| 26 | Palette | "Abrir painel Camadas" / "Fechar painel Camadas" collapses or expands the Layers panel | src/App.tsx:1527 | ☐ |
-| 27 | Palette | "Abrir painel Dados" / "Fechar painel Dados" opens or closes the Records panel | src/App.tsx:1533 | ☐ |
-| 28 | Palette | "Abrir painel Problemas" / "Fechar painel Problemas" opens or closes the Problems popover | src/App.tsx:1539 | ☐ |
-| 29 | Palette | Choosing a table command focuses that table on the canvas, pans to it, and scrolls the DBML editor to its line | src/palette/registry.ts:106 | ☐ |
-| 30 | Palette | Choosing a column command focuses that table, selects the column, and scrolls the DBML editor to the column line | src/palette/registry.ts:118 | ☐ |
-| 31 | Shortcut | Cmd/Ctrl+S saves (same as palette "Salvar") | src/help/gestures.ts:51 | ☐ |
-| 32 | Shortcut | Cmd/Ctrl+Z undoes | src/help/gestures.ts:51 | ☐ |
-| 33 | Shortcut | Cmd/Ctrl+Shift+Z redoes | src/help/gestures.ts:51 | ☐ |
-| 34 | Shortcut | Cmd/Ctrl+K opens the command palette ("Buscar comandos e tabelas") | src/help/gestures.ts:21 | ☐ |
-| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | ☐ |
-| 36 | Shortcut | Escape clears selection / closes modals | src/help/gestures.ts:23 | ☐ |
-| 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☐ |
-| 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☐ |
+| 1 | Palette | Open the command palette from the toolbar "Buscar" button | src/App.tsx:1634 | ☑ |
+| 2 | Palette | Type in the palette search box to filter tables, columns, and actions (limit 12) | src/palette/CommandPalette.tsx:87 | ☑ |
+| 3 | Palette | Arrow Up/Down moves the highlighted result | src/palette/CommandPalette.tsx:56 | ☑ |
+| 4 | Palette | Enter runs the highlighted command and closes the palette | src/palette/CommandPalette.tsx:66 | ☑ |
+| 5 | Palette | Click a result runs that command and closes the palette | src/palette/CommandPalette.tsx:110 | ☑ |
+| 6 | Palette | Escape closes the palette | src/palette/CommandPalette.tsx:51 | ☑ |
+| 7 | Palette | Click outside the palette closes it | src/palette/CommandPalette.tsx:33 | ☑ |
+| 8 | Palette | "Salvar" (Cmd/Ctrl+S) reconciles editor edits then saves; if a rename modal opens, save is blocked | src/App.tsx:1470 | ☑ |
+| 9 | Palette | "Organizar DBML" rewrites the document as tables → refs → records | src/App.tsx:1477 | ☑ |
+| 10 | Palette | "Organizar canvas" runs autolayout (lineage stack when lineage mode is on) and fits the view | src/App.tsx:1483 | ☑ |
+| 11 | Palette | "Exportar LocalDrawDB (Spark)" runs export format `localdrawdb` with dialect `spark` | src/App.tsx:1489 | ☑ |
+| 12 | Palette | "Exportar LocalDrawDB (Oracle)" runs export format `localdrawdb` with dialect `oracle` | src/App.tsx:1489 | ☑ |
+| 13 | Palette | "Exportar Spark DDL" runs export format `spark-ddl` | src/App.tsx:1489 | ☑ |
+| 14 | Palette | "Exportar Oracle DDL" runs export format `oracle-ddl` | src/App.tsx:1489 | ☑ |
+| 15 | Palette | "Exportar PostgreSQL DDL" runs export format `postgres-ddl` | src/App.tsx:1489 | ☑ |
+| 16 | Palette | "Exportar erwin (ANSI)" runs export format `erwin` | src/App.tsx:1489 | ☑ |
+| 17 | Palette | "Exportar dbt" runs export format `dbt` | src/App.tsx:1489 | ☑ |
+| 18 | Palette | "Exportar Mermaid" runs export format `mermaid` | src/App.tsx:1489 | ☑ |
+| 19 | Palette | "Exportar Dicionário de dados (XLSX)" runs export format `xlsx` | src/App.tsx:1489 | ☑ |
+| 20 | Palette | "Exportar Contexto para LLM (Markdown+JSON)" runs export format `llm-context` | src/App.tsx:1489 | ☑ |
+| 21 | Palette | "Importar (input/)" merges SQL from the project's `input/` into the DBML and may open the page wizard | src/App.tsx:1495 | ☑ |
+| 22 | Palette | "Undo" (Cmd/Ctrl+Z) restores the previous document/canvas snapshot | src/App.tsx:1501 | ☑ |
+| 23 | Palette | "Redo" (Cmd/Ctrl+Shift+Z) restores the next document/canvas snapshot | src/App.tsx:1508 | ☑ |
+| 24 | Palette | "Ligar Auto-save" / "Desligar Auto-save" toggles autosave (label depends on current state) | src/App.tsx:1515 | ☑ |
+| 25 | Palette | "Alternar modo linhagem" toggles lineage-edit mode on the canvas | src/App.tsx:1521 | ☑ |
+| 26 | Palette | "Abrir painel Camadas" / "Fechar painel Camadas" collapses or expands the Layers panel | src/App.tsx:1527 | ☑ |
+| 27 | Palette | "Abrir painel Dados" / "Fechar painel Dados" opens or closes the Records panel | src/App.tsx:1533 | ☑ |
+| 28 | Palette | "Abrir painel Problemas" / "Fechar painel Problemas" opens or closes the Problems popover | src/App.tsx:1539 | ☑ |
+| 29 | Palette | Choosing a table command focuses that table on the canvas, pans to it, and scrolls the DBML editor to its line | src/palette/registry.ts:106 | ☑ |
+| 30 | Palette | Choosing a column command focuses that table, selects the column, and scrolls the DBML editor to the column line | src/palette/registry.ts:118 | ☑ |
+| 31 | Shortcut | Cmd/Ctrl+S saves (same as palette "Salvar") | src/help/gestures.ts:51 | ☑ |
+| 32 | Shortcut | Cmd/Ctrl+Z undoes | src/help/gestures.ts:51 | ☑ |
+| 33 | Shortcut | Cmd/Ctrl+Shift+Z redoes | src/help/gestures.ts:51 | ☑ |
+| 34 | Shortcut | Cmd/Ctrl+K opens the command palette ("Buscar comandos e tabelas") | src/help/gestures.ts:21 | ☑ |
+| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | ☑ |
+| 36 | Shortcut | Escape clears selection / closes modals | src/help/gestures.ts:23 | ☑ |
+| 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☑ |
+| 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☑ |
 | 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☐ |
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☐ |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☐ |

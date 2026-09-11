@@ -134,3 +134,11 @@ Linhas do inventário: 132–156, 177–183 exercitadas em teste; não marcadas
 Decisões que tomei sozinho: credencial nunca em useState
 Preocupações: delete some em vez de disabled com 1 projeto (comportamento LDB); tokenUrl ainda diz LocalDrawDB
 Bloqueio: —
+
+## Task 25 — DONE_WITH_CONCERNS
+Commit: (preenchido após o commit)
+Portões que EU rodei: `npx vitest run src/features/command-palette` → 45/45; `npm run test` → 107/771; `npm run typecheck` → 0; `npm run format:check` → 0; `npm run build` → 0 (46 módulos — App ainda não importa a paleta)
+Linhas do inventário: 38 checadas de 38 atribuídas (1–38)
+Decisões que tomei sozinho: navbar Export continua chip dbt stub — Task 25 Files não lista Navbar.tsx; ligar EXPORTERS no menu fica para o cutover 26. Save/import/autolayout são callbacks. Delete é opt-in (`removeSelectedRef`) para não duplicar o canvas. ⌘Y no listener e no overlay, não em `shortcutsFromCommands`.
+Preocupações: paleta e overlay não compostos no App. `EXPORTERS` é `{ id, labelKey, extension?, dialect? }`, não Structura `ExporterContribution`. `CANVAS_GESTURES` ficou em PT (porte verbatim).
+Bloqueio: —

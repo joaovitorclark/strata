@@ -182,5 +182,51 @@
     "duplicatePrompt": "Nome do projeto duplicado:",
     "duplicateDefault": "{{name}} (cópia)",
     "deleteConfirm": "Excluir o projeto \"{{name}}\"? Esta ação não pode ser desfeita."
+  },
+  "palette": {
+    "ariaLabel": "Command palette",
+    "placeholder": "Buscar tabela, coluna ou ação…",
+    "empty": "Nenhum resultado",
+    "kind": {
+      "table": "Tabela",
+      "column": "Coluna",
+      "action": "Ação"
+    }
+  },
+  "command": {
+    "save": "Salvar",
+    "organizeDbml": "Organizar DBML",
+    "organizeCanvas": "Organizar canvas",
+    "importInput": "Importar (input/)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "enableAutosave": "Ligar Auto-save",
+    "disableAutosave": "Desligar Auto-save",
+    "toggleLineageMode": "Alternar modo linhagem",
+    "toggleLineageModeActive": "Alternar modo linhagem",
+    "openLayersPanel": "Abrir painel Camadas",
+    "closeLayersPanel": "Fechar painel Camadas",
+    "openRecordsPanel": "Abrir painel Dados",
+    "closeRecordsPanel": "Fechar painel Dados",
+    "openProblemsPanel": "Abrir painel Problemas",
+    "closeProblemsPanel": "Fechar painel Problemas"
+  },
+  "export": {
+    "dbt": "Exportar dbt",
+    "sparkDdl": "Exportar Spark DDL",
+    "oracleDdl": "Exportar Oracle DDL",
+    "postgresDdl": "Exportar PostgreSQL DDL",
+    "erwin": "Exportar erwin (ANSI)",
+    "mermaid": "Exportar Mermaid",
+    "xlsx": "Exportar Dicionário de dados (XLSX)",
+    "llmContext": "Exportar Contexto para LLM (Markdown+JSON)",
+    "localdrawdbSpark": "Exportar LocalDrawDB (Spark)",
+    "localdrawdbOracle": "Exportar LocalDrawDB (Oracle)"
+  },
+  "help": {
+    "title": "Atalhos e gestos",
+    "shortcuts": "Atalhos",
+    "gestures": "Gestos do canvas",
+    "close": "Fechar"
   }
 }

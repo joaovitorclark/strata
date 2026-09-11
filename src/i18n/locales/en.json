@@ -182,5 +182,51 @@
     "duplicatePrompt": "Duplicated project name:",
     "duplicateDefault": "{{name}} (copy)",
     "deleteConfirm": "Delete project \"{{name}}\"? This cannot be undone."
+  },
+  "palette": {
+    "ariaLabel": "Command palette",
+    "placeholder": "Search table, column, or action…",
+    "empty": "No results",
+    "kind": {
+      "table": "Table",
+      "column": "Column",
+      "action": "Action"
+    }
+  },
+  "command": {
+    "save": "Save",
+    "organizeDbml": "Organize DBML",
+    "organizeCanvas": "Organize canvas",
+    "importInput": "Import (input/)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "enableAutosave": "Turn on Auto-save",
+    "disableAutosave": "Turn off Auto-save",
+    "toggleLineageMode": "Toggle lineage mode",
+    "toggleLineageModeActive": "Toggle lineage mode",
+    "openLayersPanel": "Open Layers panel",
+    "closeLayersPanel": "Close Layers panel",
+    "openRecordsPanel": "Open Records panel",
+    "closeRecordsPanel": "Close Records panel",
+    "openProblemsPanel": "Open Problems panel",
+    "closeProblemsPanel": "Close Problems panel"
+  },
+  "export": {
+    "dbt": "Export dbt",
+    "sparkDdl": "Export Spark DDL",
+    "oracleDdl": "Export Oracle DDL",
+    "postgresDdl": "Export PostgreSQL DDL",
+    "erwin": "Export erwin (ANSI)",
+    "mermaid": "Export Mermaid",
+    "xlsx": "Export data dictionary (XLSX)",
+    "llmContext": "Export LLM context (Markdown+JSON)",
+    "localdrawdbSpark": "Export LocalDrawDB (Spark)",
+    "localdrawdbOracle": "Export LocalDrawDB (Oracle)"
+  },
+  "help": {
+    "title": "Shortcuts and gestures",
+    "shortcuts": "Shortcuts",
+    "gestures": "Canvas gestures",
+    "close": "Close"
   }
 }
