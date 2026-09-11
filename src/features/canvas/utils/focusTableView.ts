@@ -25,7 +25,13 @@ export function diagramOverviewBounds(
   nodes: Node[],
   cap = FOCUS_HEIGHT_CAP,
 ): FlowBounds | null {
-  const visible = nodes.filter((n) => n.type === 'table' && !n.hidden && n.width && n.height);
+  const visible = nodes.filter(
+    (n) =>
+      n.type === 'table' &&
+      !n.hidden &&
+      (n.measured?.width ?? n.width) &&
+      (n.measured?.height ?? n.height),
+  );
   if (!visible.length) return null;
 
   let minX = Infinity;
@@ -34,8 +40,8 @@ export function diagramOverviewBounds(
   let maxY = -Infinity;
 
   for (const n of visible) {
-    const w = n.width ?? 0;
-    const h = Math.min(n.height ?? 0, cap);
+    const w = n.measured?.width ?? n.width ?? 0;
+    const h = Math.min(n.measured?.height ?? n.height ?? 0, cap);
     minX = Math.min(minX, n.position.x);
     minY = Math.min(minY, n.position.y);
     maxX = Math.max(maxX, n.position.x + w);
