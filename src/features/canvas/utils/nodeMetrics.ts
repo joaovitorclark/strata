@@ -1,4 +1,6 @@
 import type { TableView } from '@/features/schema/model/parse';
+import type { TableNodeData } from '../actions';
+import { lodHeight, type LodState } from './lod';
 import {
   COLUMN_VIRTUALIZE_THRESHOLD,
   COLUMN_VIRTUAL_ROW_H,
@@ -18,7 +20,7 @@ const LAYOUT_SAFETY = 16;
 const CHAR_W = 7;
 const HEADER_LINE_H = 20;
 
-export type NodeMetricsOpts = { compact?: boolean; /** Inclui folga para autolayout anti-colisão. */ layout?: boolean };
+export type NodeMetricsOpts = { compact?: boolean; /** Inclui folga para autolayout anti-colisão. */ layout?: boolean; state?: LodState };
 
 function compactInnerWidth(t: TableView, layout: boolean): number {
   const byChars = t.id.length * CHAR_W + 56;
@@ -51,6 +53,12 @@ export function nodeWidth(t: TableView, opts: NodeMetricsOpts = {}): number {
 
 /** Altura estimada do cartão. */
 export function nodeHeight(t: TableView, opts: NodeMetricsOpts = {}): number {
+  if (opts.state) {
+    let h = lodHeight(t as TableNodeData, opts.state);
+    if (opts.layout) h += LAYOUT_SAFETY;
+    return h;
+  }
+
   if (!opts.compact) {
     const colRows =
       t.columns.length > COLUMN_VIRTUALIZE_THRESHOLD

@@ -23,9 +23,17 @@ Preocupações: `diagramOverviewBounds` filtrava `n.width && n.height` — virar
 Bloqueio: —
 
 ## Task 12b — VERDE
-Commit: (this commit)
+Commit: `21ec034`
 Portões que EU rodei: `npm run test -- src/features/canvas` → 13 files / 64 tests; `npm run typecheck` → 0; `npm run format:check` → 0
 Linhas do inventário: 0
 Decisões que tomei sozinho: o loop de `diagramOverviewBounds` também passou a `measured?.width ?? width` (e height), não só o filtro. Sem isso um nó só-measured passaria o filtro e contribuiria largura 0. Mesma forma de `tableFocusBounds`.
 Preocupações: —
+Bloqueio: —
+
+## Task 13 — DONE_WITH_CONCERNS
+Commit: (pending)
+Portões que EU rodei: `npm run test -- src/features/canvas` → 14/72; typecheck 0; format:check 0; build 0
+Linhas do inventário: 0 checadas de 54 Canvas (sem canvas ao vivo; LOD só em teste)
+Decisões que tomei sozinho: `keyColumns` une `compositePks.flat()` — `tableMeta` só lê `ColumnView.pk`, o teste Step 7 falhou até o union (era o segundo caminho).
+Preocupações: prompts de rename em PT literal no TableNode (i18n fica para shell); chips externos omitidos; overscan 5 vs `COLUMN_VIRTUAL_OVERSCAN` 3
 Bloqueio: —
