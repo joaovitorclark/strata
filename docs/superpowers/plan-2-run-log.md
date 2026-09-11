@@ -144,7 +144,7 @@ Preocupações: paleta e overlay não compostos no App. `EXPORTERS` é `{ id, la
 Bloqueio: —
 
 ## Task 26 — DONE_WITH_CONCERNS
-Commit: (preenchido após o commit)
+Commit: `42c90d4`
 Portões que EU rodei: `npm run test` → 113/793; `npm run typecheck` → 0; `npm run format:check` → 0; `npm run build` → 2573 módulos, JS 12 163 kB (antes ~46 / ~198 kB — `@xyflow/react` no grafo)
 Linhas do inventário: 258 ☑ + 2 dropped / 260; 0 ☐
 Decisões que tomei sozinho: AppGate como no LDB (`main` → DomainPicker | App). Estado do documento em `documentSlice`. Menu Export = `EXPORTERS` (lista `<ul>`, não Radix — jsdom). Fallback de cor `hsl(var(--card))`. Canvas mockado só em AppShell/Workspace tests. Não passei `removeSelectedRef` à paleta.
