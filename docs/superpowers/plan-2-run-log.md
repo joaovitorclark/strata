@@ -37,3 +37,19 @@ Linhas do inventário: 0 checadas de 54 Canvas (sem canvas ao vivo; LOD só em t
 Decisões que tomei sozinho: `keyColumns` une `compositePks.flat()` — `tableMeta` só lê `ColumnView.pk`, o teste Step 7 falhou até o union (era o segundo caminho).
 Preocupações: prompts de rename em PT literal no TableNode (i18n fica para shell); chips externos omitidos; overscan 5 vs `COLUMN_VIRTUAL_OVERSCAN` 3
 Bloqueio: —
+
+## Task 14 — DONE_WITH_CONCERNS
+Commit: `91a8034`
+Portões que EU rodei: canvas 14/72; typecheck 0; format:check 0; build 0; grep hex em `components/` vazio
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: CSS das classes `edge--*` em `edgeClasses.css` (Canvas ainda não existe). Animação xyflow `.animated` desligada em FK via CSS, sem reescrever `useCanvasEdges`.
+Preocupações: `useCanvasEdges` ainda seta `animated` em FK; o CSS é que corta.
+Bloqueio: —
+
+## Task 15 — DONE_WITH_CONCERNS
+Commit: (pending-15)
+Portões que EU rodei: canvas 14/72; typecheck 0; format:check 0; build 0; hex vazio
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: `TABLE_COLORS` de `@/features/canvas/tableColors`; fallback de grupo `--layer-raw`.
+Preocupações: `layerColorOf` não chamado (cor vem de `data.color`); pointer-events do wrapper de grupo fica para Task 16
+Bloqueio: —
