@@ -55,7 +55,7 @@ Preocupações: `layerColorOf` não chamado (cor vem de `data.color`); pointer-e
 Bloqueio: —
 
 ## Task 16 — DONE_WITH_CONCERNS
-Commit: (pending-16)
+Commit: `61a1074`
 Portões que EU rodei: canvas 15/74; typecheck 0; format:check 0
 Linhas do inventário: 0 checadas de 54 Canvas (mount ReactFlow travou no jsdom)
 Decisões que tomei sozinho: omiti SelectionBar; `--brand-green` → `--primary`; teste sample.dbml é parse+registry, não mount 1px.
