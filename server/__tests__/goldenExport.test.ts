@@ -9,7 +9,6 @@ import { ROOT } from '../paths.ts';
 
 const GOLDEN_ROOT = path.join(ROOT, 'fixtures', 'golden');
 const SAMPLE_PATH = path.join(GOLDEN_ROOT, 'sample.dbml');
-const ORACLE_GOLDEN = path.join(GOLDEN_ROOT, 'localdrawdb', 'model_oracle.sql');
 
 let tmpDir: string;
 
@@ -101,14 +100,6 @@ function dialectOf(
 
 describe('golden export parity', () => {
   for (const exporter of EXPORTERS) {
-    if (
-      exporter.id === 'localdrawdb' &&
-      dialectOf(exporter) === 'oracle' &&
-      !existsSync(ORACLE_GOLDEN)
-    ) {
-      continue;
-    }
-
     it(`${exporterCommandId(exporter)} matches fixtures/golden/${exporter.id}/ byte-for-byte`, async () => {
       const { ensureRegistry, getActiveSlug, projectOutputDir } = await import('../files.ts');
       const { dbmlToModel } = await import('../dbmlIo.ts');
@@ -117,13 +108,18 @@ describe('golden export parity', () => {
       await ensureRegistry();
       const outputDir = projectOutputDir(await getActiveSlug());
       const dbml = await fs.readFile(SAMPLE_PATH, 'utf8');
+      const dialect = dialectOf(exporter);
       const written = await runExport(dbmlToModel(dbml), {
         format: exporter.id as ExportFormat,
-        dialect: dialectOf(exporter),
+        dialect,
       });
 
       const goldenDir = path.join(GOLDEN_ROOT, exporter.id);
-      const goldenRels = await walkFiles(goldenDir);
+      let goldenRels = await walkFiles(goldenDir);
+      // localdrawdb spark/oracle share this dir; each case writes one dialect file.
+      if (exporter.id === 'localdrawdb' && dialect) {
+        goldenRels = goldenRels.filter((rel) => rel === `model_${dialect}.sql`);
+      }
       const actualByRel = new Map<string, Buffer>();
       for (const file of written) {
         const rel = relUnderFormat(file, outputDir);

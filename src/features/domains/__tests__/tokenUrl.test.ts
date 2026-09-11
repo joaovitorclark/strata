@@ -3,11 +3,17 @@ import { buildTokenCreationUrl } from "../tokenUrl";
 
 describe("buildTokenCreationUrl", () => {
   it("GitHub", () => {
-    expect(buildTokenCreationUrl("github.com")).toContain("github.com/settings/tokens/new");
+    const url = buildTokenCreationUrl("github.com");
+    expect(url).toContain("github.com/settings/tokens/new");
+    expect(url).toContain("description=Strata");
+    expect(url).not.toContain("LocalDrawDB");
   });
 
   it("GitLab", () => {
-    expect(buildTokenCreationUrl("gitlab.com")).toContain("gitlab.com");
+    const url = buildTokenCreationUrl("gitlab.com");
+    expect(url).toContain("gitlab.com");
+    expect(url).toContain("name=Strata");
+    expect(url).not.toContain("LocalDrawDB");
   });
 
   it("Bitbucket", () => {
