@@ -63,7 +63,7 @@ Preocupações: MiniMap some >200 tabelas (spec) em vez do modo lite do LDB; Can
 Bloqueio: —
 
 ## Task 17 — DONE_WITH_CONCERNS
-Commit: (pending-17)
+Commit: `4dd8c7d`
 Portões que EU rodei: lodSlice 3/3 + interaction store; typecheck 0; format:check 0; useCanvasEdges intacto
 Linhas do inventário: 0 checadas de 54 Canvas
 Decisões que tomei sozinho: `enableMapSet` já ligado — não dupliquei. `meta.strata.pinned` só no tipo; export dbt não alterado (evitei round-trip novo).
