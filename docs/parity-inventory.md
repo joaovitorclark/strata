@@ -190,7 +190,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 178 | Panel:ProjectSwitcher | Click another project to switch to it | src/ProjectSwitcher.tsx:139 | ☑ |
 | 179 | Panel:ProjectSwitcher | Rename a project via the row edit control (prompt) | src/ProjectSwitcher.tsx:152 | ☑ |
 | 180 | Panel:ProjectSwitcher | Duplicate a project via the row control (prompt for the copy name) | src/ProjectSwitcher.tsx:162 | ☑ |
-| 181 | Panel:ProjectSwitcher | Delete a project via the row × (confirm; disabled when only one project exists) | src/ProjectSwitcher.tsx:174 | ☑ |
+| 181 | Panel:ProjectSwitcher | Delete a project via the row × (confirm; hidden when only one project exists) | src/ProjectSwitcher.tsx:174 | ☑ |
 | 182 | Panel:ProjectSwitcher | "Renomear projeto" in the footer renames the current project | src/ProjectSwitcher.tsx:189 | ☑ |
 | 183 | Panel:ProjectSwitcher | When the instance is pinned, only the pin label and rename control are shown | src/ProjectSwitcher.tsx:96 | ☑ |
 | 184 | Export | Format `localdrawdb`: writes `output/localdrawdb/model_spark.sql` or `model_oracle.sql` depending on dialect (`spark` default, `oracle`). Warnings from `exportInputL2Warning`: (1) no LineageFields but L1 Lineage exists; (2) no Lineage and no LineageFields; (3) N silver columns without L2 mapping | server/exportDispatch.ts:35 | ☑ |
@@ -202,7 +202,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 190 | Export | Format `mermaid`: writes `output/mermaid/modelo.mmd`. No L2 warning. | server/exportDispatch.ts:70 | ☑ |
 | 191 | Export | Format `xlsx`: writes `output/xlsx/dicionario.xlsx`. No L2 warning. | server/exportDispatch.ts:74 | ☑ |
 | 192 | Export | Format `llm-context`: writes `output/llm/contexto.md`. No L2 warning. | server/exportDispatch.ts:79 | ☑ |
-| 193 | Export | Toolbar "Exportar" menu lists the same ten options and runs the matching format | src/ExportMenu.tsx:50 | ☑ |
+| 193 | Export | Toolbar "Exportar" menu lists the same ten options and runs the matching format | src/ExportMenu.tsx:50 | ☐ (menu open — Plan 3; Radix DropdownMenu does not open in jsdom; trigger + EXPORTERS(10) verified) |
 | 194 | Git | View current branch, dirty/ahead/behind summary on the GitPanel trigger | server/git.ts:165 | ☑ |
 | 195 | Git | Switch to an existing branch (`git switch`) | server/git.ts:183 | ☑ |
 | 196 | Git | Create a branch (`git switch -c`); if HEAD is unborn, a first commit is created first | server/git.ts:188 | ☑ |
@@ -282,7 +282,14 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 
 Code wired is not behaviour verified. Rows whose ☑ came from inspecting Canvas.tsx / wiring Workspace, not from driving the gesture, went back to ☐ with `(needs live ReactFlow — Plan 3)`.
 
-**Count: 202 ☑ · 56 ☐ · 2 dropped.**
+**Count after Task 29: 202 ☑ · 56 ☐ · 2 dropped.**
+
+Wave M follow-ups (not Task 29):
+
+- **181** — inventory text was wrong. LocalDrawDB and Strata both **hide** the row × when `projects.length === 1`; they do not disable it. The ☑ stays (jsdom: `ProjectSwitcher.test.tsx`).
+- **193** → ☐ after Task 30 restored Radix. Opening the menu is Plan 3.
+
+**Count after Task 30: 201 ☑ · 57 ☐ · 2 dropped.**
 
 | Set | Decision |
 | --- | --- |

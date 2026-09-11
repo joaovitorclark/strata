@@ -168,9 +168,80 @@ Preocupações: host Node v24.5.0 vs pin 22.11.0 — risco SEA (`STATUS_ACCESS_V
 Bloqueio: —
 
 ## Task 29 — VERDE
-Commit: (preenchido após o commit)
+Commit: `182cca3`
 Portões que EU rodei: contagem no markdown — 202 ☑, 56 ☐, 2 dropped (219, 244). Soma 260.
 Linhas do inventário: 202 checadas de 260 (honestas)
 Decisões que tomei sozinho: 1–34 e 36–38 ficam ☑ — o jsdom da paleta clicou, filtrou e disparou atalhos, não foi inspeção estrutural. 35 volta a ☐ (Workspace não passa `removeSelectedRef`). 247 volta a ☐ (só `shouldPanToTable`). 39–92 inteiras ☐.
 Preocupações: o número piorou de propósito (258→202). Painéis que disparam `onFocusTable` mockado continuam ☑ no controle do painel; o pan em si é linha Canvas.
 Bloqueio: —
+
+---
+
+## Onda M (Tasks 29–34)
+
+Corretiva do Plano 2. Sem Cypress, sem canvas ao vivo, sem build Windows.
+
+### Contagem verdadeira do inventário (Task 29)
+
+**202 ☑ · 56 ☐ · 2 dropped** (219 PNG, 244 resizer). Soma 260.
+
+O 258/260 do cutover estava superestimado: 54 linhas de Canvas + 35 + 247 tinham ☑ por inspeção de código. Depois da Task 30 a linha **193** (abrir o menu Export) volta a ☐ — Radix não abre no jsdom — e o placar fica **201 ☑ · 57 ☐ · 2 dropped**. O Plano 3 precisa das ~54 linhas de Canvas mais abertura do menu Export.
+
+### Golden dbt (Task 32)
+
+Regeneração **intencional**, não fixture consertado para passar.
+
+| Arquivo | SHA-256 | Mudança |
+| --- | --- | --- |
+| `fixtures/golden/dbt/models/loja/schema.yml` | `287082a8…4b465edb` | `meta.strata.pinned: []` em `pedido` |
+| `fixtures/golden/dbt/models/loja/sources.yml` | `88846b38…14e44cad` | `meta.strata.pinned: []` em `cliente` |
+| `dbt_project.yml` / `pedido.sql` | inalterados | — |
+
+dbtExport passa a emitir `strata.pinned` sempre (lista vazia se não houver pins). dbtImport lê de volta para `Table.dbtMeta`. Round-trip estendido em `dbtMetaRoundtrip.test.ts`. Pins da sessão também vão em `canvas.json` (`CanvasState.pinnedByTable`) para o Keys LOD sobreviver ao reload.
+
+### ProjectSwitcher (Task 33a)
+
+O **inventário estava errado**. `$LDB/src/ProjectSwitcher.tsx:167` faz `{projects.length > 1 && (` — o × **some**, não fica `disabled`. Strata já copiava isso (`ProjectSwitcher.tsx:216`). Componente intocado; texto da linha 181 corrigido para "hidden".
+
+---
+
+## Task 30 — VERDE
+Commit: `df15e03`
+Portões que EU rodei: suíte completa na Task 34
+Linhas do inventário: **193** → ☐ (abrir o menu é Plano 3)
+Decisões que tomei sozinho: teste extra lê o source de `Navbar.tsx` para garantir DropdownMenu+EXPORTERS e a ausência de `<ul role="menu">`. Não assertei `aria-expanded` / menuitem no jsdom. `handleExportOption("dbt")` via `renderHook` em Workspace.test.
+Preocupações: —
+Bloqueio: —
+
+## Task 31 — DONE_WITH_CONCERNS
+Commit: `e04295a`
+Portões que EU rodei: autolayout+nodeMetrics+lod+geometry 36/36; `autolayout.test.ts` continua 414 linhas, asserções intocadas; typecheck 0
+Linhas do inventário: 0 checadas (pintura/layout ainda precisam de ReactFlow ao vivo)
+Decisões que tomei sozinho: `rowHeightForDensity` (cozy 25 / compact 21); `COLUMN_VIRTUAL_ROW_H` permanece 25. `autolayoutPositions` / `autolayoutLineagePositions` ganharam `density` opcional default `'cozy'` — a matemática não foi reescrita. `handleAutolayout` passa `density` do `useState` do Workspace.
+Preocupações: `--row-h` é setado no wrap do Canvas; `ColumnRow` usa pixels JS (`useCanvasRowH`) para bater com `lodHeight`/`nodeHeight`. SchemaTree ainda hard-coda `COLUMN_VIRTUAL_ROW_H`. Resize manual de nó não encolhe ao trocar compact. Export UI não envia pins (Task 32).
+Bloqueio: —
+
+## Task 32 — DONE_WITH_CONCERNS
+Commit: `6278da0`
+Portões que EU rodei: dbtMetaRoundtrip + goldenExport no lote da Onda M; suíte na 34
+Linhas do inventário: n/a (interop)
+Decisões que tomei sozinho: `meta.strata` é irmão de `meta.localdrawdb`, sempre presente. Pins da UI vivem em `lodSlice.pinnedByTable` e `canvas.json`; o exporter lê `Table.dbtMeta.strata.pinned` (round-trip dbt). Golden regenerado de propósito.
+Preocupações: `exportFormat(dbml)` **não** manda `pinnedByTable` — schema.yml do menu Export sai com `pinned: []` até as pins estarem no model. Reload do app **sim** via canvas.json. Rename/delete de tabela não migra chaves de pin. `modelToDbml` ainda serializa `dbtMeta.strata` como `[object Object]` (pré-existente).
+Bloqueio: —
+
+## Task 33 — VERDE
+Commit: `f61826b`
+Portões que EU rodei: tokenUrl + ProjectSwitcher + goldenExport no lote; suíte na 34
+Linhas do inventário: **181** texto corrigido (☑ permanece)
+Decisões que tomei sozinho: deixei "LocalDrawDB (Spark/Oracle)" como **nome do formato** em i18n/`EXPORTERS`. Removi o skip de oracle ausente no `goldenExport.test.ts` — a fixture existe; se sumir, o teste falha. Spark golden intacto (`24224f46…c93f9adc`). Oracle: `f046b25c…8719afd` (589 B).
+Preocupações: `grep LocalDrawDB src/` ainda encontra o nome do formato, comentários de proveniência, e `exportLocalDrawDB`.
+Bloqueio: —
+
+## Task 34 — VERDE
+Commit: (este commit)
+Portões que EU rodei: `npm run test` → 123 files / 855 tests; `npm run typecheck` → 0; `npm run format:check` → 0
+Linhas do inventário: placar após 29 = 202/56/2; após 30 linha 193 = 201/57/2
+Decisões que tomei sozinho: inventário 181+193 no commit de log (orquestrador); commits 30–33 separados por arquivo.
+Preocupações: suíte 855 vs 842 no fechamento do Plano 2 — testes novos das tasks 30–33, não Cypress.
+Bloqueio: —
+
