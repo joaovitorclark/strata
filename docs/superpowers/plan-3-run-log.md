@@ -40,7 +40,7 @@ Preocupações: —
 Bloqueio: —
 
 ## Task 39 — VERMELHO no node-height (premissa cumprida)
-Commit: *(este commit)*
+Commit: `d1a2302`
 Portões que EU rodei: `npm run cy:run:stress` → large 3/3, wide 3/3, node-height 0/1.
 Linhas do inventário: n/a (Task 40).
 Decisões que tomei sozinho: fixture `large` tem 200 tabelas; Canvas usa `<= MINIMAP_MAX_TABLES` / `<= SKIP_INITIAL_FIT_TABLES`, então minimap **aparece** e fitView **roda** (zoom 0.25). Spec observou o `<=`, não reescreveu Canvas. Filtro `_at` trocado por `c18`. Scroll 80px (overscan) — 500px desmontava o handle e a aresta. Altura: spec permanece vermelho.
@@ -61,6 +61,19 @@ Tabela node-height (suite completa):
 Corrida isolada anterior: hub/full **181** (−229). Altura full não é estável. TableNode/nodeMetrics **não** alterados.
 Preocupações: `cy:run:stress` não fica verde enquanto o spec de altura existir — isso é o ponto da premissa.
 Bloqueio: —
+
+## Task 40 — VERDE (contagem honesta, abaixo do Plan 2)
+Commit: *(preenchido após o commit)*
+Portões que EU rodei: inventário relido contra specs que **rodaram**.
+Linhas: ☑ **57, 64, 72, 193** (nome do spec no campo Verified). Dropped **35, 44, 45**. Remaining ☐ each with a reason.
+```
+Baseline (after Wave M task 30):  ☑ 201   ☐ 57   dropped 2
+After Plan 3 Task 40:             ☑ 205   ☐ 50   dropped 5
+```
+Plan 2 claimed 258 ☑. **205 is lower.** That is the plan working.
+Decisões: não tiquei 73 (click sem scroll do editor), 46 (Escape só tabela), 76 (só zoom). 1–7/29–34/36–38 já eram ☑ jsdom; ganharam o nome do spec live sem mudar a contagem.
+Bloqueio: —
+
 
 
 
