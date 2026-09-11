@@ -78,5 +78,109 @@
       "apply": "Aplicar",
       "keepSeparate": "Manter separado"
     }
+  },
+  "panels": {
+    "records": {
+      "toggle": "Dados (amostra) · {{count}} tabela(s)",
+      "tableNote": "Nota da tabela",
+      "tableNotePlaceholder": "Descrição ou contexto da tabela…",
+      "columnNote": "Nota · {{column}}",
+      "columnNotePlaceholder": "Descrição da coluna…",
+      "l1Title": "Origem L1",
+      "l2Title": "Origem L2 (campo)",
+      "constraints": "Constraints",
+      "via": "via {{col}}",
+      "goTo": "Ir para {{table}}",
+      "rows": "{{count}} linhas"
+    },
+    "statusLog": {
+      "tooltip": "Histórico de status (últimos 100)",
+      "empty": "Sem registros nesta sessão"
+    },
+    "pageImport": {
+      "title": "Diagrama grande ({{count}} tabelas)",
+      "body": "O modelo completo fica no editor. Marque os assuntos (TableGroups) que deseja abrir no canvas — nada vem selecionado por padrão para evitar travar a interface.",
+      "legend": "Assuntos no canvas",
+      "allTables": "Todas as tabelas (pode ficar lento)",
+      "openCanvas": "Abrir canvas",
+      "later": "Depois"
+    },
+    "columnMappings": {
+      "title": "Mapeamentos (L2)",
+      "empty": "Nenhum mapeamento para este campo",
+      "edit": "Editar mapeamento",
+      "new": "Novo mapeamento",
+      "remove": "Remover mapeamento",
+      "sourceTable": "Tabela origem",
+      "sourceColumn": "Coluna origem",
+      "choose": "— escolher —",
+      "dash": "—",
+      "etlNote": "Nota ETL",
+      "etlPlaceholder": "regra de negócio",
+      "ref": "Ref (sql/py)",
+      "refPlaceholder": "jobs/transform.sql",
+      "add": "+ mapeamento"
+    }
+  },
+  "domains": {
+    "git": {
+      "operations": "Operações git",
+      "current": "{{name}} (atual)",
+      "newBranch": "nova-branch",
+      "createBranch": "Criar branch",
+      "commitMessage": "mensagem do commit",
+      "commit": "commit",
+      "commitRequired": "Mensagem de commit é obrigatória.",
+      "pull": "pull",
+      "push": "push",
+      "openPr": "Abrir PR",
+      "credentials": "Credenciais",
+      "switched": "Na branch {{name}}.",
+      "committed": "Commit criado.",
+      "pulled": "Atualizado.",
+      "pushed": "Enviado.",
+      "noPrUrl": "Sem link automático para este host — faça push e abra o PR manualmente.",
+      "fallbackHost": "seu provedor git"
+    },
+    "picker": {
+      "choose": "Escolha um domínio",
+      "back": "← Domínios",
+      "newLocal": "+ Novo domínio local",
+      "cloneRepo": "+ Clonar repositório",
+      "domainName": "Nome do domínio",
+      "repoUrl": "URL do repositório (https ou ssh)",
+      "create": "Criar",
+      "removeTitle": "Remover deste computador",
+      "removeAria": "Remover {{name}}",
+      "removeConfirm": "Apagar \"{{name}}\" deste computador? O repositório no GitHub não será alterado.",
+      "attachRepo": "Anexar repositório",
+      "attachTitle": "Versionar este domínio com git",
+      "remoteOptional": "URL do remote (opcional — https ou ssh)",
+      "confirm": "Confirmar",
+      "newProject": "Nome do novo projeto",
+      "newProjectButton": "+ Novo projeto"
+    },
+    "credentials": {
+      "title": "Configurar acesso a {{host}}",
+      "intro": "Para publicar/atualizar por HTTPS, {{host}} pede um <bold>token de acesso pessoal</bold> no lugar de senha. Gere um token e cole abaixo.",
+      "openTokenPage": "Abrir página de criar token em {{host}}",
+      "unknownHost": "Gere um token de acesso pessoal com permissão de repositório no seu provedor ({{host}}).",
+      "username": "Usuário",
+      "token": "Token"
+    }
+  },
+  "projects": {
+    "switch": "Trocar projeto",
+    "pinnedTitle": "Instância fixada neste projeto (porta dedicada)",
+    "rename": "Renomear",
+    "renameProject": "Renomear projeto",
+    "duplicate": "Duplicar",
+    "delete": "Excluir",
+    "unsaved": "Não salvo",
+    "renamePrompt": "Novo nome do projeto:",
+    "createPrompt": "Nome do novo projeto:",
+    "duplicatePrompt": "Nome do projeto duplicado:",
+    "duplicateDefault": "{{name}} (cópia)",
+    "deleteConfirm": "Excluir o projeto \"{{name}}\"? Esta ação não pode ser desfeita."
   }
 }

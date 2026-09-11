@@ -78,5 +78,109 @@
       "apply": "Apply",
       "keepSeparate": "Keep separate"
     }
+  },
+  "panels": {
+    "records": {
+      "toggle": "Sample data · {{count}} table(s)",
+      "tableNote": "Table note",
+      "tableNotePlaceholder": "Table description or context…",
+      "columnNote": "Note · {{column}}",
+      "columnNotePlaceholder": "Column description…",
+      "l1Title": "L1 source",
+      "l2Title": "L2 source (field)",
+      "constraints": "Constraints",
+      "via": "via {{col}}",
+      "goTo": "Go to {{table}}",
+      "rows": "{{count}} rows"
+    },
+    "statusLog": {
+      "tooltip": "Status history (last 100)",
+      "empty": "No records in this session"
+    },
+    "pageImport": {
+      "title": "Large diagram ({{count}} tables)",
+      "body": "The full model stays in the editor. Check the subjects (TableGroups) to open on the canvas — nothing is selected by default so the UI does not freeze.",
+      "legend": "Subjects on the canvas",
+      "allTables": "All tables (may be slow)",
+      "openCanvas": "Open canvas",
+      "later": "Later"
+    },
+    "columnMappings": {
+      "title": "Mappings (L2)",
+      "empty": "No mappings for this field",
+      "edit": "Edit mapping",
+      "new": "New mapping",
+      "remove": "Remove mapping",
+      "sourceTable": "Source table",
+      "sourceColumn": "Source column",
+      "choose": "— choose —",
+      "dash": "—",
+      "etlNote": "ETL note",
+      "etlPlaceholder": "business rule",
+      "ref": "Ref (sql/py)",
+      "refPlaceholder": "jobs/transform.sql",
+      "add": "+ mapping"
+    }
+  },
+  "domains": {
+    "git": {
+      "operations": "Git operations",
+      "current": "{{name}} (current)",
+      "newBranch": "new-branch",
+      "createBranch": "Create branch",
+      "commitMessage": "commit message",
+      "commit": "commit",
+      "commitRequired": "Commit message is required.",
+      "pull": "pull",
+      "push": "push",
+      "openPr": "Open PR",
+      "credentials": "Credentials",
+      "switched": "On branch {{name}}.",
+      "committed": "Commit created.",
+      "pulled": "Updated.",
+      "pushed": "Pushed.",
+      "noPrUrl": "No automatic link for this host — push and open the PR manually.",
+      "fallbackHost": "your git provider"
+    },
+    "picker": {
+      "choose": "Choose a domain",
+      "back": "← Domains",
+      "newLocal": "+ New local domain",
+      "cloneRepo": "+ Clone repository",
+      "domainName": "Domain name",
+      "repoUrl": "Repository URL (https or ssh)",
+      "create": "Create",
+      "removeTitle": "Remove from this computer",
+      "removeAria": "Remove {{name}}",
+      "removeConfirm": "Delete \"{{name}}\" from this computer? The GitHub repository will not be changed.",
+      "attachRepo": "Attach repository",
+      "attachTitle": "Version this domain with git",
+      "remoteOptional": "Remote URL (optional — https or ssh)",
+      "confirm": "Confirm",
+      "newProject": "New project name",
+      "newProjectButton": "+ New project"
+    },
+    "credentials": {
+      "title": "Configure access to {{host}}",
+      "intro": "To publish/update over HTTPS, {{host}} asks for a <bold>personal access token</bold> instead of a password. Generate a token and paste it below.",
+      "openTokenPage": "Open the token creation page on {{host}}",
+      "unknownHost": "Generate a personal access token with repository permission at your provider ({{host}}).",
+      "username": "Username",
+      "token": "Token"
+    }
+  },
+  "projects": {
+    "switch": "Switch project",
+    "pinnedTitle": "Instance pinned to this project (dedicated port)",
+    "rename": "Rename",
+    "renameProject": "Rename project",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "unsaved": "Unsaved",
+    "renamePrompt": "New project name:",
+    "createPrompt": "New project name:",
+    "duplicatePrompt": "Duplicated project name:",
+    "duplicateDefault": "{{name}} (copy)",
+    "deleteConfirm": "Delete project \"{{name}}\"? This cannot be undone."
   }
 }
