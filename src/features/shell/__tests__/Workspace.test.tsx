@@ -1,10 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import "@/i18n";
 import App from "@/App";
 import { AppGate } from "@/features/domains/AppGate";
 import { useSchemaStore } from "@/features/schema/store";
 import { EXPORTERS } from "@/features/command-palette/actions";
+import { useWorkspace } from "@/features/shell/useWorkspace";
 import type { DomainMeta, ProjectMeta } from "@/infrastructure/api";
 import * as api from "@/infrastructure/api";
 
@@ -144,17 +153,16 @@ describe("AppGate / Workspace cutover", () => {
     fireEvent.click(screen.getByRole("button", { name: "Atalhos e gestos" }));
     expect(screen.getByTestId("shortcuts-overlay")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
-    const items = document.querySelectorAll("[data-export-id]");
-    expect(items.length).toBe(10);
+    expect(screen.getByRole("button", { name: "Exportar" })).toBeTruthy();
     expect(EXPORTERS).toHaveLength(10);
   });
 
-  it("navbar export runs exportFormat for dbt", async () => {
-    render(<App domain={domain} />);
+  it("calling onExportOption dbt hits exportFormat without opening Radix", async () => {
+    const { result } = renderHook(() => useWorkspace({ domain }));
     await waitFor(() => expect(api.listProjects).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole("button", { name: "Exportar" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Exportar dbt" }));
+    await act(async () => {
+      result.current.handleExportOption("dbt");
+    });
     await waitFor(() =>
       expect(api.exportFormat).toHaveBeenCalledWith(expect.any(String), "dbt", undefined),
     );

@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Moon, Search, Share2, Sun, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EXPORTERS, exporterCommandId } from "@/features/command-palette/actions";
 import {
@@ -83,27 +89,9 @@ export function Navbar({
 }: NavbarProps = {}) {
   const { t } = useTranslation();
   const [theme, setTheme] = useState<ThemeName>(() => resolveTheme(readStoredTheme()));
-  const [exportOpen, setExportOpen] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
   const shortcut = isMacPlatform() ? "⌘K" : "Ctrl+K";
   const nextTheme: ThemeName = theme === "dark" ? "light" : "dark";
   const ThemeIcon = theme === "dark" ? Sun : Moon;
-
-  useEffect(() => {
-    if (!exportOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExportOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [exportOpen]);
 
   const toggleTheme = () => {
     setTheme(nextTheme);
@@ -195,56 +183,39 @@ export function Navbar({
           </Tooltip>
 
           {onExportOption ? (
-            <div ref={exportRef} className="relative">
-              <button
-                type="button"
-                aria-label={t("shell.export")}
-                aria-expanded={exportOpen}
-                aria-haspopup="menu"
-                data-export-menu="trigger"
-                onClick={() => setExportOpen((open) => !open)}
-                className={cn(
-                  FOCUS,
-                  "inline-flex h-8 items-center gap-1.5 rounded-md border border-input",
-                  "bg-background px-2.5 text-sm hover:bg-accent hover:text-accent-foreground",
-                )}
-              >
-                {t("shell.export")}
-                <span className="rounded-sm bg-primary/15 px-1.5 py-px text-2xs font-medium text-primary">
-                  {t("shell.exportFormatDbt")}
-                </span>
-              </button>
-              {exportOpen ? (
-                <ul
-                  role="menu"
-                  data-export-menu="list"
-                  className="absolute right-0 z-50 mt-1 min-w-64 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t("shell.export")}
+                  className={cn(
+                    FOCUS,
+                    "inline-flex h-8 items-center gap-1.5 rounded-md border border-input",
+                    "bg-background px-2.5 text-sm hover:bg-accent hover:text-accent-foreground",
+                  )}
                 >
-                  {EXPORTERS.map((exporter) => (
-                    <li key={exporterCommandId(exporter)} role="none">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        data-export-id={exporterCommandId(exporter)}
-                        className={cn(
-                          FOCUS,
-                          "flex w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent",
-                        )}
-                        onClick={() => {
-                          setExportOpen(false);
-                          onExportOption(
-                            exporter.id,
-                            "dialect" in exporter ? exporter.dialect : undefined,
-                          );
-                        }}
-                      >
-                        {t(exporter.labelKey)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
+                  {t("shell.export")}
+                  <span className="rounded-sm bg-primary/15 px-1.5 py-px text-2xs font-medium text-primary">
+                    {t("shell.exportFormatDbt")}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-64">
+                {EXPORTERS.map((exporter) => (
+                  <DropdownMenuItem
+                    key={exporterCommandId(exporter)}
+                    onSelect={() => {
+                      onExportOption(
+                        exporter.id,
+                        "dialect" in exporter ? exporter.dialect : undefined,
+                      );
+                    }}
+                  >
+                    {t(exporter.labelKey)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <button
               type="button"
