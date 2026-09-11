@@ -75,14 +75,14 @@ Decisões: não tiquei 73 (click sem scroll do editor), 46 (Escape só tabela), 
 Bloqueio: —
 
 ## Task 41 — BLOCKED (ambiente)
-Commit: *(este commit)*
+Commit: `39dcb92`
 Portões que EU rodei: host `Darwin` (uname -s); `node -v` = **v24.5.0** (o pin do pacote Windows é **22.11.0** em `scripts/build-win/fetchNode.mjs`); nvm local só tem v23.5.0 — **22.11.0 não está instalado**. `dist-win/LocalDrawDB-win.zip` existe (104.5 MB, Plan 2 Task 28) mas **não foi lançado**. Não há `.github/workflows`. Não há wine. Não há máquina/VM/runner Windows neste ambiente.
 Não reconstruí o zip neste host: gerar o blob SEA com Node 24.5.0 contra `node.exe` 22.11.0 é o crash `STATUS_ACCESS_VIOLATION` que o README descreve.
 O gate da Task 28 (**o artefato portátil corre**) **não está satisfeito**. Verificação bloqueada em ambiente, não em silêncio.
 Bloqueio: Darwin + Node 24.5.0 ≠ 22.11.0 + ausência de Windows.
 
 ## Task 42 — VERDE (só mediu; sem code splitting)
-Commit: *(este commit)*
+Commit: `39dcb92`
 Portões que EU rodei: `npm run build` (typecheck + vite) → 0. Um único JS chunk.
 
 Chunks > 200 KB gzip:
