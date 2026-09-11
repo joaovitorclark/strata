@@ -136,7 +136,7 @@ Preocupações: delete some em vez de disabled com 1 projeto (comportamento LDB)
 Bloqueio: —
 
 ## Task 25 — DONE_WITH_CONCERNS
-Commit: (preenchido após o commit)
+Commit: `e3815d8`
 Portões que EU rodei: `npx vitest run src/features/command-palette` → 45/45; `npm run test` → 107/771; `npm run typecheck` → 0; `npm run format:check` → 0; `npm run build` → 0 (46 módulos — App ainda não importa a paleta)
 Linhas do inventário: 38 checadas de 38 atribuídas (1–38)
 Decisões que tomei sozinho: navbar Export continua chip dbt stub — Task 25 Files não lista Navbar.tsx; ligar EXPORTERS no menu fica para o cutover 26. Save/import/autolayout são callbacks. Delete é opt-in (`removeSelectedRef`) para não duplicar o canvas. ⌘Y no listener e no overlay, não em `shortcutsFromCommands`.
