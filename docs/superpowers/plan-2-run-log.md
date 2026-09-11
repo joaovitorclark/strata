@@ -77,3 +77,35 @@ Linhas do inventário: 0
 Decisões que tomei sozinho: slot canvas vazio (Canvas exige props de documento). Tema dark/light sem next-themes (matchMedia quebra jsdom).
 Preocupações: navbar/statusbar auto=0px até 19–22
 Bloqueio: —
+
+## Task 19 — DONE_WITH_CONCERNS
+Commit: (pending-19)
+Portões que EU rodei: suíte 85/608; typecheck 0; format:check 0; pickTooltipSide ausente de src/
+Linhas do inventário: 0 checadas de 18 (Shortcut+Export) — UI existe, atalhos globais são Task 25
+Decisões que tomei sozinho: **DROP pickTooltipSide** — Radix Tooltip já faz collision detection; não portei Tooltip.tsx nem tooltip.test.ts.
+Preocupações: chrome não composto no AppShell (agentes proibidos de editar App.tsx)
+Bloqueio: —
+
+## Task 20 — DONE_WITH_CONCERNS
+Commit: (pending-20)
+Portões que EU rodei: SchemaTree testa 500 linhas + selectTable; computeVirtualWindow reusado
+Linhas do inventário: 0 de 0
+Decisões que tomei sozinho: prova de 500 é teste jsdom (não 60fps). Camada desconhecida → `--layer-raw`.
+Preocupações: não montado no slot tree
+Bloqueio: —
+
+## Task 21 — DONE_WITH_CONCERNS
+Commit: (pending-21)
+Portões que EU rodei: Inspector.test verde
+Linhas do inventário: 0 checadas de 13 (Panel:ColumnPanel+TableInfoPopover) — inspector mostra TableMeta, não é o ColumnPanel mutável
+Decisões que tomei sozinho: omiti `TableMeta.has` (flag do ⓘ). tableMeta via prop.
+Preocupações: ColumnPanel (mutação) é Task 23
+Bloqueio: —
+
+## Task 22 — DONE_WITH_CONCERNS
+Commit: (pending-22)
+Portões que EU rodei: Outline.virtualize + syncEditorCanvas verdes; --syn-* no highlight
+Linhas do inventário: 0 checadas de 28 (Editor+DbmlDiff) — drawer não montado
+Decisões que tomei sozinho: CodeMirror via @uiw/react-codemirror 4.x + @codemirror/* 6.x
+Preocupações: applyRenames reescrito no drawer; App.tsx não monta SourceDrawer
+Bloqueio: —

@@ -2,12 +2,81 @@
   "app": { "name": "Strata" },
   "theme": { "dark": "Escuro", "light": "Claro" },
   "common": { "cancel": "Cancelar", "save": "Salvar", "close": "Fechar" },
+  "shell": {
+    "breadcrumb": "Projeto",
+    "search": "Buscar",
+    "themeToggle": "Alternar tema",
+    "export": "Exportar",
+    "exportFormatDbt": "dbt",
+    "share": "Compartilhar",
+    "avatar": "Conta",
+    "rail": {
+      "tables": "Tabelas",
+      "layers": "Camadas",
+      "lineage": "Linhagem",
+      "code": "Código",
+      "search": "Buscar",
+      "settings": "Configurações"
+    },
+    "problems": "Problemas",
+    "problemsLabel": "Problemas {{count}}",
+    "dbml": "DBML",
+    "zoomOut": "Reduzir zoom",
+    "zoomIn": "Aumentar zoom",
+    "fitView": "Ajustar à tela",
+    "density": "Densidade",
+    "densityCompact": "Compacto",
+    "densityCozy": "Confortável",
+    "schemaTree": {
+      "title": "Esquema",
+      "ungrouped": "public"
+    },
+    "inspector": {
+      "title": "Propriedades",
+      "empty": "Selecione uma tabela",
+      "close": "Fechar inspetor",
+      "table": "Tabela",
+      "layer": "Camada",
+      "noLayer": "Sem camada",
+      "columns": "Colunas",
+      "primaryKey": "Chave primária",
+      "foreignKeys": "Chaves estrangeiras",
+      "materialization": "Materialização",
+      "tags": "Tags",
+      "colour": "Cor",
+      "noColour": "Sem cor",
+      "sources": "Sources (linhagem)",
+      "sample": "Exemplo de dados",
+      "referencedBy": "referenciada por",
+      "comments": "Comentários",
+      "resourceType": "Tipo",
+      "column": "Coluna"
+    }
+  },
   "canvas": {
     "edges": {
       "removeRelation": "Remover relação",
       "removeLineage": "Remover linhagem",
       "derivedFrom": "derivado de",
       "externalLinks": "{{count}} ligações → {{label}}"
+    }
+  },
+  "source": {
+    "outline": "Outline",
+    "outlineFilter": "Filtrar blocos…",
+    "outlineResize": "Redimensionar painel de outline",
+    "format": "Formatar",
+    "copy": "Copiar",
+    "placeholder": "Defina suas tabelas em DBML…\n\nTable schema.tabela {\n  id bigint [pk]\n  nome string\n}",
+    "errorGoTo": "Ir para linha do erro",
+    "diff": "Diff",
+    "diffTitle": "Diff DBML",
+    "rename": {
+      "title": "Confirmar renomeação",
+      "hint": "Atualiza {{count}} referência(s) no total.",
+      "refs": "{{count}} referência(s)",
+      "apply": "Aplicar",
+      "keepSeparate": "Manter separado"
     }
   }
 }

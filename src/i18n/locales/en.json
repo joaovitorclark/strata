@@ -2,12 +2,81 @@
   "app": { "name": "Strata" },
   "theme": { "dark": "Dark", "light": "Light" },
   "common": { "cancel": "Cancel", "save": "Save", "close": "Close" },
+  "shell": {
+    "breadcrumb": "Project",
+    "search": "Search",
+    "themeToggle": "Toggle theme",
+    "export": "Export",
+    "exportFormatDbt": "dbt",
+    "share": "Share",
+    "avatar": "Account",
+    "rail": {
+      "tables": "Tables",
+      "layers": "Layers",
+      "lineage": "Lineage",
+      "code": "Code",
+      "search": "Search",
+      "settings": "Settings"
+    },
+    "problems": "Problems",
+    "problemsLabel": "Problems {{count}}",
+    "dbml": "DBML",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "fitView": "Fit view",
+    "density": "Density",
+    "densityCompact": "Compact",
+    "densityCozy": "Cozy",
+    "schemaTree": {
+      "title": "Schema",
+      "ungrouped": "public"
+    },
+    "inspector": {
+      "title": "Properties",
+      "empty": "Select a table",
+      "close": "Close inspector",
+      "table": "Table",
+      "layer": "Layer",
+      "noLayer": "No layer",
+      "columns": "Columns",
+      "primaryKey": "Primary key",
+      "foreignKeys": "Foreign keys",
+      "materialization": "Materialization",
+      "tags": "Tags",
+      "colour": "Colour",
+      "noColour": "No colour",
+      "sources": "Sources (lineage)",
+      "sample": "Sample data",
+      "referencedBy": "referenced by",
+      "comments": "Comments",
+      "resourceType": "Type",
+      "column": "Column"
+    }
+  },
   "canvas": {
     "edges": {
       "removeRelation": "Remove relation",
       "removeLineage": "Remove lineage",
       "derivedFrom": "derived from",
       "externalLinks": "{{count}} links → {{label}}"
+    }
+  },
+  "source": {
+    "outline": "Outline",
+    "outlineFilter": "Filter blocks…",
+    "outlineResize": "Resize outline panel",
+    "format": "Format",
+    "copy": "Copy",
+    "placeholder": "Define your tables in DBML…\n\nTable schema.table {\n  id bigint [pk]\n  name string\n}",
+    "errorGoTo": "Go to the error line",
+    "diff": "Diff",
+    "diffTitle": "DBML diff",
+    "rename": {
+      "title": "Confirm rename",
+      "hint": "Updates {{count}} reference(s) in total.",
+      "refs": "{{count}} reference(s)",
+      "apply": "Apply",
+      "keepSeparate": "Keep separate"
     }
   }
 }
