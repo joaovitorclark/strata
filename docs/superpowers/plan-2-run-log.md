@@ -109,3 +109,28 @@ Linhas do inventário: 0 checadas de 28 (Editor+DbmlDiff) — drawer não montad
 Decisões que tomei sozinho: CodeMirror via @uiw/react-codemirror 4.x + @codemirror/* 6.x
 Preocupações: applyRenames reescrito no drawer; App.tsx não monta SourceDrawer
 Bloqueio: —
+
+
+## Task 23 — DONE_WITH_CONCERNS
+Commit: `9621084`
+Portões que EU rodei: panels+records+domains+projects 18/120; typecheck 0; format:check 0
+Linhas do inventário: exercitadas em jsdom 93–126, 159–162; **não** marcadas no markdown (sem App ao vivo)
+Decisões que tomei sozinho: "+ camada" usa TABLE_COLORS em vez de prompt hex; parsePagesCollapsed só reexportado.
+Preocupações: TableInfoPopover não ligado ao ⓘ do TableNode
+Bloqueio: —
+
+## Task 24a — DONE_WITH_CONCERNS
+Commit: `045f822`
+Portões que EU rodei: mesmos
+Linhas do inventário: 127–131, 157–158, 163–174 exercitadas em teste; não marcadas
+Decisões que tomei sozinho: parseRecordsOpen relocado; loadRecordsOpen ficou no componente
+Preocupações: useCollapsePersist não portado; painéis não montados
+Bloqueio: —
+
+## Task 24b — DONE_WITH_CONCERNS
+Commit: `955bab2`
+Portões que EU rodei: mesmos; token em useRef não state
+Linhas do inventário: 132–156, 177–183 exercitadas em teste; não marcadas
+Decisões que tomei sozinho: credencial nunca em useState
+Preocupações: delete some em vez de disabled com 1 projeto (comportamento LDB); tokenUrl ainda diz LocalDrawDB
+Bloqueio: —
