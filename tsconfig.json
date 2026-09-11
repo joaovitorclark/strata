@@ -6,8 +6,13 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    // Desligados durante a migração: o código portado do LocalDrawDB foi escrito sob
+    // um tsconfig mais frouxo, e satisfazer essas duas flags exigiria EDITAR código
+    // verbatim — a única coisa que não pode acontecer. Reativar depois do Stage 6,
+    // como limpeza própria. Até lá, @typescript-eslint/no-unused-vars cobre código
+    // novo via npm run lint.
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
