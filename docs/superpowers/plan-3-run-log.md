@@ -63,7 +63,7 @@ Preocupações: `cy:run:stress` não fica verde enquanto o spec de altura existi
 Bloqueio: —
 
 ## Task 40 — VERDE (contagem honesta, abaixo do Plan 2)
-Commit: *(preenchido após o commit)*
+Commit: `d763061`
 Portões que EU rodei: inventário relido contra specs que **rodaram**.
 Linhas: ☑ **57, 64, 72, 193** (nome do spec no campo Verified). Dropped **35, 44, 45**. Remaining ☐ each with a reason.
 ```
@@ -73,6 +73,31 @@ After Plan 3 Task 40:             ☑ 205   ☐ 50   dropped 5
 Plan 2 claimed 258 ☑. **205 is lower.** That is the plan working.
 Decisões: não tiquei 73 (click sem scroll do editor), 46 (Escape só tabela), 76 (só zoom). 1–7/29–34/36–38 já eram ☑ jsdom; ganharam o nome do spec live sem mudar a contagem.
 Bloqueio: —
+
+## Task 41 — BLOCKED (ambiente)
+Commit: *(este commit)*
+Portões que EU rodei: host `Darwin` (uname -s); `node -v` = **v24.5.0** (o pin do pacote Windows é **22.11.0** em `scripts/build-win/fetchNode.mjs`); nvm local só tem v23.5.0 — **22.11.0 não está instalado**. `dist-win/LocalDrawDB-win.zip` existe (104.5 MB, Plan 2 Task 28) mas **não foi lançado**. Não há `.github/workflows`. Não há wine. Não há máquina/VM/runner Windows neste ambiente.
+Não reconstruí o zip neste host: gerar o blob SEA com Node 24.5.0 contra `node.exe` 22.11.0 é o crash `STATUS_ACCESS_VIOLATION` que o README descreve.
+O gate da Task 28 (**o artefato portátil corre**) **não está satisfeito**. Verificação bloqueada em ambiente, não em silêncio.
+Bloqueio: Darwin + Node 24.5.0 ≠ 22.11.0 + ausência de Windows.
+
+## Task 42 — VERDE (só mediu; sem code splitting)
+Commit: *(este commit)*
+Portões que EU rodei: `npm run build` (typecheck + vite) → 0. Um único JS chunk.
+
+Chunks > 200 KB gzip:
+
+| ficheiro | raw | gzip |
+| --- | --- | --- |
+| `dist/assets/index-DxBFXPVz.js` | 12 165.28 kB | **2 134.06 kB** |
+
+`dist/assets/index-DTfDYkf3.css` = 62.19 kB / gzip 11.97 kB (abaixo do limiar). `vite.config.ts` não define `manualChunks`.
+
+As quatro bibliotecas pedidas estão **no mesmo chunk** `index-DxBFXPVz.js` (probes no bundle minificado: `react-flow__node`/`xyflow`, `sp_addextendedproperty`/`@dbml`, `XLSX`/`xlsx`, `CodeMirror`/`EditorView`).
+
+Nota: um único payload de ~2.1 MB gzip no first load é o custo de canvas + parser + editor + export Excel no mesmo grafo. Separar `@xyflow/react` (canvas), `@uiw/react-codemirror` (gaveta, on-demand), `xlsx` (só no export) e `@dbml/core` (parse) reduziria o parse inicial; **não foi feito neste plano** — seria uma decisão de performance, não de verificação.
+Bloqueio: —
+
 
 
 
