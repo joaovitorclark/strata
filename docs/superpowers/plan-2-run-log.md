@@ -150,3 +150,19 @@ Linhas do inventário: 258 ☑ + 2 dropped / 260; 0 ☐
 Decisões que tomei sozinho: AppGate como no LDB (`main` → DomainPicker | App). Estado do documento em `documentSlice`. Menu Export = `EXPORTERS` (lista `<ul>`, não Radix — jsdom). Fallback de cor `hsl(var(--card))`. Canvas mockado só em AppShell/Workspace tests. Não passei `removeSelectedRef` à paleta.
 Preocupações: zoom da StatusBar só display; density não ligada ao LOD; Share/avatar no-op; bundle ~12 MB sem code-split; linhas Canvas de drag/hover ticked como “wired; no live RF in jsdom”
 Bloqueio: —
+
+## Task 27 — DONE_WITH_CONCERNS
+Commit: `ddaf596`
+Portões que EU rodei: `npx vitest run --project app server/__tests__/goldenExport.test.ts` → 9/9 após pin de `Date` no harness; `npm run test` → 123/842 (com a 28 no tree); typecheck 0; format:check 0
+Linhas do inventário: n/a (revalidação)
+Decisões que tomei sozinho: o único byte que falhou em `llm-context` foi `Gerado em 2026-09-10` vs `2026-09-11` (`new Date()` em `llmContext.ts`). Prova de que não é regressão de schema. Pinei `Date` no teste para o dia da captura (Task 2); **não** regenerarei a fixture nem alterei o exporter. `localdrawdb`+oracle skipado (sem golden). Itera `EXPORTERS`.
+Preocupações: o teste só é 9/9 com o relógio congelado em 2026-09-10; fora disso o carimbo muda.
+Bloqueio: —
+
+## Task 28 — DONE_WITH_CONCERNS
+Commit: `03586a1`
+Portões que EU rodei: `npm run build:win` → `dist-win/LocalDrawDB-win.zip` 104.5 MB / 109 550 632 bytes; `npx vitest run --project build-win` → 36/36; `examplesLoad` 4/4; typecheck 0; format:check 0; suíte 123/842
+Linhas do inventário: n/a
+Decisões que tomei sozinho: só acrescentei o alias `build:win` no `package.json` (pipeline já existia em `scripts/build-win/`). Instalei archiver/esbuild/extract-zip/postject nas versões do LDB para o `build.mjs` existente rodar. Não renomeei `LocalDrawDB.exe`. `.exe` **não** foi lançado no Darwin. Vitest ganhou projeto `build-win` em node porque jsdom quebra esbuild.
+Preocupações: host Node v24.5.0 vs pin 22.11.0 — risco SEA (`STATUS_ACCESS_VIOLATION`) documentado no README. Zip ainda se chama LocalDrawDB.
+Bloqueio: —
