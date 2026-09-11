@@ -213,7 +213,7 @@ This wave is alone because everything in Waves G and H imports from it.
 the plan: it moves the hard, correct, tested maths without redesigning it.
 
 **Files:**
-- Create: `src/features/canvas/utils/{autolayout,pageFilter,columnHandleGeometry,focusTableView,nodeMetrics,lineageHandles,edgeFocus,scaleLimits,defaultTablePosition}.ts`
+- Create: `src/features/canvas/utils/{autolayout,pageFilter,columnHandleGeometry,focusTableView,nodeMetrics,lineageHandles,edgeFocus,scaleLimits,defaultTablePosition,pagesPanelState,statusLabel}.ts`
 - Create: `src/features/canvas/hooks/{useVirtualWindow,useColumnEdgeCoords,useCanvasNodes,useCanvasEdges}.ts`
 - Create: `src/features/canvas/store/tableScrollStore.ts`
 - Create: `src/features/canvas/actions.ts`
@@ -245,6 +245,44 @@ cp $LDB/src/canvas/__tests__/*.test.ts src/features/canvas/__tests__/
 
 Rewrite their relative imports to `@/features/canvas/...`. Change nothing else in them.
 
+**Three of the twelve need more than a path rewrite.** Handle them exactly as follows and list what
+you did in the task report.
+
+**`pagesPanelState.test.ts` and `statusLabel.test.ts` do not test geometry.** They import
+`parsePagesCollapsed` from `LayersPanel.tsx:24` and `statusLabel` from `StatusLog.tsx:18` — two
+`export function` declarations that happen to live inside component files this task does not build.
+
+Extract both into `src/features/canvas/utils/` as part of this task:
+
+```
+$LDB/src/canvas/LayersPanel.tsx :: parsePagesCollapsed  →  src/features/canvas/utils/pagesPanelState.ts
+$LDB/src/canvas/StatusLog.tsx   :: statusLabel          →  src/features/canvas/utils/statusLabel.ts
+```
+
+Copy the function bodies **verbatim** — this is a move, not a rewrite. Then point the two tests at
+the new paths.
+
+This is the right home regardless of the gate: they are pure functions with pure tests, and pure
+logic does not live inside a React component under this repo's `features/` discipline. Tasks 23 and
+24 import them from `utils/` rather than redefining them, which also removes a dependency those
+tasks did not know they had.
+
+**`focusColumn.test.ts` imports `useInteraction` from `../../store/interaction`.** Plan 1 renamed
+that store to `useSchemaStore` at `@/features/schema/store`, keeping LocalDrawDB's member names.
+Alias it **at the import site** so the test body stays byte-identical:
+
+```ts
+import { useSchemaStore as useInteraction } from "@/features/schema/store";
+```
+
+Do **not** re-export `useInteraction` from the store. Plan 1's Decision 12 settled that the store
+has one public name; a re-export would reintroduce the two-vocabularies problem that decision
+removed. The alias is local to this file and public to nothing.
+
+**General rule, it will recur in Tasks 22–24:** when a ported test imports a module Plan 1 renamed,
+alias it at the import line. Never rename inside the test body, and never add a compatibility
+re-export to the source module.
+
 - [ ] **Step 3: Run to verify they fail**
 
 Run: `npm run test -- src/features/canvas`
@@ -258,8 +296,12 @@ cd $LDB/src/canvas
 cp autolayout.ts pageFilter.ts columnHandleGeometry.ts focusTableView.ts nodeMetrics.ts \
    lineageHandles.ts edgeFocus.ts scaleLimits.ts defaultTablePosition.ts \
    $STRATA/src/features/canvas/utils/
-cp hooks/useVirtualWindow.ts hooks/useColumnEdgeCoords.ts \
-   hooks/useCanvasNodes.ts hooks/useCanvasEdges.ts $STRATA/src/features/canvas/hooks/
+# NOTE: useColumnEdgeCoords.ts lives at the canvas root in LocalDrawDB, not under
+# hooks/. The other three are under hooks/. Destination is hooks/ for all four —
+# they are all hooks; only LocalDrawDB's filing was inconsistent.
+cp hooks/useVirtualWindow.ts hooks/useCanvasNodes.ts hooks/useCanvasEdges.ts \
+   $STRATA/src/features/canvas/hooks/
+cp useColumnEdgeCoords.ts $STRATA/src/features/canvas/hooks/
 cp tableScrollStore.ts $STRATA/src/features/canvas/store/
 cp actions.ts $STRATA/src/features/canvas/
 ```
