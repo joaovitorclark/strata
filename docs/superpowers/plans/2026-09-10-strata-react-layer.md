@@ -58,6 +58,46 @@ sites you cannot see from your task.
 **Do not delete `App.tsx` before Task 26.** It is the parity reference until the inventory is fully
 checked.
 
+### Relocation is permitted. Rewriting is not.
+
+Strata does not have to inherit LocalDrawDB's filing. Where the port exposes logic living in the
+wrong place, move it — but a move qualifies **only if all five hold**:
+
+1. It is **already `export`ed**, so moving changes no encapsulation.
+2. It has **no React import, no JSX, no hook call**.
+3. It has **its own test**, and the test moves with it.
+4. The body is copied **byte-identically**.
+5. The destination is **determined by this repo's stated convention**, not by your taste.
+
+If any one is false, leave it where it is and say so in your report.
+
+**The discriminator:** if you have to *decide* what the new shape should be, it is a rewrite — stop.
+If the shape is already fixed by what is exported and where the convention puts it, it is a
+relocation — do it. Splitting along a boundary that already exists is allowed; inventing a boundary
+is not.
+
+**This is a closed list, not a licence.** A repo-wide search for exported non-component logic inside
+`.tsx` files found exactly five instances. Four move, one does not:
+
+| Function | From | To | Owner |
+| --- | --- | --- | --- |
+| `parsePagesCollapsed` | `canvas/LayersPanel.tsx:24` | `features/canvas/utils/pagesPanelState.ts` | Task 12 |
+| `statusLabel` | `canvas/StatusLog.tsx:18` | `features/canvas/utils/statusLabel.ts` | Task 12 |
+| `parseRecordsOpen` | `records/RecordsPanel.tsx:23` | `features/records/utils/recordsPanelState.ts` | Task 24 |
+| `pickTooltipSide` | `Tooltip.tsx:18` | see below | Task 19 |
+| `loadRecordsOpen` | `records/RecordsPanel.tsx:27` | **stays put** — no test, and it reads `localStorage` | Task 24 |
+
+`loadRecordsOpen` is the impure wrapper around the pure `parseRecordsOpen`. The tested half moves;
+the untested, side-effecting half stays with its component. It is excluded by rule 3, not by
+preference — which is the point of having the rule.
+
+`pickTooltipSide` computes tooltip placement, and Strata's tooltips are shadcn/Radix, which does its
+own collision detection. **Task 19 must first decide whether it is still needed.** If Radix replaces
+it, drop the function and its test and record the drop with a reason, the same way a parity row is
+dropped. Relocating dead code is worse than deleting it.
+
+Finding a sixth instance means the search missed something: report it, do not act on it.
+
 ---
 
 ## The `CanvasActions` contract
