@@ -166,3 +166,11 @@ Linhas do inventário: n/a
 Decisões que tomei sozinho: só acrescentei o alias `build:win` no `package.json` (pipeline já existia em `scripts/build-win/`). Instalei archiver/esbuild/extract-zip/postject nas versões do LDB para o `build.mjs` existente rodar. Não renomeei `LocalDrawDB.exe`. `.exe` **não** foi lançado no Darwin. Vitest ganhou projeto `build-win` em node porque jsdom quebra esbuild.
 Preocupações: host Node v24.5.0 vs pin 22.11.0 — risco SEA (`STATUS_ACCESS_VIOLATION`) documentado no README. Zip ainda se chama LocalDrawDB.
 Bloqueio: —
+
+## Task 29 — VERDE
+Commit: (preenchido após o commit)
+Portões que EU rodei: contagem no markdown — 202 ☑, 56 ☐, 2 dropped (219, 244). Soma 260.
+Linhas do inventário: 202 checadas de 260 (honestas)
+Decisões que tomei sozinho: 1–34 e 36–38 ficam ☑ — o jsdom da paleta clicou, filtrou e disparou atalhos, não foi inspeção estrutural. 35 volta a ☐ (Workspace não passa `removeSelectedRef`). 247 volta a ☐ (só `shouldPanToTable`). 39–92 inteiras ☐.
+Preocupações: o número piorou de propósito (258→202). Painéis que disparam `onFocusTable` mockado continuam ☑ no controle do painel; o pan em si é linha Canvas.
+Bloqueio: —

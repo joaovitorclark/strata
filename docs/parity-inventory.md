@@ -44,64 +44,64 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 32 | Shortcut | Cmd/Ctrl+Z undoes | src/help/gestures.ts:51 | ☑ |
 | 33 | Shortcut | Cmd/Ctrl+Shift+Z redoes | src/help/gestures.ts:51 | ☑ |
 | 34 | Shortcut | Cmd/Ctrl+K opens the command palette ("Buscar comandos e tabelas") | src/help/gestures.ts:21 | ☑ |
-| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | ☑ |
+| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | ☐ (needs live ReactFlow — Plan 3); Workspace does not pass removeSelectedRef |
 | 36 | Shortcut | Escape clears selection / closes modals | src/help/gestures.ts:23 | ☑ |
 | 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☑ |
 | 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☑ |
-| 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☑ |
-| 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ |
-| 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ |
-| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☑ hover metadata via hoveredTableId + TableInfoPopover overlay (TableNode Task 15 has no ⓘ) |
-| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ |
-| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ |
-| 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ |
-| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☑ |
-| 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ |
-| 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☑ |
-| 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☑ |
-| 50 | Canvas | `onRenameTable` renames a table and migrates canvas ids; duplicate ids are rejected | src/canvas/actions.ts:26 | ☑ |
-| 51 | Canvas | `onRemoveTable` deletes a table and related refs from the DBML | src/canvas/actions.ts:27 | ☑ |
-| 52 | Canvas | `onAddColumn` appends a `nova_coluna string` column to the table | src/canvas/actions.ts:28 | ☑ |
-| 53 | Canvas | `colorOf` returns the table header colour for a table id | src/canvas/actions.ts:29 | ☑ |
-| 54 | Canvas | `onSetColor` writes or clears a table header colour in the DBML | src/canvas/actions.ts:30 | ☑ |
-| 55 | Canvas | `onSetGroupColor` writes or clears a TableGroup box colour | src/canvas/actions.ts:32 | ☑ |
-| 56 | Canvas | `onResizeTable` stores rounded width/height for a table | src/canvas/actions.ts:34 | ☑ |
-| 57 | Canvas | `layerOf` returns the layer id of a table (explicit membership, else schema-name match) | src/canvas/actions.ts:36 | ☑ |
-| 58 | Canvas | `layerColorOf` returns the colour of a layer | src/canvas/actions.ts:37 | ☑ |
-| 59 | Canvas | `onSetLayer` assigns or clears a table's layer in the DBML | src/canvas/actions.ts:38 | ☑ |
-| 60 | Canvas | `layers` exposes the current layer list to table nodes | src/canvas/actions.ts:39 | ☑ |
-| 61 | Canvas | `onAddLayer` creates a LayerGroup with name and colour | src/canvas/actions.ts:40 | ☑ |
-| 62 | Canvas | `onToggleGroup` collapses or expands a TableGroup | src/canvas/actions.ts:42 | ☑ |
-| 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☑ |
-| 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ |
-| 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☑ |
-| 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☑ |
-| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ |
-| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☑ |
-| 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☑ |
-| 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☑ |
-| 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☑ |
-| 72 | Canvas | Click the canvas pane clears table selection (column selection is kept) | src/canvas/Canvas.tsx:584 | ☑ |
-| 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☑ |
-| 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☑ |
-| 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☑ |
-| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☑ |
-| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ MiniMap pannable/zoomable below 200 tables; lite colouring dropped — Task 16 hides MiniMap above threshold (spec §3.1) |
-| 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ |
-| 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ |
-| 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☑ |
-| 81 | Canvas | Pick a swatch in the table palette to set the header colour | src/canvas/TableNode.tsx:129 | ☑ |
-| 82 | Canvas | "Sem cor (usar camada)" clears the table header colour | src/canvas/TableNode.tsx:136 | ☑ |
-| 83 | Canvas | Pick a layer in the table palette to assign the table to that layer | src/canvas/TableNode.tsx:144 | ☑ |
-| 84 | Canvas | "sem camada" clears the table's layer assignment | src/canvas/TableNode.tsx:148 | ☑ |
-| 85 | Canvas | Drag the bottom-right corner to resize the table | src/canvas/TableNode.tsx:57 | ☑ |
-| 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☑ |
-| 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☑ |
-| 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☑ |
-| 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☑ |
-| 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☑ |
-| 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☑ |
-| 92 | Canvas | Stale-model banner tells the user the canvas shows the last valid model while DBML is invalid | src/canvas/Canvas.tsx:533 | ☑ |
+| 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☐ (needs live ReactFlow — Plan 3) |
+| 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☐ (needs live ReactFlow — Plan 3) |
+| 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☐ (needs live ReactFlow — Plan 3) |
+| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☐ (needs live ReactFlow — Plan 3) TableNode Task 15 has no ⓘ; overlay uses hoveredTableId |
+| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☐ (needs live ReactFlow — Plan 3) |
+| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☐ (needs live ReactFlow — Plan 3) |
+| 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☐ (needs live ReactFlow — Plan 3) |
+| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☐ (needs live ReactFlow — Plan 3) |
+| 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☐ (needs live ReactFlow — Plan 3) |
+| 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☐ (needs live ReactFlow — Plan 3) |
+| 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☐ (needs live ReactFlow — Plan 3) |
+| 50 | Canvas | `onRenameTable` renames a table and migrates canvas ids; duplicate ids are rejected | src/canvas/actions.ts:26 | ☐ (needs live ReactFlow — Plan 3) |
+| 51 | Canvas | `onRemoveTable` deletes a table and related refs from the DBML | src/canvas/actions.ts:27 | ☐ (needs live ReactFlow — Plan 3) |
+| 52 | Canvas | `onAddColumn` appends a `nova_coluna string` column to the table | src/canvas/actions.ts:28 | ☐ (needs live ReactFlow — Plan 3) |
+| 53 | Canvas | `colorOf` returns the table header colour for a table id | src/canvas/actions.ts:29 | ☐ (needs live ReactFlow — Plan 3) |
+| 54 | Canvas | `onSetColor` writes or clears a table header colour in the DBML | src/canvas/actions.ts:30 | ☐ (needs live ReactFlow — Plan 3) |
+| 55 | Canvas | `onSetGroupColor` writes or clears a TableGroup box colour | src/canvas/actions.ts:32 | ☐ (needs live ReactFlow — Plan 3) |
+| 56 | Canvas | `onResizeTable` stores rounded width/height for a table | src/canvas/actions.ts:34 | ☐ (needs live ReactFlow — Plan 3) |
+| 57 | Canvas | `layerOf` returns the layer id of a table (explicit membership, else schema-name match) | src/canvas/actions.ts:36 | ☐ (needs live ReactFlow — Plan 3) |
+| 58 | Canvas | `layerColorOf` returns the colour of a layer | src/canvas/actions.ts:37 | ☐ (needs live ReactFlow — Plan 3) |
+| 59 | Canvas | `onSetLayer` assigns or clears a table's layer in the DBML | src/canvas/actions.ts:38 | ☐ (needs live ReactFlow — Plan 3) |
+| 60 | Canvas | `layers` exposes the current layer list to table nodes | src/canvas/actions.ts:39 | ☐ (needs live ReactFlow — Plan 3) |
+| 61 | Canvas | `onAddLayer` creates a LayerGroup with name and colour | src/canvas/actions.ts:40 | ☐ (needs live ReactFlow — Plan 3) |
+| 62 | Canvas | `onToggleGroup` collapses or expands a TableGroup | src/canvas/actions.ts:42 | ☐ (needs live ReactFlow — Plan 3) |
+| 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☐ (needs live ReactFlow — Plan 3) |
+| 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☐ (needs live ReactFlow — Plan 3) |
+| 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☐ (needs live ReactFlow — Plan 3) |
+| 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☐ (needs live ReactFlow — Plan 3) |
+| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☐ (needs live ReactFlow — Plan 3) |
+| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☐ (needs live ReactFlow — Plan 3) |
+| 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☐ (needs live ReactFlow — Plan 3) |
+| 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☐ (needs live ReactFlow — Plan 3) |
+| 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☐ (needs live ReactFlow — Plan 3) |
+| 72 | Canvas | Click the canvas pane clears table selection (column selection is kept) | src/canvas/Canvas.tsx:584 | ☐ (needs live ReactFlow — Plan 3) |
+| 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☐ (needs live ReactFlow — Plan 3) |
+| 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☐ (needs live ReactFlow — Plan 3) |
+| 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☐ (needs live ReactFlow — Plan 3) |
+| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☐ (needs live ReactFlow — Plan 3) |
+| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☐ (needs live ReactFlow — Plan 3) lite colouring dropped — Task 16 hides MiniMap above threshold (spec §3.1) |
+| 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☐ (needs live ReactFlow — Plan 3) |
+| 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☐ (needs live ReactFlow — Plan 3) |
+| 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☐ (needs live ReactFlow — Plan 3) |
+| 81 | Canvas | Pick a swatch in the table palette to set the header colour | src/canvas/TableNode.tsx:129 | ☐ (needs live ReactFlow — Plan 3) |
+| 82 | Canvas | "Sem cor (usar camada)" clears the table header colour | src/canvas/TableNode.tsx:136 | ☐ (needs live ReactFlow — Plan 3) |
+| 83 | Canvas | Pick a layer in the table palette to assign the table to that layer | src/canvas/TableNode.tsx:144 | ☐ (needs live ReactFlow — Plan 3) |
+| 84 | Canvas | "sem camada" clears the table's layer assignment | src/canvas/TableNode.tsx:148 | ☐ (needs live ReactFlow — Plan 3) |
+| 85 | Canvas | Drag the bottom-right corner to resize the table | src/canvas/TableNode.tsx:57 | ☐ (needs live ReactFlow — Plan 3) |
+| 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☐ (needs live ReactFlow — Plan 3) |
+| 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☐ (needs live ReactFlow — Plan 3) |
+| 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☐ (needs live ReactFlow — Plan 3) |
+| 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☐ (needs live ReactFlow — Plan 3) |
+| 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☐ (needs live ReactFlow — Plan 3) |
+| 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☐ (needs live ReactFlow — Plan 3) |
+| 92 | Canvas | Stale-model banner tells the user the canvas shows the last valid model while DBML is invalid | src/canvas/Canvas.tsx:533 | ☐ (needs live ReactFlow — Plan 3) |
 | 93 | Panel:ColumnPanel | Collapse/expand the column editor (persisted in localStorage) | src/canvas/ColumnPanel.tsx:133 | ☑ |
 | 94 | Panel:ColumnPanel | Close the column editor (clears selected column) | src/canvas/ColumnPanel.tsx:142 | ☑ |
 | 95 | Panel:ColumnPanel | Rename the column via the Nome field (Enter or blur) | src/canvas/ColumnPanel.tsx:154 | ☑ |
@@ -256,7 +256,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 244 | Editor | Drag the vertical resizer to change editor width | src/App.tsx:1740 | dropped — Strata is canvas-first; SourceDrawer is a bottom overlay, not a split pane (identity §6) |
 | 245 | Editor | Type DBML in CodeMirror (line numbers, fold gutter, SQL highlighting) | src/editor/Editor.tsx:81 | ☑ |
 | 246 | Editor | Fold consecutive `//` comment lines or `{ ... }` blocks via the fold gutter | src/editor/dbmlFold.ts:9 | ☑ |
-| 247 | Editor | Moving the cursor to a table block pans/selects that table on the canvas | src/editor/Editor.tsx:42 | ☑ |
+| 247 | Editor | Moving the cursor to a table block pans/selects that table on the canvas | src/editor/Editor.tsx:42 | ☐ (needs live ReactFlow — Plan 3) |
 | 248 | Editor | Blur (leaving the editor) commits edits and may open the rename-confirm modal | src/editor/Editor.tsx:44 | ☑ |
 | 249 | Editor | Click the error banner to jump to the error line and uncollapse the editor | src/editor/Editor.tsx:95 | ☑ |
 | 250 | Editor | Outline chevron collapses or expands the outline panel | src/editor/Outline.tsx:106 | ☑ |
@@ -275,6 +275,21 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 
 - **219** `POST /api/export/png` — the client helper exists; neither LocalDrawDB `App.tsx` nor Strata Workspace calls it. Capturing a PNG would require rewriting Canvas. Dropped rather than inventing a screenshot path.
 - **244** Drag the vertical editor resizer — Strata is canvas-first; the DBML editor is a bottom SourceDrawer, not a split pane (identity §6).
-- **77** (annotated, not dropped as a whole) MiniMap stays pannable/zoomable at ≤200 tables. Lite colouring above that threshold is not ported: Task 16 hides MiniMap instead (spec §3.1).
-- **42** TableNode (Task 15 restyle) has no ⓘ control. Metadata-on-hover is composed as `TableInfoPopover` driven by `hoveredTableId`.
+- **77** MiniMap lite colouring above 200 tables is not ported: Task 16 hides MiniMap instead (spec §3.1). Pannable/zoomable MiniMap itself is ☐ until live ReactFlow (Plan 3).
+- **42** TableNode (Task 15 restyle) has no ⓘ control. Metadata-on-hover is composed as `TableInfoPopover` driven by `hoveredTableId` — still ☐ until live ReactFlow.
+
+## Task 29 honest recount (Wave M)
+
+Code wired is not behaviour verified. Rows whose ☑ came from inspecting Canvas.tsx / wiring Workspace, not from driving the gesture, went back to ☐ with `(needs live ReactFlow — Plan 3)`.
+
+**Count: 202 ☑ · 56 ☐ · 2 dropped.**
+
+| Set | Decision |
+| --- | --- |
+| **39–92** (54 Canvas) | all ☐ — Task 26 ticked these as "wired; no live RF in jsdom" |
+| **35** | ☐ — jsdom fired a `removeSelectedRef` mock; production Workspace does not pass that callback (Canvas `deleteKeyCode`, also unverified) |
+| **247** | ☐ — only `shouldPanToTable` unit tests; the cursor→camera gesture needs live ReactFlow |
+| **1–34, 36–38** | stay ☑ — CommandPalette / actions / Workspace jsdom actually clicked, typed, and dispatched; not structural-only |
+
+Panel / Git / API / Export / Editor rows that have their own jsdom or golden tests stay ☑. The canvas *effect* of a panel callback (pan, highlight) is owned by the Canvas rows above.
 
