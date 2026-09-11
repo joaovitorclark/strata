@@ -53,3 +53,11 @@ Linhas do inventário: 0 checadas de 54 Canvas
 Decisões que tomei sozinho: `TABLE_COLORS` de `@/features/canvas/tableColors`; fallback de grupo `--layer-raw`.
 Preocupações: `layerColorOf` não chamado (cor vem de `data.color`); pointer-events do wrapper de grupo fica para Task 16
 Bloqueio: —
+
+## Task 16 — DONE_WITH_CONCERNS
+Commit: (pending-16)
+Portões que EU rodei: canvas 15/74; typecheck 0; format:check 0
+Linhas do inventário: 0 checadas de 54 Canvas (mount ReactFlow travou no jsdom)
+Decisões que tomei sozinho: omiti SelectionBar; `--brand-green` → `--primary`; teste sample.dbml é parse+registry, não mount 1px.
+Preocupações: MiniMap some >200 tabelas (spec) em vez do modo lite do LDB; Canvas ainda não está no App.tsx
+Bloqueio: —
