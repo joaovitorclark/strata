@@ -94,10 +94,26 @@ describe('export dbt — data_type e meta.localdrawdb', () => {
     });
   });
 
-  it('omite meta quando não há metadado LocalDrawDB', () => {
+  it('omite meta.localdrawdb quando não há metadado LocalDrawDB e emite strata.pinned vazio', () => {
     const doc2 = findSchemaYml(modelToDbtFiles(dbmlToModel('Table t {\n  id int\n}\n')));
-    expect(doc2.models[0].meta).toBeUndefined();
+    expect(doc2.models[0].meta?.localdrawdb).toBeUndefined();
+    expect(doc2.models[0].meta?.strata?.pinned).toEqual([]);
     expect(doc2.models[0].columns[0].meta).toBeUndefined();
+  });
+
+  it('emite meta.strata.pinned vazio e preserva meta.localdrawdb', () => {
+    const dim = findSchemaYml(files).models.find((m: any) => m.name === 'dim_cliente');
+    expect(dim.meta.strata.pinned).toEqual([]);
+    expect(dim.meta.localdrawdb).toMatchObject({ schema: 'silver', pk: ['cliente_key'] });
+  });
+
+  it('emite as colunas pinadas de Table.dbtMeta em meta.strata.pinned', () => {
+    const model = dbmlToModel(DBML);
+    const table = model.tables.find((t) => t.name === 'dim_cliente')!;
+    table.dbtMeta = { strata: { pinned: ['nome'] } };
+    const dim = findSchemaYml(modelToDbtFiles(model)).models.find((m: any) => m.name === 'dim_cliente');
+    expect(dim.meta.strata.pinned).toEqual(['nome']);
+    expect(dim.meta.localdrawdb.schema).toBe('silver');
   });
 });
 
@@ -159,6 +175,23 @@ models:
     expect(m.colors).toBeUndefined();
     expect(m.layerColors).toBeUndefined();
   });
+
+  it('lê meta.strata.pinned para Table.dbtMeta', () => {
+    const YML = `version: 2
+models:
+  - name: dim_cliente
+    meta:
+      strata:
+        pinned: [nome]
+    columns:
+      - name: cliente_key
+        data_type: bigint
+      - name: nome
+        data_type: string
+`;
+    const m = schemaYmlToModel(YML);
+    expect(m.tables[0].dbtMeta).toMatchObject({ strata: { pinned: ['nome'] } });
+  });
 });
 
 describe('round-trip completo DBML → dbt → Model → DBML', () => {
@@ -178,5 +211,16 @@ describe('round-trip completo DBML → dbt → Model → DBML', () => {
     expect(dbml).toMatch(/LineageFields\s*\{[^}]*silver\.fato_venda\.cliente_key < silver\.dim_cliente\.cliente_key/);
     // L1 via ref()/source() dos models .sql, com nomes qualificados pelo schema
     expect(dbml).toMatch(/Lineage\s*\{[^}]*silver\.fato_venda < silver\.dim_cliente/);
+  });
+
+  it('preserva meta.strata.pinned no round-trip model → dbt → model', () => {
+    const model = dbmlToModel(DBML);
+    model.tables.find((t) => t.name === 'dim_cliente')!.dbtMeta = {
+      strata: { pinned: ['nome'] },
+    };
+    const files = modelToDbtFiles(model);
+    const back = dbtFilesToModel(files.map((f) => ({ file: f.path, content: f.content })));
+    const dim = back!.tables.find((t) => t.name === 'dim_cliente');
+    expect(dim?.dbtMeta).toMatchObject({ strata: { pinned: ['nome'] } });
   });
 });

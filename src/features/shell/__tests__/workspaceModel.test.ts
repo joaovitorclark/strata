@@ -38,4 +38,12 @@ describe("workspaceModel", () => {
     expect(loaded.dbml).toContain("Table loja.cliente");
     expect(loaded.projectId).toBe("p1");
   });
+
+  it("hydrateFromProject restores canvas.pinnedByTable", () => {
+    const loaded = hydrateFromProject(
+      { dbml: "Table a { id int }", canvas: { pinnedByTable: { a: ["id"] } } },
+      "p1",
+    );
+    expect(loaded.pinnedByTable).toEqual({ a: ["id"] });
+  });
 });

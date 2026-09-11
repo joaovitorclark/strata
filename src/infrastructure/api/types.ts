@@ -26,6 +26,8 @@ export type CanvasState = {
   activePageIds?: string[];
   /** @deprecated use activePageIds */
   activePageId?: string | null;
+  /** Colunas pinadas por tabela (⌘click). Sobrevive ao reload via canvas.json. */
+  pinnedByTable?: Record<string, string[]>;
 };
 
 export type ProjectMeta = {

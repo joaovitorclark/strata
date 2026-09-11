@@ -115,6 +115,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   const collapsedGroups = useSchemaStore((s) => s.collapsedGroups);
   const canvasPages = useSchemaStore((s) => s.canvasPages);
   const activePageIds = useSchemaStore((s) => s.activePageIds);
+  const pinnedByTable = useSchemaStore((s) => s.pinnedByTable);
   const past = useSchemaStore((s) => s.past);
   const future = useSchemaStore((s) => s.future);
   const saveState = useSchemaStore((s) => s.saveState);
@@ -175,6 +176,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
           canvasPages: loaded.pages0,
           activePageIds: loaded.active0,
           currentProjectId: loaded.projectId || store.currentProjectId,
+          pinnedByTable: loaded.pinnedByTable,
         });
       });
       prevDbmlRef.current = loaded.dbml;
@@ -283,7 +285,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       if (s === "saving" || s === "saved") return s;
       return "dirty";
     });
-  }, [dbml, positions, sizes, colors, collapsedGroups, canvasPages, activePageIds]);
+  }, [dbml, positions, sizes, colors, collapsedGroups, canvasPages, activePageIds, pinnedByTable]);
 
   const handleSave = useCallback((explicitDbml?: string) => {
     const s = useSchemaStore.getState();
@@ -296,6 +298,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       collapsedGroups: s.collapsedGroups,
       pages: s.canvasPages,
       activePageIds: s.activePageIds,
+      pinnedByTable: s.pinnedByTable,
     };
     const saveCall = s.currentProjectId
       ? api.saveProjectById(s.currentProjectId, dbmlToSave, canvas)
@@ -968,6 +971,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
             collapsedGroups: s.collapsedGroups,
             pages: s.canvasPages,
             activePageIds: s.activePageIds,
+            pinnedByTable: s.pinnedByTable,
           });
         } catch {
           /* ignore */
@@ -1068,6 +1072,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
           collapsedGroups: s.collapsedGroups,
           pages: s.canvasPages,
           activePageIds: s.activePageIds,
+          pinnedByTable: s.pinnedByTable,
         });
       } catch {
         /* ignore */

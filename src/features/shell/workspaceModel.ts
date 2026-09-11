@@ -251,6 +251,7 @@ export type HydratedProject = {
   sizes: Record<string, number | TableSize> | undefined;
   collapsedGroups: string[];
   projectId: string;
+  pinnedByTable: Record<string, string[]>;
 };
 
 export function hydrateFromProject(
@@ -279,6 +280,7 @@ export function hydrateFromProject(
     sizes: p.canvas?.sizes,
     collapsedGroups: p.canvas?.collapsedGroups ?? [],
     projectId,
+    pinnedByTable: p.canvas?.pinnedByTable ?? {},
   };
 }
 

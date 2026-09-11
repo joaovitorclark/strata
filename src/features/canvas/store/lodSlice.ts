@@ -5,7 +5,7 @@ import type { DocumentSlice } from "@/features/schema/store/documentSlice";
 
 const EMPTY_PINS: readonly string[] = [];
 
-/** Pins destined for dbt `meta.strata.pinned` (identity.md §7) once export emits that key. */
+/** Pins destined for dbt `meta.strata.pinned` (identity.md §7). */
 export type StrataMeta = {
   pinned: string[];
 };

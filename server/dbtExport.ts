@@ -136,6 +136,24 @@ function tableLdbMeta(t: Table, model: Model): Record<string, unknown> | undefin
   return Object.keys(meta).length ? meta : undefined;
 }
 
+/** Colunas pinadas pelo usuário (`identity.md` §7) — passthrough de `Table.dbtMeta.strata.pinned`. */
+function tableStrataPinned(t: Table): string[] {
+  const strata = t.dbtMeta?.strata;
+  if (!strata || typeof strata !== 'object' || Array.isArray(strata)) return [];
+  const pinned = (strata as Record<string, unknown>).pinned;
+  if (!Array.isArray(pinned)) return [];
+  return pinned.map(String);
+}
+
+/** `meta` da tabela: `localdrawdb` existente + `strata.pinned` (lista vazia se não houver pins). */
+function tableMetaYaml(t: Table, model: Model): Record<string, unknown> {
+  const meta: Record<string, unknown> = {};
+  const ldb = tableLdbMeta(t, model);
+  if (ldb) meta.localdrawdb = ldb;
+  meta.strata = { pinned: tableStrataPinned(t) };
+  return meta;
+}
+
 // ---------------------------------------------------------------------------
 // Lineage upstream → ref()/source()
 // ---------------------------------------------------------------------------
@@ -206,8 +224,7 @@ function sourcesYml(schema: string, tables: Table[], model: Model): string {
         tables: tables.map((t) => {
           const tbl: Record<string, unknown> = { name: t.name };
           if (t.note) tbl.description = t.note;
-          const meta = tableLdbMeta(t, model);
-          if (meta) tbl.meta = { localdrawdb: meta };
+          tbl.meta = tableMetaYaml(t, model);
           tbl.columns = t.columns.map((c) => columnEntry(t, c, model));
           return tbl;
         }),
@@ -226,8 +243,7 @@ function schemaYml(tables: Table[], model: Model): string {
       const entry: Record<string, unknown> = { name: t.name };
       if (t.note) entry.description = t.note;
       entry.config = config;
-      const meta = tableLdbMeta(t, model);
-      if (meta) entry.meta = { localdrawdb: meta };
+      entry.meta = tableMetaYaml(t, model);
       entry.columns = t.columns.map((c) => columnEntry(t, c, model));
       return entry;
     }),

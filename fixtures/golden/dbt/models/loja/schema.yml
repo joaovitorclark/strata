@@ -9,6 +9,8 @@ models:
         group: vendas
         pk:
           - id
+      strata:
+        pinned: []
     columns:
       - name: id
         data_type: bigint

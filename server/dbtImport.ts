@@ -64,6 +64,14 @@ function applyLdbMeta(table: Table, entry: any, acc: LdbAcc): void {
     }
   }
 
+  const pinned = entry?.meta?.strata?.pinned;
+  if (Array.isArray(pinned)) {
+    table.dbtMeta = {
+      ...(table.dbtMeta ?? {}),
+      strata: { pinned: pinned.map(String) },
+    };
+  }
+
   const qn = qualifiedName(table);
   for (const c of entry?.columns ?? []) {
     const cldb = c?.meta?.localdrawdb;

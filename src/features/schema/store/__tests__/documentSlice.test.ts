@@ -26,6 +26,37 @@ describe("documentSlice", () => {
     expect(s.currentProjectId).toBe("p1");
   });
 
+  it("hydrates pinnedByTable onto the lod slice and replaces prior pins", () => {
+    useSchemaStore.getState().pinColumn("old.t", "x");
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+      pinnedByTable: { "loja.pedido": ["total"] },
+    });
+    expect(useSchemaStore.getState().pinnedByTable).toEqual({ "loja.pedido": ["total"] });
+    expect(useSchemaStore.getState().pinnedColumns("loja.pedido")).toEqual(["total"]);
+    expect(useSchemaStore.getState().pinnedColumns("old.t")).toEqual([]);
+  });
+
+  it("hydrateDocument without pinnedByTable clears pins", () => {
+    useSchemaStore.getState().pinColumn("loja.pedido", "total");
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+    });
+    expect(useSchemaStore.getState().pinnedByTable).toEqual({});
+  });
+
   it("undo/redo restores {dbml,positions,colors} snapshots", () => {
     const s = useSchemaStore.getState();
     s.setDbml("A");

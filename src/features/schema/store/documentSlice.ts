@@ -48,6 +48,7 @@ export type DocumentSlice = {
     canvasPages: CanvasPage[];
     activePageIds: string[];
     currentProjectId?: string;
+    pinnedByTable?: Record<string, string[]>;
   }) => void;
   applySnapshot: (snapshot: Snapshot) => void;
   undo: () => void;
@@ -141,6 +142,9 @@ export const createDocumentSlice: StateCreator<
       state.canvasPages = next.canvasPages;
       state.activePageIds = [...next.activePageIds];
       if (next.currentProjectId !== undefined) state.currentProjectId = next.currentProjectId;
+      state.pinnedByTable = Object.fromEntries(
+        Object.entries(next.pinnedByTable ?? {}).map(([id, cols]) => [id, [...cols]]),
+      );
       state.past = [];
       state.future = [];
     }),
