@@ -732,6 +732,8 @@ export function Canvas(props: Props) {
           if (n.type === "table") setHovered(n.id);
         }}
         onNodeMouseLeave={() => setHovered(null)}
+        onEdgeMouseEnter={(_, e) => useInteraction.getState().peekEdge(e.id)}
+        onEdgeMouseLeave={() => useInteraction.getState().peekEdge(null)}
         onNodeClick={(event, n) => {
           if (n.type === "group") selectGroup(n.id.replace(/^group:/, ""));
           else if (n.type === "table") {

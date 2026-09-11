@@ -1,10 +1,11 @@
 import { memo, useState } from "react";
-import { NodeResizeControl, useStore, type Node, type NodeProps } from "@xyflow/react";
+import { NodeResizeControl, useEdges, useStore, type Node, type NodeProps } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
-import { resolveLod, type LodState } from "@/features/canvas/utils/lod";
+import { resolveLod } from "@/features/canvas/utils/lod";
+import { isLineageHandle } from "@/features/canvas/utils/lineageHandles";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
 import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
@@ -33,17 +34,63 @@ function layerEdgeClass(layerId: string | undefined): string {
   }
 }
 
+const PEEK_OPACITY = 0.34;
+
+type PeekEdge = {
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+  data?: {
+    endpoints?: { fromTbl: string; fromCol: string; toTbl: string; toCol: string };
+    mapping?: {
+      sourceTable: string;
+      sourceColumn: string;
+      targetTable: string;
+      targetColumn: string;
+    };
+  };
+};
+
+function participatingColumns(tableId: string, edge: PeekEdge): string[] | undefined {
+  if (edge.source !== tableId && edge.target !== tableId) return undefined;
+  const cols = new Set<string>();
+  const endpoints = edge.data?.endpoints;
+  if (endpoints) {
+    if (endpoints.fromTbl === tableId) cols.add(endpoints.fromCol);
+    if (endpoints.toTbl === tableId) cols.add(endpoints.toCol);
+  }
+  const mapping = edge.data?.mapping;
+  if (mapping) {
+    if (mapping.sourceTable === tableId) cols.add(mapping.sourceColumn);
+    if (mapping.targetTable === tableId) cols.add(mapping.targetColumn);
+  }
+  if (edge.source === tableId && edge.sourceHandle && !isLineageHandle(edge.sourceHandle)) {
+    cols.add(edge.sourceHandle.replace(/^[st]:/, ""));
+  }
+  if (edge.target === tableId && edge.targetHandle && !isLineageHandle(edge.targetHandle)) {
+    cols.add(edge.targetHandle.replace(/^[st]:/, ""));
+  }
+  return [...cols].filter(Boolean);
+}
+
 function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table">>) {
   const actions = useCanvasActions();
   const selectedColumn = useSchemaStore((s) =>
     s.selectedColumn && s.selectedColumn.table === data.id ? s.selectedColumn.column : null,
   );
-  const [lodPin, setLodPin] = useState<LodState | undefined>();
+  const lodPin = useSchemaStore((s) => s.nodeLod[data.id]);
+  const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
+  const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
+  const edges = useEdges();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
   const state = useStore((s) => resolveLod(s.transform[2], { pinned: lodPin, selected }));
+  const peeked = peekedEdgeId ? edges.find((e) => e.id === peekedEdgeId) : undefined;
+  const peekCols = peeked ? participatingColumns(data.id, peeked) : undefined;
+  const dimPeek = peekedEdgeId != null && peekCols === undefined;
 
   const layerId = actions.layerOf(data.id);
   const layer = actions.layers.find((l) => l.id === layerId);
@@ -56,7 +103,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   };
 
   return (
-    <div className="relative">
+    <div className="relative" style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}>
       <NodeResizeControl
         position="bottom-right"
         minWidth={200}
@@ -178,12 +225,22 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         <TableColumnList
           data={data}
           state={state}
-          pinned={[]}
+          pinned={pinned}
+          peekColumns={peekCols && peekCols.length > 0 ? peekCols : undefined}
           filter={state === "full" ? filter : ""}
           selectedColumn={selectedColumn}
           editing={editing}
           draft={draft}
-          onSelect={(column, altKey) => {
+          onSelect={(column, altKey, metaKey) => {
+            if (metaKey) {
+              const store = useSchemaStore.getState();
+              if (store.pinnedColumns(data.id).includes(column)) {
+                store.unpinColumn(data.id, column);
+              } else {
+                store.pinColumn(data.id, column);
+              }
+              return;
+            }
             if (altKey && actions.onGoToColumn) {
               actions.onGoToColumn(data.id, column);
               return;
@@ -197,7 +254,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
           onDraftChange={setDraft}
           onCommitEdit={commitEdit}
           onCancelEdit={() => setEditing(null)}
-          onShowMore={() => setLodPin("full")}
+          onShowMore={() => useSchemaStore.getState().setNodeLod(data.id, "full")}
         />
         {state !== "sigil" ? (
           <button

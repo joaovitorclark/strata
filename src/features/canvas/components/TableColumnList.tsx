@@ -35,10 +35,11 @@ export type TableColumnListProps = {
   state: LodState;
   pinned?: readonly string[];
   filter?: string;
+  peekColumns?: readonly string[];
   selectedColumn: string | null;
   editing: string | null;
   draft: string;
-  onSelect: (column: string, altKey: boolean) => void;
+  onSelect: (column: string, altKey: boolean, metaKey: boolean) => void;
   onStartEdit: (column: string) => void;
   onDraftChange: (value: string) => void;
   onCommitEdit: (oldName: string) => void;
@@ -52,6 +53,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     state,
     pinned = [],
     filter = "",
+    peekColumns,
     selectedColumn,
     editing,
     draft,
@@ -63,13 +65,15 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     onShowMore,
   } = props;
 
+  const peekSet = peekColumns?.length ? new Set(peekColumns) : null;
+  const scoped = peekSet ? data.columns.filter((c) => peekSet.has(c.name)) : data.columns;
   const filterText = filter.trim().toLowerCase();
   const columns = filterText
-    ? data.columns.filter(
+    ? scoped.filter(
         (c) =>
           c.name.toLowerCase().includes(filterText) || c.type.toLowerCase().includes(filterText),
       )
-    : data.columns;
+    : scoped;
 
   const scrollable = state === "full" && columns.length > COLUMN_VIRTUALIZE_THRESHOLD;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -151,8 +155,8 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
   if (state === "sigil") return null;
 
   if (state === "keys") {
-    const shown = keyColumns(data, pinned);
-    const hidden = data.columns.length - shown.length;
+    const shown = peekSet ? scoped : keyColumns(data, pinned);
+    const hidden = peekSet ? 0 : data.columns.length - shown.length;
     return (
       <div>
         {shown.map((c) => (

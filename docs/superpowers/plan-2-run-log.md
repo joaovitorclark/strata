@@ -61,3 +61,11 @@ Linhas do inventário: 0 checadas de 54 Canvas (mount ReactFlow travou no jsdom)
 Decisões que tomei sozinho: omiti SelectionBar; `--brand-green` → `--primary`; teste sample.dbml é parse+registry, não mount 1px.
 Preocupações: MiniMap some >200 tabelas (spec) em vez do modo lite do LDB; Canvas ainda não está no App.tsx
 Bloqueio: —
+
+## Task 17 — DONE_WITH_CONCERNS
+Commit: (pending-17)
+Portões que EU rodei: lodSlice 3/3 + interaction store; typecheck 0; format:check 0; useCanvasEdges intacto
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: `enableMapSet` já ligado — não dupliquei. `meta.strata.pinned` só no tipo; export dbt não alterado (evitei round-trip novo).
+Preocupações: pins não sobrevivem reload; Ctrl-click também pina
+Bloqueio: —

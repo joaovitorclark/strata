@@ -14,7 +14,7 @@ export type ColumnRowProps = {
   selectedColumn: string | null;
   editing: string | null;
   draft: string;
-  onSelect: (column: string, altKey: boolean) => void;
+  onSelect: (column: string, altKey: boolean, metaKey: boolean) => void;
   onStartEdit: (column: string) => void;
   onDraftChange: (value: string) => void;
   onCommitEdit: (oldName: string) => void;
@@ -64,7 +64,7 @@ function ColumnRowImpl({
       if (!d || isInteractiveChild(e.target)) return;
       if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) return;
       e.stopPropagation();
-      onSelect(c.name, e.altKey);
+      onSelect(c.name, e.altKey, e.metaKey || e.ctrlKey);
     },
     [c.name, isInteractiveChild, onSelect],
   );

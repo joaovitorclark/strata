@@ -1,4 +1,5 @@
 import type { StateCreator } from "zustand";
+import type { LodSlice } from "@/features/canvas/store/lodSlice";
 
 export type SelectedColumn = { table: string; column: string } | null;
 
@@ -47,7 +48,7 @@ export type InteractionSlice = {
 };
 
 export const createInteractionSlice: StateCreator<
-  InteractionSlice,
+  InteractionSlice & LodSlice,
   [["zustand/immer", never]],
   [],
   InteractionSlice
