@@ -2,7 +2,7 @@
 // Princípio: nomes de coluna são únicos numa tabela -> localização robusta por nome.
 import { splitDbmlBlocks, normalizeEol } from './blocks';
 import { quoteDbmlNote } from './dbmlNotes';
-import { splitTableColumn } from './dbmlClean';
+import { splitTableColumn, parsePinsBlock, extractRecords } from './dbmlClean';
 import { dbmlIdent } from './parse';
 
 const stripQuotes = (s: string) => s.replace(/["`]/g, '').trim();
@@ -611,6 +611,22 @@ function pruneLineageFieldsBlock(block: string, tableId: string): string | null 
   return `LineageFields {\n${bodyLines.join('\n')}\n}\n`;
 }
 
+function prunePinsBlock(block: string, tableId: string): string | null {
+  if (!/Pins\s*\{/i.test(block)) return block;
+  const bodyLines: string[] = [];
+  for (const line of block.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//') || /^Pins\s*\{/i.test(trimmed) || trimmed === '}') {
+      continue;
+    }
+    const sc = splitTableColumn(trimmed.replace(/["`]/g, ''));
+    if (!sc || tableMatches(sc.table, tableId)) continue;
+    bodyLines.push(line);
+  }
+  if (!bodyLines.length) return null;
+  return `Pins {\n${bodyLines.join('\n')}\n}\n`;
+}
+
 function clearInlineRefsToTable(src: string, tableId: string): string {
   return splitDbmlBlocks(src)
     .map((b) => {
@@ -650,6 +666,10 @@ export function removeTable(src: string, tableId: string): string {
       }
       if (b.type === 'lineageFields') {
         const pruned = pruneLineageFieldsBlock(b.text, id);
+        return pruned ?? '';
+      }
+      if (b.type === 'pins') {
+        const pruned = prunePinsBlock(b.text, id);
         return pruned ?? '';
       }
       return b.text;
@@ -756,4 +776,57 @@ export function setColumnColor(
   color: string | null,
 ): string {
   return setColorEntry(src, `${table}.${column}`, color);
+}
+
+function pinIdent(tableId: string, column: string): string {
+  return `${stripQuotes(tableId)}.${stripQuotes(column)}`;
+}
+
+/** Grava `schema.tabela.coluna` no bloco `Pins {}` (cria o bloco se não existir). */
+export function pinColumn(src: string, tableId: string, column: string): string {
+  const ident = pinIdent(tableId, column);
+  if (!ident.includes('.')) return src;
+  const line = `  ${ident}`;
+  const blocks = splitDbmlBlocks(src);
+  const block = blocks.find((b) => b.type === 'pins');
+  if (block) {
+    if (parsePinsBlock(block.text).includes(ident)) return src;
+    const close = block.text.lastIndexOf('}');
+    if (close >= 0) {
+      const newText = block.text.slice(0, close) + `${line}\n` + block.text.slice(close);
+      return src.replace(block.text, newText);
+    }
+  }
+  return `${src.replace(/\n+$/, '')}\n\nPins {\n${line}\n}\n`.replace(/^\n+/, '');
+}
+
+/** Remove uma coluna do bloco `Pins {}`. Remove o bloco se ficar vazio. */
+export function unpinColumn(src: string, tableId: string, column: string): string {
+  const ident = pinIdent(tableId, column);
+  const blocks = splitDbmlBlocks(src);
+  const block = blocks.find((b) => b.type === 'pins');
+  if (!block) return src;
+  const updated = block.text
+    .split('\n')
+    .filter((l) => {
+      const t = l.trim().replace(/["`]/g, '');
+      if (!t || /^Pins\s*\{/i.test(t) || t === '}') return true;
+      return t !== ident;
+    })
+    .join('\n');
+  if (!/\S/.test(updated.replace(/Pins\s*\{/i, '').replace('}', ''))) {
+    return src.replace(block.text, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  }
+  return src.replace(block.text, updated);
+}
+
+/** One-shot: fold canvas.json pins into `Pins {}` when the DBML has none. */
+export function migrateCanvasPins(src: string, byTable?: Record<string, string[]>): string {
+  if (!byTable || !Object.keys(byTable).length) return src;
+  if (extractRecords(src).pins.length) return src;
+  let out = src;
+  for (const [table, cols] of Object.entries(byTable)) {
+    for (const col of cols) out = pinColumn(out, table, col);
+  }
+  return out;
 }

@@ -190,8 +190,10 @@ in Sigil and to the **column handle** in Keys/Full, so relationships never dangl
 
 ### Supporting mechanics
 
-- **Pinned columns.** PK and FK auto-pin. `⌘click` any column to pin it; pins survive in Keys view
-  and round-trip into dbt `schema.yml` under `meta.strata.pinned`.
+- **Pinned columns.** PK and FK auto-pin. `⌘click` any column to pin it; pins live in the DBML
+  `Pins {}` block (same class as `Colors {}`) and round-trip into dbt `schema.yml` under
+  `meta.strata.pinned`. The export endpoint receives only DBML, so canvas-only state would not
+  survive.
 - **In-node filter.** At Full, a filter field appears in the node header. Typing `_at` narrows 187
   columns to the 12 timestamps without leaving the canvas.
 - **Edge peek.** Hovering a relationship surfaces *only* the participating columns on both endpoints

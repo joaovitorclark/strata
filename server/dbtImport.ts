@@ -12,15 +12,17 @@ type LdbAcc = {
   colors: Record<string, string>;
   layerColors: Record<string, string>;
   lineageFields: FieldLineageEntry[];
+  pins: string[];
 };
 
-const newLdbAcc = (): LdbAcc => ({ colors: {}, layerColors: {}, lineageFields: [] });
+const newLdbAcc = (): LdbAcc => ({ colors: {}, layerColors: {}, lineageFields: [], pins: [] });
 
 /** Espalha os campos do acumulador no Model (omitindo vazios). */
 function applyLdbAcc(model: Model, acc: LdbAcc): Model {
   if (Object.keys(acc.colors).length) model.colors = acc.colors;
   if (Object.keys(acc.layerColors).length) model.layerColors = acc.layerColors;
   if (acc.lineageFields.length) model.lineageFields = acc.lineageFields;
+  if (acc.pins.length) model.pins = [...new Set(acc.pins)];
   return model;
 }
 
@@ -65,14 +67,15 @@ function applyLdbMeta(table: Table, entry: any, acc: LdbAcc): void {
   }
 
   const pinned = entry?.meta?.strata?.pinned;
+  const qn = qualifiedName(table);
   if (Array.isArray(pinned)) {
-    table.dbtMeta = {
-      ...(table.dbtMeta ?? {}),
-      strata: { pinned: pinned.map(String) },
-    };
+    for (const col of pinned) {
+      const name = String(col);
+      if (!name) continue;
+      acc.pins.push(`${qn}.${name}`);
+    }
   }
 
-  const qn = qualifiedName(table);
   for (const c of entry?.columns ?? []) {
     const cldb = c?.meta?.localdrawdb;
     if (!cldb || typeof cldb !== 'object') continue;
@@ -298,6 +301,7 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
     Object.assign(acc.colors, m.colors ?? {});
     Object.assign(acc.layerColors, m.layerColors ?? {});
     if (m.lineageFields?.length) acc.lineageFields.push(...m.lineageFields);
+    if (m.pins?.length) acc.pins.push(...m.pins);
   }
 
   const lineage: LineageEntry[] = [];

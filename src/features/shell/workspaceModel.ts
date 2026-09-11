@@ -14,8 +14,14 @@ import {
   LARGE_DIAGRAM_HINT,
   PAGE_WIZARD_THRESHOLD,
 } from "@/features/canvas/utils/scaleLimits";
-import { isCompleteTableId, renameColumnAllRefs, renameTable } from "@/features/schema/model/edit";
+import {
+  isCompleteTableId,
+  migrateCanvasPins,
+  renameColumnAllRefs,
+  renameTable,
+} from "@/features/schema/model/edit";
 import { parseDbml, type ParseResult } from "@/features/schema/model/parse";
+import { extractRecords, pinnedByTableFromList } from "@/features/schema/model/dbmlClean";
 import {
   keepSeparateKeyRename,
   propagateKeyRename,
@@ -258,7 +264,8 @@ export function hydrateFromProject(
   p: { dbml: string; canvas?: CanvasState },
   projectId: string,
 ): HydratedProject {
-  const dbml0 = p.dbml || SAMPLE_DBML;
+  const rawDbml = p.dbml || SAMPLE_DBML;
+  const dbml0 = migrateCanvasPins(rawDbml, p.canvas?.pinnedByTable);
   const pos0 = p.canvas?.positions ?? {};
   const col0 = p.canvas?.colors ?? {};
   const parsed0 = parseDbml(dbml0);
@@ -280,7 +287,7 @@ export function hydrateFromProject(
     sizes: p.canvas?.sizes,
     collapsedGroups: p.canvas?.collapsedGroups ?? [],
     projectId,
-    pinnedByTable: p.canvas?.pinnedByTable ?? {},
+    pinnedByTable: pinnedByTableFromList(extractRecords(dbml0).pins),
   };
 }
 

@@ -975,6 +975,7 @@ export function mergeModel(base: Model, incoming: Model): Model {
   const lineageFields = mergeFieldLineageEntries(base.lineageFields, incoming.lineageFields);
   const colors = { ...(base.colors ?? {}), ...(incoming.colors ?? {}) };
   const layerColors = { ...(base.layerColors ?? {}), ...(incoming.layerColors ?? {}) };
+  const pinSet = [...new Set([...(base.pins ?? []), ...(incoming.pins ?? [])])];
   return {
     tables: [...byKey.values()],
     refs,
@@ -982,6 +983,7 @@ export function mergeModel(base: Model, incoming: Model): Model {
     lineageFields: lineageFields.length ? lineageFields : undefined,
     colors: Object.keys(colors).length ? colors : undefined,
     layerColors: Object.keys(layerColors).length ? layerColors : undefined,
+    pins: pinSet.length ? pinSet : undefined,
     warnings: warnings.length ? warnings : undefined,
   };
 }

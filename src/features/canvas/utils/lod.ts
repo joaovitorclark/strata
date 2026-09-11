@@ -28,9 +28,8 @@ export function resolveLod(
  * user pinned.
  *
  * Pins arrive as a parameter rather than a field on the column, because pinning
- * is user state that lives in the store (Task 17), not in the parsed model. This
- * function must stay pure — `lodHeight` calls it, and `autolayout` calls that.
- * Task 17 passes real pins; until then callers pass none.
+ * is user state that lives in the DBML `Pins {}` block (and the store cache).
+ * This function must stay pure — `lodHeight` calls it, and `autolayout` calls that.
  */
 export function keyColumns(
   data: TableNodeData,

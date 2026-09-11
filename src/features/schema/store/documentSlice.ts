@@ -4,6 +4,8 @@ import type { LodSlice } from "@/features/canvas/store/lodSlice";
 import { allTablesPage } from "@/features/canvas/utils/pageFilter";
 import type { InteractionSlice } from "./interactionSlice";
 import type { CanvasPage, ProjectMeta, TableSize } from "@/infrastructure/api";
+import { extractRecords, pinnedByTableFromList } from "@/features/schema/model/dbmlClean";
+import { migrateCanvasPins } from "@/features/schema/model/edit";
 
 export type Positions = Record<string, { x: number; y: number }>;
 export type Colors = Record<string, string>;
@@ -64,6 +66,10 @@ function cloneSnapshot(s: Snapshot): Snapshot {
   return { dbml: s.dbml, positions: { ...s.positions }, colors: { ...s.colors } };
 }
 
+function syncPinsFromDbml(state: { dbml: string; pinnedByTable: Record<string, string[]> }) {
+  state.pinnedByTable = pinnedByTableFromList(extractRecords(state.dbml).pins);
+}
+
 export const createDocumentSlice: StateCreator<
   InteractionSlice & LodSlice & DocumentSlice,
   [["zustand/immer", never]],
@@ -87,6 +93,7 @@ export const createDocumentSlice: StateCreator<
   setDbml: (update) =>
     set((state) => {
       state.dbml = applyUpdate(state.dbml, update);
+      syncPinsFromDbml(state);
     }),
   setPositions: (update) =>
     set((state) => {
@@ -134,7 +141,6 @@ export const createDocumentSlice: StateCreator<
     }),
   hydrateDocument: (next) =>
     set((state) => {
-      state.dbml = next.dbml;
       state.positions = { ...next.positions };
       state.sizes = { ...next.sizes };
       state.colors = { ...next.colors };
@@ -142,9 +148,8 @@ export const createDocumentSlice: StateCreator<
       state.canvasPages = next.canvasPages;
       state.activePageIds = [...next.activePageIds];
       if (next.currentProjectId !== undefined) state.currentProjectId = next.currentProjectId;
-      state.pinnedByTable = Object.fromEntries(
-        Object.entries(next.pinnedByTable ?? {}).map(([id, cols]) => [id, [...cols]]),
-      );
+      state.dbml = migrateCanvasPins(next.dbml, next.pinnedByTable);
+      syncPinsFromDbml(state);
       state.past = [];
       state.future = [];
     }),
@@ -153,6 +158,7 @@ export const createDocumentSlice: StateCreator<
       state.dbml = snapshot.dbml;
       state.positions = { ...snapshot.positions };
       state.colors = { ...snapshot.colors };
+      syncPinsFromDbml(state);
     }),
   undo: () =>
     set((state) => {
@@ -165,6 +171,7 @@ export const createDocumentSlice: StateCreator<
       state.dbml = prev.dbml;
       state.positions = { ...prev.positions };
       state.colors = { ...prev.colors };
+      syncPinsFromDbml(state);
     }),
   redo: () =>
     set((state) => {
@@ -177,6 +184,7 @@ export const createDocumentSlice: StateCreator<
       state.dbml = next.dbml;
       state.positions = { ...next.positions };
       state.colors = { ...next.colors };
+      syncPinsFromDbml(state);
     }),
   pushHistory: (baseline) =>
     set((state) => {

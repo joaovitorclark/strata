@@ -324,7 +324,30 @@ export function parseColorsBlock(block: string): ParsedColor[] {
   return out;
 }
 
-const CUSTOM_TYPES = new Set(['records', 'layerGroup', 'lineage', 'lineageFields', 'dbt', 'rolenames', 'colors']);
+/** Parse de `Pins { schema.tabela.coluna }` — um identificador por linha. */
+export function parsePinsBlock(block: string): string[] {
+  const out: string[] = [];
+  for (const raw of block.split('\n')) {
+    const line = raw.trim().replace(/["`]/g, '');
+    if (!line || line.startsWith('//') || /^Pins\s*\{/i.test(line) || line === '}') continue;
+    if (!out.includes(line)) out.push(line);
+  }
+  return out;
+}
+
+/** Agrupa `schema.tabela.coluna` por id de tabela (LOD Keys). */
+export function pinnedByTableFromList(pins: string[]): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const q of pins) {
+    const sc = splitTableColumn(q);
+    if (!sc) continue;
+    const list = out[sc.table] ?? (out[sc.table] = []);
+    if (!list.includes(sc.column)) list.push(sc.column);
+  }
+  return out;
+}
+
+const CUSTOM_TYPES = new Set(['records', 'layerGroup', 'lineage', 'lineageFields', 'dbt', 'rolenames', 'colors', 'pins']);
 
 /** Remove blocos extras antes do @dbml/core. */
 export function cleanDbml(src: string): string {
@@ -393,6 +416,7 @@ export function extractRecords(src: string): {
   dbtTables: ParsedDbtTable[];
   rolenames: ParsedRolename[];
   colors: ParsedColor[];
+  pins: string[];
   mapCleanLineToOriginal: CleanLineMap;
 } {
   const blocks = splitDbmlBlocks(src);
@@ -403,6 +427,7 @@ export function extractRecords(src: string): {
   const dbtTables: ParsedDbtTable[] = [];
   const rolenames: ParsedRolename[] = [];
   const colors: ParsedColor[] = [];
+  const pins: string[] = [];
   for (const b of blocks) {
     if (b.type === 'records') {
       const pr = parseRecords(b.text);
@@ -420,8 +445,12 @@ export function extractRecords(src: string): {
       rolenames.push(...parseRolenamesBlock(b.text));
     } else if (b.type === 'colors') {
       colors.push(...parseColorsBlock(b.text));
+    } else if (b.type === 'pins') {
+      for (const p of parsePinsBlock(b.text)) {
+        if (!pins.includes(p)) pins.push(p);
+      }
     }
   }
   const { clean, mapCleanLineToOriginal } = buildCleanFromBlocks(blocks);
-  return { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, mapCleanLineToOriginal };
+  return { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal };
 }

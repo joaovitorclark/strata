@@ -2,10 +2,14 @@ import type { StateCreator } from "zustand";
 import type { LodState } from "@/features/canvas/utils/lod";
 import type { InteractionSlice } from "@/features/schema/store/interactionSlice";
 import type { DocumentSlice } from "@/features/schema/store/documentSlice";
+import {
+  pinColumn as writePin,
+  unpinColumn as writeUnpin,
+} from "@/features/schema/model/edit";
 
 const EMPTY_PINS: readonly string[] = [];
 
-/** Pins destined for dbt `meta.strata.pinned` (identity.md §7). */
+/** Pins destined for dbt `meta.strata.pinned` (identity.md §7) via DBML `Pins {}`. */
 export type StrataMeta = {
   pinned: string[];
 };
@@ -28,21 +32,12 @@ export const createLodSlice: StateCreator<
   LodSlice
 > = (set, get) => ({
   pinnedByTable: {},
-  pinColumn: (tableId, column) =>
-    set((state) => {
-      const list = state.pinnedByTable[tableId];
-      if (!list) {
-        state.pinnedByTable[tableId] = [column];
-        return;
-      }
-      if (!list.includes(column)) list.push(column);
-    }),
-  unpinColumn: (tableId, column) =>
-    set((state) => {
-      const list = state.pinnedByTable[tableId];
-      if (!list) return;
-      state.pinnedByTable[tableId] = list.filter((name) => name !== column);
-    }),
+  pinColumn: (tableId, column) => {
+    get().setDbml((d) => writePin(d, tableId, column));
+  },
+  unpinColumn: (tableId, column) => {
+    get().setDbml((d) => writeUnpin(d, tableId, column));
+  },
   pinnedColumns: (tableId) => get().pinnedByTable[tableId] ?? EMPTY_PINS,
   nodeLod: {},
   setNodeLod: (tableId, lod) =>

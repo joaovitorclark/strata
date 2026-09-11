@@ -27,7 +27,7 @@ function isDegenerateRef(r: Ref): boolean {
 
 /** Faz parse de uma string DBML para o modelo canônico (inclui LayerGroup, Records, PK composta, Dbt). */
 export function dbmlToModel(dbml: string): Model {
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, colors } =
+  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, colors, pins } =
     extractRecords(dbml);
   const db = Parser.parse(clean, 'dbml');
   const tables: Table[] = [];
@@ -161,6 +161,7 @@ export function dbmlToModel(dbml: string): Model {
     lineageFields: modelLineageFields,
     colors: Object.keys(modelColors).length ? modelColors : undefined,
     layerColors: Object.keys(modelLayerColors).length ? modelLayerColors : undefined,
+    pins: pins.length ? pins : undefined,
   };
 }
 
@@ -331,6 +332,13 @@ export function modelToDbml(model: Model): string {
     out.push('');
     out.push('Colors {');
     for (const [key, color] of colorEntries) out.push(`  ${key}: ${color}`);
+    out.push('}');
+  }
+
+  if (model.pins?.length) {
+    out.push('');
+    out.push('Pins {');
+    for (const p of model.pins) out.push(`  ${p}`);
     out.push('}');
   }
 

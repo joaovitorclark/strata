@@ -5,6 +5,7 @@ import yaml from 'js-yaml';
 import { pkCols, qualifiedName } from './model.ts';
 import type { Column, ColumnTest, Model, Ref, Table } from './model.ts';
 import { materializationForLayer, resourceTypeForLayer } from '../src/features/schema/model/layers.ts';
+import { splitTableColumn } from '../src/features/schema/model/dbmlClean.ts';
 
 export type DbtFile = { path: string; content: string };
 
@@ -136,22 +137,28 @@ function tableLdbMeta(t: Table, model: Model): Record<string, unknown> | undefin
   return Object.keys(meta).length ? meta : undefined;
 }
 
-/** Colunas pinadas pelo usuário (`identity.md` §7) — passthrough de `Table.dbtMeta.strata.pinned`. */
-function tableStrataPinned(t: Table): string[] {
-  const strata = t.dbtMeta?.strata;
-  if (!strata || typeof strata !== 'object' || Array.isArray(strata)) return [];
-  const pinned = (strata as Record<string, unknown>).pinned;
-  if (!Array.isArray(pinned)) return [];
-  return pinned.map(String);
+/** Colunas pinadas pelo usuário (`identity.md` §7) — do bloco DBML `Pins {}`, não de dbtMeta. */
+function tableStrataPinned(t: Table, model: Model): string[] {
+  const qn = qualifiedName(t);
+  const out: string[] = [];
+  for (const p of model.pins ?? []) {
+    const sc = splitTableColumn(p);
+    if (!sc) continue;
+    if (sc.table === qn || sc.table === t.name) {
+      if (!out.includes(sc.column)) out.push(sc.column);
+    }
+  }
+  return out;
 }
 
-/** `meta` da tabela: `localdrawdb` existente + `strata.pinned` (lista vazia se não houver pins). */
-function tableMetaYaml(t: Table, model: Model): Record<string, unknown> {
+/** `meta` da tabela: `localdrawdb` existente + `strata.pinned` só quando houver pins. */
+function tableMetaYaml(t: Table, model: Model): Record<string, unknown> | undefined {
   const meta: Record<string, unknown> = {};
   const ldb = tableLdbMeta(t, model);
   if (ldb) meta.localdrawdb = ldb;
-  meta.strata = { pinned: tableStrataPinned(t) };
-  return meta;
+  const pinned = tableStrataPinned(t, model);
+  if (pinned.length) meta.strata = { pinned };
+  return Object.keys(meta).length ? meta : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +231,8 @@ function sourcesYml(schema: string, tables: Table[], model: Model): string {
         tables: tables.map((t) => {
           const tbl: Record<string, unknown> = { name: t.name };
           if (t.note) tbl.description = t.note;
-          tbl.meta = tableMetaYaml(t, model);
+          const meta = tableMetaYaml(t, model);
+          if (meta) tbl.meta = meta;
           tbl.columns = t.columns.map((c) => columnEntry(t, c, model));
           return tbl;
         }),
@@ -243,7 +251,8 @@ function schemaYml(tables: Table[], model: Model): string {
       const entry: Record<string, unknown> = { name: t.name };
       if (t.note) entry.description = t.note;
       entry.config = config;
-      entry.meta = tableMetaYaml(t, model);
+      const meta = tableMetaYaml(t, model);
+      if (meta) entry.meta = meta;
       entry.columns = t.columns.map((c) => columnEntry(t, c, model));
       return entry;
     }),

@@ -68,6 +68,8 @@ export type Model = {
   colors?: Record<string, string>;
   /** Cores de camada (`LayerGroup nome [color: #hex]`) — chave: nome da camada. */
   layerColors?: Record<string, string>;
+  /** Colunas pinadas (bloco DBML `Pins {}`) — `schema.tabela.coluna`. */
+  pins?: string[];
   /** Avisos do import SQL (ex.: FK composta com aridade divergente). */
   warnings?: string[];
 };

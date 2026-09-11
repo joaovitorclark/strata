@@ -45,5 +45,7 @@ describe("workspaceModel", () => {
       "p1",
     );
     expect(loaded.pinnedByTable).toEqual({ a: ["id"] });
+    expect(loaded.dbml).toMatch(/Pins\s*\{/);
+    expect(loaded.dbml).toContain("a.id");
   });
 });

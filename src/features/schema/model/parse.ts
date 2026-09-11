@@ -73,6 +73,8 @@ export type ParseResult = {
   rolenames: ParsedRolename[];
   /** Cor por tabela (do bloco Colors {}) — id da tabela -> hex/nome. */
   colors: Record<string, string>;
+  /** Colunas pinadas (bloco Pins {}) — `schema.tabela.coluna`. */
+  pins?: string[];
   error?: string;
   /** Linha 0-based no buffer do editor (quando disponível). */
   errorLine?: number;
@@ -175,9 +177,9 @@ function applyTableGroupMembership(dbml: string, tables: TableView[]): void {
 
 export function parseDbml(dbml: string): ParseResult {
   if (!dbml.trim()) {
-    return { tables: [], refs: [], records: [], layerGroups: [], lineage: [], lineageFields: [], rolenames: [], colors: {} };
+    return { tables: [], refs: [], records: [], layerGroups: [], lineage: [], lineageFields: [], rolenames: [], colors: {}, pins: [] };
   }
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, mapCleanLineToOriginal } =
+  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal } =
     extractRecords(dbml);
   const colorsMap = Object.fromEntries(colors.map((c) => [c.table, c.color]));
   let db: any;
@@ -187,7 +189,7 @@ export function parseDbml(dbml: string): ParseResult {
     const { rawMessage, cleanLine0 } = formatParseError(e);
     const { message, line } = buildParseError(dbml, rawMessage, cleanLine0, mapCleanLineToOriginal);
     return {
-      tables: [], refs: [], records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, error: message, errorLine: line,
+      tables: [], refs: [], records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins, error: message, errorLine: line,
     };
   }
 
@@ -269,7 +271,7 @@ export function parseDbml(dbml: string): ParseResult {
     }
   }
 
-  return { tables, refs, records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap };
+  return { tables, refs, records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins };
 }
 
 /** Snippet de colunas de metadados padrão do lakehouse. */

@@ -26,7 +26,7 @@ export type CanvasState = {
   activePageIds?: string[];
   /** @deprecated use activePageIds */
   activePageId?: string | null;
-  /** Colunas pinadas por tabela (⌘click). Sobrevive ao reload via canvas.json. */
+  /** @deprecated pins live in DBML `Pins {}`; kept so old canvas.json can migrate on load. */
   pinnedByTable?: Record<string, string[]>;
 };
 
