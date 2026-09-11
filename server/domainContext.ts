@@ -6,9 +6,9 @@ import { DATA_DIR } from './paths.ts';
 export const DOMAINS_DIR_NAME = 'domains';
 export const DOMAINS_REGISTRY_FILE = 'domains.json';
 
-/** Diretório base de dados: LOCALDRAWDB_DATA_DIR (testes) ou ROOT/data (produção). */
+/** Diretório base de dados: STRATA_DATA_DIR / LOCALDRAWDB_DATA_DIR (testes) ou ROOT/data (produção). */
 export function baseDataDir(): string {
-  return process.env.LOCALDRAWDB_DATA_DIR ?? DATA_DIR;
+  return process.env.STRATA_DATA_DIR ?? process.env.LOCALDRAWDB_DATA_DIR ?? DATA_DIR;
 }
 
 export function domainsRootDir(): string {
@@ -25,7 +25,7 @@ export function domainDirFor(slug: string): string {
 
 // Três estados: `undefined` = nunca setado explicitamente (cai no pin de env);
 // `null` = limpo explicitamente (clearContext — não volta a cair no pin, senão o
-// clear seria no-op numa instância com LOCALDRAWDB_DOMAIN); string = ativo.
+// clear seria no-op numa instância com STRATA_DOMAIN / LOCALDRAWDB_DOMAIN); string = ativo.
 let activeDomainSlug: string | null | undefined = undefined;
 
 /** Define o domínio ativo do processo (contexto em memória — não persiste em disco). */
@@ -33,10 +33,10 @@ export function setActiveDomainSlug(slug: string | null): void {
   activeDomainSlug = slug;
 }
 
-/** Domínio ativo: memória (setActiveDomainSlug) > LOCALDRAWDB_DOMAIN (pin de processo) > null. */
+/** Domínio ativo: memória (setActiveDomainSlug) > STRATA_DOMAIN / LOCALDRAWDB_DOMAIN (pin) > null. */
 export function getActiveDomainSlug(): string | null {
   if (activeDomainSlug !== undefined) return activeDomainSlug;
-  const pinned = process.env.LOCALDRAWDB_DOMAIN?.trim();
+  const pinned = (process.env.STRATA_DOMAIN ?? process.env.LOCALDRAWDB_DOMAIN)?.trim();
   return pinned || null;
 }
 

@@ -6,6 +6,10 @@ src/components/ui/
 node_modules/
 dist/
 .superpowers/
+cypress/fixtures/data/
+cypress/reports/
+cypress/screenshots/
+cypress/videos/
 
 # ── Ignorado ATÉ o fim do Stage 6 ───────────────────────────
 # Porte verbatim do LocalDrawDB. A regra do verbatim permite Prettier, mas um

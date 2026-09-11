@@ -9,14 +9,16 @@ import { getActiveDomainSlug, domainDirFor } from './domainContext.ts';
 export { ROOT, DATA_DIR };
 
 /**
- * Diretório de dados efetivo: domínio ativo (memória ou LOCALDRAWDB_DOMAIN)
- * tem prioridade; senão, LOCALDRAWDB_DATA_DIR (compat com testes/legado);
- * senão, lança erro — nenhuma rota deve chamar isto sem domínio nem override.
+ * Diretório de dados efetivo: domínio ativo (memória ou STRATA_DOMAIN /
+ * LOCALDRAWDB_DOMAIN) tem prioridade; senão, STRATA_DATA_DIR /
+ * LOCALDRAWDB_DATA_DIR (compat com testes/legado); senão, lança erro —
+ * nenhuma rota deve chamar isto sem domínio nem override.
  */
 function getDataDir(): string {
   const slug = getActiveDomainSlug();
   if (slug) return domainDirFor(slug);
-  if (process.env.LOCALDRAWDB_DATA_DIR) return process.env.LOCALDRAWDB_DATA_DIR;
+  const override = process.env.STRATA_DATA_DIR ?? process.env.LOCALDRAWDB_DATA_DIR;
+  if (override) return override;
   throw new Error('Nenhum domínio ativo — selecione um projeto na tela de escolha.');
 }
 

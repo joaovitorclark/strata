@@ -1,0 +1,1406 @@
+Table lake.t001 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t002 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t003 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t004 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t005 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t006 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t007 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t008 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t009 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t010 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t011 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t012 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t013 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t014 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t015 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t016 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t017 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t018 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t019 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t020 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t021 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t022 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t023 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t024 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t025 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t026 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t027 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t028 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t029 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t030 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t031 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t032 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t033 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t034 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t035 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t036 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t037 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t038 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t039 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t040 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t041 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t042 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t043 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t044 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t045 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t046 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t047 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t048 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t049 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t050 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t051 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t052 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t053 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t054 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t055 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t056 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t057 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t058 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t059 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t060 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t061 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t062 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t063 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t064 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t065 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t066 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t067 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t068 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t069 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t070 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t071 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t072 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t073 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t074 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t075 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t076 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t077 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t078 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t079 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t080 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t081 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t082 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t083 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t084 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t085 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t086 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t087 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t088 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t089 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t090 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t091 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t092 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t093 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t094 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t095 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t096 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t097 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t098 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t099 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t100 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t101 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t102 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t103 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t104 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t105 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t106 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t107 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t108 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t109 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t110 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t111 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t112 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t113 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t114 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t115 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t116 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t117 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t118 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t119 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t120 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t121 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t122 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t123 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t124 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t125 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t126 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t127 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t128 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t129 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t130 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t131 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t132 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t133 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t134 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t135 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t136 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t137 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t138 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t139 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t140 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t141 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t142 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t143 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t144 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t145 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t146 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t147 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t148 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t149 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t150 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t151 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t152 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t153 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t154 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t155 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t156 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t157 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t158 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t159 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t160 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t161 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t162 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t163 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t164 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t165 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t166 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t167 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t168 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t169 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t170 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t171 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t172 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t173 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t174 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t175 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t176 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t177 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t178 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t179 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t180 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t181 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t182 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t183 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t184 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t185 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t186 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t187 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t188 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t189 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t190 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t191 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t192 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t193 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t194 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t195 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t196 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t197 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t198 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t199 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+Table lake.t200 {
+  id bigint [pk]
+  a int
+  b string
+}
+
+LayerGroup bronze {
+  lake.t001
+  lake.t004
+  lake.t007
+  lake.t010
+  lake.t013
+  lake.t016
+  lake.t019
+  lake.t022
+  lake.t025
+  lake.t028
+  lake.t031
+  lake.t034
+  lake.t037
+  lake.t040
+  lake.t043
+  lake.t046
+  lake.t049
+  lake.t052
+  lake.t055
+  lake.t058
+  lake.t061
+  lake.t064
+  lake.t067
+  lake.t070
+  lake.t073
+  lake.t076
+  lake.t079
+  lake.t082
+  lake.t085
+  lake.t088
+  lake.t091
+  lake.t094
+  lake.t097
+  lake.t100
+  lake.t103
+  lake.t106
+  lake.t109
+  lake.t112
+  lake.t115
+  lake.t118
+  lake.t121
+  lake.t124
+  lake.t127
+  lake.t130
+  lake.t133
+  lake.t136
+  lake.t139
+  lake.t142
+  lake.t145
+  lake.t148
+  lake.t151
+  lake.t154
+  lake.t157
+  lake.t160
+  lake.t163
+  lake.t166
+  lake.t169
+  lake.t172
+  lake.t175
+  lake.t178
+  lake.t181
+  lake.t184
+  lake.t187
+  lake.t190
+  lake.t193
+  lake.t196
+  lake.t199
+}
+LayerGroup prata {
+  lake.t002
+  lake.t005
+  lake.t008
+  lake.t011
+  lake.t014
+  lake.t017
+  lake.t020
+  lake.t023
+  lake.t026
+  lake.t029
+  lake.t032
+  lake.t035
+  lake.t038
+  lake.t041
+  lake.t044
+  lake.t047
+  lake.t050
+  lake.t053
+  lake.t056
+  lake.t059
+  lake.t062
+  lake.t065
+  lake.t068
+  lake.t071
+  lake.t074
+  lake.t077
+  lake.t080
+  lake.t083
+  lake.t086
+  lake.t089
+  lake.t092
+  lake.t095
+  lake.t098
+  lake.t101
+  lake.t104
+  lake.t107
+  lake.t110
+  lake.t113
+  lake.t116
+  lake.t119
+  lake.t122
+  lake.t125
+  lake.t128
+  lake.t131
+  lake.t134
+  lake.t137
+  lake.t140
+  lake.t143
+  lake.t146
+  lake.t149
+  lake.t152
+  lake.t155
+  lake.t158
+  lake.t161
+  lake.t164
+  lake.t167
+  lake.t170
+  lake.t173
+  lake.t176
+  lake.t179
+  lake.t182
+  lake.t185
+  lake.t188
+  lake.t191
+  lake.t194
+  lake.t197
+  lake.t200
+}
+LayerGroup ouro {
+  lake.t003
+  lake.t006
+  lake.t009
+  lake.t012
+  lake.t015
+  lake.t018
+  lake.t021
+  lake.t024
+  lake.t027
+  lake.t030
+  lake.t033
+  lake.t036
+  lake.t039
+  lake.t042
+  lake.t045
+  lake.t048
+  lake.t051
+  lake.t054
+  lake.t057
+  lake.t060
+  lake.t063
+  lake.t066
+  lake.t069
+  lake.t072
+  lake.t075
+  lake.t078
+  lake.t081
+  lake.t084
+  lake.t087
+  lake.t090
+  lake.t093
+  lake.t096
+  lake.t099
+  lake.t102
+  lake.t105
+  lake.t108
+  lake.t111
+  lake.t114
+  lake.t117
+  lake.t120
+  lake.t123
+  lake.t126
+  lake.t129
+  lake.t132
+  lake.t135
+  lake.t138
+  lake.t141
+  lake.t144
+  lake.t147
+  lake.t150
+  lake.t153
+  lake.t156
+  lake.t159
+  lake.t162
+  lake.t165
+  lake.t168
+  lake.t171
+  lake.t174
+  lake.t177
+  lake.t180
+  lake.t183
+  lake.t186
+  lake.t189
+  lake.t192
+  lake.t195
+  lake.t198
+}

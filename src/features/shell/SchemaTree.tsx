@@ -92,6 +92,7 @@ export function SchemaTree({ tables, layerOf }: SchemaTreeProps) {
 
   return (
     <nav
+      data-testid="schema-tree"
       aria-label={t("shell.schemaTree.title")}
       className="flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground"
     >
