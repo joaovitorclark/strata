@@ -164,7 +164,7 @@ Bloqueio: —
 
 ## Task 47 — VERDE
 
-Commit: (this commit)
+Commit: `9b54a9f`
 Portões que EU rodei:
 - `npm run test` → **125 files / 880 tests**
 - `npm run typecheck` → 0
