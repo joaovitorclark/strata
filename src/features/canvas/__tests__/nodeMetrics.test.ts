@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { TableView } from '@/features/schema/model/parse';
 import { nodeHeight } from '@/features/canvas/utils/nodeMetrics';
-import { COLUMN_VIRTUAL_VIEW_ROWS, COLUMN_VIRTUAL_ROW_H } from '@/features/canvas/utils/scaleLimits';
+import {
+  COLUMN_VIRTUAL_VIEW_ROWS,
+  COLUMN_VIRTUAL_ROW_H,
+  MINIMAP_MAX_TABLES,
+  isMiniMapLite,
+} from '@/features/canvas/utils/scaleLimits';
 
 function tableWithCols(n: number): TableView {
   return {
@@ -37,5 +42,12 @@ describe('nodeHeight', () => {
     expect(nodeHeight(t, { state: "full", density: "compact" })).not.toBe(
       nodeHeight(t, { state: "full", density: "cozy" }),
     );
+  });
+});
+
+describe("isMiniMapLite", () => {
+  it("is strictly greater than MINIMAP_MAX_TABLES, never hidden", () => {
+    expect(isMiniMapLite(MINIMAP_MAX_TABLES)).toBe(false);
+    expect(isMiniMapLite(MINIMAP_MAX_TABLES + 1)).toBe(true);
   });
 });

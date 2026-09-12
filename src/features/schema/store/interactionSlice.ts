@@ -23,6 +23,20 @@ export type InteractionSlice = {
   selectedGroup: string | null;
   selectGroup: (id: string | null) => void;
   clearCanvasSelection: () => void;
+  selectedRef: {
+    fromTbl: string;
+    fromCol: string;
+    toTbl: string;
+    toCol: string;
+  } | null;
+  setSelectedRef: (
+    ref: {
+      fromTbl: string;
+      fromCol: string;
+      toTbl: string;
+      toCol: string;
+    } | null,
+  ) => void;
 
   hiddenLayers: Set<string>;
   toggleLayer: (id: string) => void;
@@ -98,6 +112,12 @@ export const createInteractionSlice: StateCreator<
       state.selectedTableIds = [];
       state.selectedGroup = null;
       state.focusedFieldMapping = null;
+      state.selectedRef = null;
+    }),
+  selectedRef: null,
+  setSelectedRef: (ref) =>
+    set((state) => {
+      state.selectedRef = ref;
     }),
 
   hiddenLayers: new Set<string>(),

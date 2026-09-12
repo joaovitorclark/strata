@@ -44,7 +44,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 32 | Shortcut | Cmd/Ctrl+Z undoes | src/help/gestures.ts:51 | ☑ shell-shortcuts.cy.ts |
 | 33 | Shortcut | Cmd/Ctrl+Shift+Z redoes | src/help/gestures.ts:51 | ☑ shell-shortcuts.cy.ts |
 | 34 | Shortcut | Cmd/Ctrl+K opens the command palette ("Buscar comandos e tabelas") | src/help/gestures.ts:21 | ☑ shell-command-palette.cy.ts |
-| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | dropped — Workspace does not pass removeSelectedRef; spec omitted rather than wiring the callback (Plan 3) |
+| 35 | Shortcut | Delete removes the selected ref | src/help/gestures.ts:22 | ☑ canvas-edges.cy.ts |
 | 36 | Shortcut | Escape clears selection / closes modals | src/help/gestures.ts:23 | ☑ shell-shortcuts.cy.ts |
 | 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☑ shell-shortcuts.cy.ts |
 | 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☑ shell-shortcuts.cy.ts |
@@ -53,8 +53,8 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☐ no Plan 3 spec |
 | 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☐ TableNode has no ⓘ (Task 15); no Plan 3 spec for TableInfoPopover |
 | 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☐ no Plan 3 spec |
-| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | dropped — TableNode does not mount LineagePorts (LocalDrawDB does); toggling Mostrar linhagem paints no rf__edge-lin (canvas-edges.cy.ts shrunk) |
-| 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | dropped — same gap as 35: Workspace does not pass removeSelectedRef |
+| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
+| 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
 | 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☐ canvas-selection.cy.ts / shell-shortcuts.cy.ts only clear table selection |
 | 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☐ no Plan 3 spec |
 | 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☐ no Plan 3 spec |
@@ -76,7 +76,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
 | 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☐ no Plan 3 spec |
 | 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☐ no Plan 3 spec |
-| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☐ no Plan 3 spec; LineagePorts not mounted (see 44) |
+| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☐ no Plan 3 spec |
 | 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☐ no Plan 3 spec |
 | 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☐ no Plan 3 spec |
 | 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☐ no Plan 3 spec |
@@ -86,7 +86,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☐ no Plan 3 spec |
 | 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☐ no Plan 3 spec |
 | 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☐ canvas-lod.cy.ts covers zoom in/out only; fit view and lock untested |
-| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☐ stress-large-diagram.cy.ts: minimap still shown at 200 (`tableCount <= 200`); pannable/zoomable untested; lite colouring not ported |
+| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ stress-large-diagram.cy.ts |
 | 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☐ no Plan 3 spec |
 | 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☐ no Plan 3 spec |
 | 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☐ no Plan 3 spec |
@@ -275,7 +275,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 
 - **219** `POST /api/export/png` — the client helper exists; neither LocalDrawDB `App.tsx` nor Strata Workspace calls it. Capturing a PNG would require rewriting Canvas. Dropped rather than inventing a screenshot path.
 - **244** Drag the vertical editor resizer — Strata is canvas-first; the DBML editor is a bottom SourceDrawer, not a split pane (identity §6).
-- **77** MiniMap lite colouring above 200 tables is not ported: Task 16 hides MiniMap instead (spec §3.1). Pannable/zoomable MiniMap itself is ☐ until live ReactFlow (Plan 3).
+- **77** MiniMap lite colouring: LocalDrawDB never hides the minimap; above `MINIMAP_MAX_TABLES` it paints with a uniform token fill. Ported in Onda S (`stress-large-diagram.cy.ts`).
 - **42** TableNode (Task 15 restyle) has no ⓘ control. Metadata-on-hover is composed as `TableInfoPopover` driven by `hoveredTableId` — still ☐ until live ReactFlow.
 
 ## Task 29 honest recount (Wave M)
@@ -315,6 +315,18 @@ Dropped this plan (component not rewritten to make a spec pass):
 
 Plan 2 claimed 258 ☑. This number is lower, and that is the plan working.
 
-Rows still ☐, each with a reason in the Verified column. The remaining canvas gestures (39–43, 46–56, 58–63, 65–71, 73–92) and **247** have no Plan 3 spec. **76** is zoom-only (`canvas-lod.cy.ts`); **73** is select-without-editor-scroll; **77** still shows the minimap at 200 tables (`<= MINIMAP_MAX_TABLES`).
+Rows still ☐, each with a reason in the Verified column. The remaining canvas gestures (39–43, 46–56, 58–63, 65–71, 73–76, 78–92) and **247** have no Plan 3 spec. **76** is zoom-only (`canvas-lod.cy.ts`); **73** is select-without-editor-scroll.
+
+## Onda S recount (Tasks 43–46)
+
+Live Cypress restored the three Task 40 drops and ticked MiniMap lite:
+
+- **35, 45** — `canvas-edges.cy.ts` (Delete on a selected Ref)
+- **44** — `canvas-edges.cy.ts` (`rf__edge-lin:` with "Mostrar linhagem")
+- **77** — `stress-large-diagram.cy.ts` (MiniMap exists in lite mode above 200)
+
+**Count after Onda S: 209 ☑ · 49 ☐ · 2 dropped.**
+
+Dropped remaining are Task 26's **219** and **244**.
 
 

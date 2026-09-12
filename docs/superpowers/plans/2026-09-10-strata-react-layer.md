@@ -814,8 +814,9 @@ Import `"@xyflow/react/dist/style.css"`. Wire the dotted grid through the `.stra
 from `globals.css` rather than React Flow's `<Background />`, so the grid colour follows
 `--grid-line` in both themes.
 
-Honour the existing scale thresholds from `scaleLimits.ts`: hide the minimap above
-`MINIMAP_MAX_TABLES`, skip the first-frame `fitView` above `SKIP_INITIAL_FIT_TABLES`.
+Honour the existing scale thresholds from `scaleLimits.ts`: the MiniMap stays mounted
+above `MINIMAP_MAX_TABLES` in **lite** colouring (uniform token fill, no per-node colour) —
+never hidden. Skip the first-frame `fitView` above `SKIP_INITIAL_FIT_TABLES`.
 
 - [ ] **Step 3: Feed zoom to the LOD**
 

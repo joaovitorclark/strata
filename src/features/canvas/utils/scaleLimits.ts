@@ -29,8 +29,12 @@ export function columnVirtualViewportCss(): string {
 /** Overscan acima/abaixo do viewport virtual. */
 export const COLUMN_VIRTUAL_OVERSCAN = 3;
 
-/** Limiar: ocultar MiniMap (custo de pintura). */
+/** Limiar: MiniMap em modo lite (cor uniforme). Sempre visível. */
 export const MINIMAP_MAX_TABLES = 200;
+
+export function isMiniMapLite(tableCount: number): boolean {
+  return tableCount > MINIMAP_MAX_TABLES;
+}
 
 /** Limiar: pular fitView automático no primeiro frame. */
 export const SKIP_INITIAL_FIT_TABLES = 200;

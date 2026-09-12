@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { NodeResizeControl, useEdges, useStore, type Node, type NodeProps } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
+import { LineagePorts } from "@/features/canvas/components/LineagePorts";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
 import { resolveLod } from "@/features/canvas/utils/lod";
@@ -82,6 +83,9 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const lodPin = useSchemaStore((s) => s.nodeLod[data.id]);
   const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
   const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
+  const lineageMode = useSchemaStore((s) => s.lineageMode);
+  const lineageVisible = useSchemaStore((s) => s.lineageVisible);
+  const showLineagePorts = lineageMode || lineageVisible;
   const edges = useEdges();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -103,7 +107,15 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   };
 
   return (
-    <div className="relative" style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}>
+    <div
+      className={cn(
+        "relative table-node-shell",
+        lineageMode && "table-node-shell--lineage",
+        showLineagePorts && "table-node-shell--lineage-ports",
+      )}
+      style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}
+    >
+      {showLineagePorts ? <LineagePorts /> : null}
       <NodeResizeControl
         position="bottom-right"
         minWidth={200}

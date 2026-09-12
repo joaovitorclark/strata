@@ -33,7 +33,7 @@ export type CommandContext = {
   goToLine: (line: number) => void;
   goToColumn?: (table: string, column: string) => void;
   openSourceDrawer?: () => void;
-  removeSelectedRef?: () => void;
+  removeSelectedRef?: () => boolean;
   closeModals?: () => void;
   onExport?: (files: string[]) => void;
   lineageMode?: boolean;

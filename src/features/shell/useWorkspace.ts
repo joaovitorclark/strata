@@ -888,6 +888,13 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     },
     [mutateDbml, pushStatus],
   );
+  const handleRemoveSelectedRef = useCallback((): boolean => {
+    const ref = useSchemaStore.getState().selectedRef;
+    if (!ref) return false;
+    handleRemoveRef(ref.fromTbl, ref.fromCol, ref.toTbl, ref.toCol);
+    useSchemaStore.getState().setSelectedRef(null);
+    return true;
+  }, [handleRemoveRef]);
 
   const run = useCallback(
     async (label: string, fn: () => Promise<string>) => {
@@ -1174,6 +1181,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       goToLine,
       goToColumn,
       openSourceDrawer: () => setSourceDrawerOpen(true),
+      removeSelectedRef: handleRemoveSelectedRef,
       closeModals: () => {
         setPaletteOpen(false);
         setHelpOpen(false);
@@ -1199,6 +1207,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       goToLine,
       goToColumn,
       pushStatus,
+      handleRemoveSelectedRef,
     ],
   );
 
@@ -1293,6 +1302,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     handleDbmlChange,
     handleCreateRef,
     handleRemoveRef,
+    handleRemoveSelectedRef,
     handleRemoveTable,
     handleRemoveTables,
     handleCreateLineage,

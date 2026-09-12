@@ -90,8 +90,11 @@ export function CommandPalette({
 
       if (e.key === "Delete" && !e.metaKey && !e.ctrlKey) {
         if (open || isTypingTarget(e.target)) return;
-        e.preventDefault();
-        context.removeSelectedRef?.();
+        const handled = Boolean(context.removeSelectedRef?.());
+        if (handled) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         return;
       }
 

@@ -4,7 +4,20 @@ import {
 } from "../../src/features/canvas/utils/scaleLimits";
 import { panCanvas, readScale, restoreSmoke } from "../support/stress";
 
+type ProjectBody = { dbml: string; canvas?: unknown };
+
+const EXTRA_TABLE = `
+Table lake.t201 {
+  id bigint [pk]
+  a int
+  b string
+}
+`;
+
 describe("stress large diagram", () => {
+  let largeId: string | undefined;
+  let largeSnap: ProjectBody | undefined;
+
   before(() => {
     expect(MINIMAP_MAX_TABLES, "fixture is exactly the minimap threshold").to.eq(200);
     expect(SKIP_INITIAL_FIT_TABLES, "fixture is exactly the skip-fit threshold").to.eq(200);
@@ -12,18 +25,32 @@ describe("stress large diagram", () => {
     cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
     // InitialFitHelper retries up to 40 rAF frames when enabled.
     cy.wait(1000);
+    cy.request("GET", "/api/projects").then((res) => {
+      const body = res.body as { projects: Array<{ id: string; slug: string }> };
+      const proj = body.projects.find((p) => p.slug === "large");
+      if (!proj) throw new Error('fixture project "large" not found');
+      largeId = proj.id;
+      cy.request("GET", `/api/projects/${proj.id}`).then((got) => {
+        largeSnap = got.body as ProjectBody;
+      });
+    });
   });
 
   after(() => {
+    if (largeId && largeSnap) {
+      cy.request("PUT", `/api/projects/${largeId}`, {
+        dbml: largeSnap.dbml,
+        canvas: largeSnap.canvas ?? {},
+      });
+    }
     restoreSmoke();
   });
 
-  it("still shows the minimap at MINIMAP_MAX_TABLES (hide is strictly greater)", () => {
+  it("still shows the minimap at MINIMAP_MAX_TABLES (lite is strictly greater)", () => {
     cy.get('[data-testid="rf__wrapper"]').should("exist");
-    // Canvas: `showMiniMap = tableCount <= MINIMAP_MAX_TABLES`. large has exactly
-    // 200 tables, so the minimap is still painted. Hide requires 201+; the
-    // committed fixture cannot observe that branch. Do not change Canvas.
-    cy.get('[data-testid="rf__minimap"]').should("exist");
+    // Canvas: MiniMap is always mounted. large has exactly 200 tables, so this
+    // is the full (coloured) minimap. Lite colouring requires 201+.
+    cy.get('[data-testid="rf__minimap"]').should("exist").and("not.have.class", "minimap--lite");
   });
 
   it("still runs the initial fitView at SKIP_INITIAL_FIT_TABLES (skip is strictly greater)", () => {
@@ -57,5 +84,25 @@ describe("stress large diagram", () => {
     cy.get('[data-testid="schema-tree"]').should("be.visible");
     cy.get('[data-testid="rf__wrapper"]').should("exist");
     cy.get('[data-testid^="rf__node-"]').should("exist");
+  });
+
+  it("keeps the minimap in lite mode above MINIMAP_MAX_TABLES", () => {
+    cy.then(() => {
+      if (!largeId || !largeSnap) throw new Error("large fixture snapshot missing");
+      cy.request("PUT", `/api/projects/${largeId}`, {
+        dbml: `${largeSnap.dbml}\n${EXTRA_TABLE}`,
+        canvas: largeSnap.canvas ?? {},
+      });
+    });
+    cy.seedProject("large");
+    cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
+    cy.get('[data-testid="rf__minimap"]').should("exist").and("have.class", "minimap--lite");
+    cy.then(() => {
+      if (!largeId || !largeSnap) return;
+      cy.request("PUT", `/api/projects/${largeId}`, {
+        dbml: largeSnap.dbml,
+        canvas: largeSnap.canvas ?? {},
+      });
+    });
   });
 });

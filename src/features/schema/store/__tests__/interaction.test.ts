@@ -10,6 +10,19 @@ describe("schema interaction store", () => {
     expect(useSchemaStore.getState().selectedColumn).toBeNull();
   });
 
+  it("records and clears the selected relation endpoints", () => {
+    const ref = {
+      fromTbl: "vendas.pedido",
+      fromCol: "cliente_id",
+      toTbl: "vendas.cliente",
+      toCol: "id",
+    };
+    useSchemaStore.getState().setSelectedRef(ref);
+    expect(useSchemaStore.getState().selectedRef).toEqual(ref);
+    useSchemaStore.getState().clearCanvasSelection();
+    expect(useSchemaStore.getState().selectedRef).toBeNull();
+  });
+
   it("selects and clears a column immutably", () => {
     const before = useSchemaStore.getState();
     useSchemaStore.getState().selectColumn({ table: "loja.pedido", column: "id" });

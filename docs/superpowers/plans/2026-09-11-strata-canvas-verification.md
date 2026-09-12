@@ -354,8 +354,9 @@ needed.
 
 **`stress-large-diagram.cy.ts`** against the `large` project (200 tables):
 
-- The minimap is hidden at or above `MINIMAP_MAX_TABLES` — assert on
-  `[data-testid="rf__minimap"]` not existing, which React Flow provides.
+- The MiniMap stays mounted at and above `MINIMAP_MAX_TABLES` — assert on
+  `[data-testid="rf__minimap"]` existing, and in **lite** mode (`minimap--lite`) when the
+  table count is strictly greater than the threshold. LocalDrawDB never hides it.
 - The initial `fitView` is skipped at or above `SKIP_INITIAL_FIT_TABLES`.
 - Pan and zoom complete without the page becoming unresponsive.
 

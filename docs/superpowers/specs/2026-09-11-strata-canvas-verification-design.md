@@ -134,7 +134,7 @@ occasion on which the product's central design premise gets tested at all:
 | --- | --- | --- |
 | A 187-column table stays usable | `identity.md` §7 | LOD transitions, in-node filter, virtualised scroll |
 | Edges follow columns as a table scrolls | `columnHandleGeometry.ts` | anchor `kind` flips to `above`/`below` at the viewport edge |
-| A 200-table diagram is navigable | `scaleLimits.ts` | minimap hides, initial `fitView` skipped, frames hold |
+| A 200-table diagram is navigable | `scaleLimits.ts` | MiniMap stays in lite colouring above the table threshold, initial `fitView` skipped, frames hold |
 | Node heights match `nodeMetrics` | Plan 2 Global Constraints | rendered height equals `nodeHeight()` prediction, or autolayout collides |
 
 The last row deserves emphasis: `autolayout` positions every node from a *predicted* height. Unit
