@@ -99,8 +99,7 @@ Nota: um único payload de ~2.1 MB gzip no first load é o custo de canvas + par
 Bloqueio: —
 
 ## Task 43 — VERDE
-
-Commit: (this commit)
+Commit: `2491cc0`
 Portões que EU rodei: `npm run build` → 0; `npm run cy:run:stress` **duas vezes** → 7/7 as duas. `stress-node-height` delta **0** em todos os estados e nas duas densidades; as tabelas das duas corridas são **idênticas**.
 Linhas do inventário: n/a (Task 47). Premissa da 39 paga.
 
@@ -134,6 +133,82 @@ Corrida 1 = corrida 2:
 Decisões: spec de altura agora cobre cozy e compact (toggle Densidade). Não toquei em `SKIP_INITIAL_FIT_TABLES`.
 Preocupações: —
 Bloqueio: —
+
+## Task 44 — VERDE
+
+Commit: `aa033e2` (com 45/46; internals dos handles neste commit da 47)
+Portões: `canvas-edges.cy.ts` — `rf__edge-lin:` aparece com "Mostrar linhagem" ligado; path `.edge-path--lineage` anima `lineage-flow`.
+Linhas: **44** ☑ `canvas-edges.cy.ts`. Task 15 produziu `LineagePorts`; Task 13/16 não montava. `TableNode` agora monta como o LocalDrawDB (`lineageMode || lineageVisible`). Classe `table-node-shell--lineage-ports` via token (sem padding de 10px do modo compacto LDB — mudaria `lodHeight`).
+Decisões: `updateNodeInternals` quando as portas montam (xyflow não liga aresta a handle dinâmico sem isso).
+Bloqueio: —
+
+## Task 45 — VERDE
+
+Commit: `aa033e2`
+Portões: `canvas-edges.cy.ts` — seleciona a FK, Delete, aresta some, DBML da gaveta perde exactamente um `Ref:`.
+Linhas: **35** e **45** ☑ `canvas-edges.cy.ts`.
+
+**LDB convive.** `Canvas.tsx` deixa `deleteKeyCode={['Delete','Backspace']}` **e** `onEdgesDelete`. O `App.tsx` do LDB **não** trata Delete para refs; a palette do LDB também não. O Strata é que ganhou um listener em capture na `CommandPalette` que fazia `preventDefault()` mesmo com `removeSelectedRef` ausente — isso é que matava o `deleteKeyCode` do RF. Não era double-delete: era zero-delete.
+
+Espelho: `deleteKeyCode` fica ligado. `removeSelectedRef` está no `commandContext` e só faz `preventDefault`+`stopPropagation` quando devolve `true` (havia um Ref selecionado). Assim o RF continua a tratar Backspace/tabelas/linhagem. `TooltipProvider` à volta do React Flow: selecionar a aresta montava o botão X e crashava sem provider.
+
+Bloqueio: —
+
+## Task 46 — VERDE
+
+Commit: `aa033e2`
+Portões: `stress-large-diagram.cy.ts` — a 200 tabelas o minimap existe (não lite); acima do limiar (201 via PUT restaurado) existe **com** `minimap--lite`. `SKIP_INITIAL_FIT_TABLES` intocado (`<=` nos dois).
+Linhas: **77** ☑ `stress-large-diagram.cy.ts`.
+Docs corrigidos: plano Task 16 Step 2, spec de verificação §4, plano de verificação Wave Q. Comentário em `scaleLimits` deixou de dizer "ocultar".
+Bloqueio: —
+
+## Task 47 — VERDE
+
+Commit: (this commit)
+Portões que EU rodei:
+- `npm run test` → **125 files / 880 tests**
+- `npm run typecheck` → 0
+- `npm run format:check` → All matched files use Prettier code style
+- `npm run cy:run` → **24 passing** (12 specs)
+- `npm run cy:run:stress` → **8 passing** (large 4, node-height 1, wide 3)
+
+Não code splitting. Não build Windows.
+
+Bloqueio: —
+
+---
+
+## Onda S
+
+Correctiva das costuras da Onda G. Placar do inventário:
+
+```
+Baseline (after Wave M task 30):  ☑ 201   ☐ 57   dropped 2
+After Plan 3 Task 40:             ☑ 205   ☐ 50   dropped 5
+After Onda S (43–46):             ☑ 209   ☐ 49   dropped 2
+```
+
+Ticks novos (spec que rodou): **35, 44, 45** (`canvas-edges.cy.ts`), **77** (`stress-large-diagram.cy.ts`).
+Dropped que voltaram: 35, 44, 45. Dropped que restam: **219**, **244** (Task 26).
+
+`stress-node-height` nas duas densidades, duas corridas, números **idênticos**, delta **0**:
+
+| id | density | state | offsetHeight | predicted | delta |
+| --- | --- | --- | --- | --- | --- |
+| wide.hub | cozy | sigil | 34 | 34 | 0 |
+| wide.hub | cozy | keys | 110 | 110 | 0 |
+| wide.hub | cozy | full | 410 | 410 | 0 |
+| wide.left | cozy | * | 34 / 110 / 110 | iguais | 0 |
+| wide.right | cozy | * | 34 / 110 / 110 | iguais | 0 |
+| wide.hub | compact | sigil | 34 | 34 | 0 |
+| wide.hub | compact | keys | 102 | 102 | 0 |
+| wide.hub | compact | full | 354 | 354 | 0 |
+| wide.left / right | compact | keys/full | 102 | 102 | 0 |
+
+Regra da junta: task que produz um componente nomeia quem o MONTA; a que monta tem isso no portão. Task 15 produziu `LineagePorts` sem nomear a Task 13/16 como montadora — a 44 pagou.
+
+Fora da Onda S (decisões humanas, não bugs): lazy no bundle; verificação Windows.
+
 
 
 

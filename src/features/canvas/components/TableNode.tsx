@@ -1,5 +1,13 @@
-import { memo, useState } from "react";
-import { NodeResizeControl, useEdges, useStore, type Node, type NodeProps } from "@xyflow/react";
+import { memo, useEffect, useState } from "react";
+import {
+  NodeResizeControl,
+  useEdges,
+  useNodeId,
+  useStore,
+  useUpdateNodeInternals,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
 import { LineagePorts } from "@/features/canvas/components/LineagePorts";
@@ -86,6 +94,13 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const lineageMode = useSchemaStore((s) => s.lineageMode);
   const lineageVisible = useSchemaStore((s) => s.lineageVisible);
   const showLineagePorts = lineageMode || lineageVisible;
+  const nodeId = useNodeId();
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  useEffect(() => {
+    if (!showLineagePorts || !nodeId) return;
+    updateNodeInternals(nodeId);
+  }, [showLineagePorts, nodeId, updateNodeInternals]);
   const edges = useEdges();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);

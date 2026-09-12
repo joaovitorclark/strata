@@ -38,6 +38,7 @@ describe("canvas edges", () => {
     });
     cy.get(".layers-panel").should("not.have.class", "is-collapsed");
     cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
+    cy.get(".lineage-port-handle").should("have.length.at.least", 8);
     cy.get('[data-testid^="rf__edge-lin:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {
       expect($path.length, "lineage path").to.be.at.least(1);
