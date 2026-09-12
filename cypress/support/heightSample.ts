@@ -1,4 +1,5 @@
 export type LodState = "sigil" | "keys" | "full";
+export type CanvasDensity = "compact" | "cozy";
 
 export type HeightTable = {
   id: string;
@@ -12,4 +13,5 @@ export type HeightSample = {
   id: string;
   state: LodState;
   table: HeightTable;
+  density?: CanvasDensity;
 };

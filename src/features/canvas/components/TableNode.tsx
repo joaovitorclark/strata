@@ -113,7 +113,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
       />
       <div
         className={cn(
-          "relative min-w-[200px] overflow-hidden rounded-lg bg-card text-card-foreground shadow-md",
+          "relative flex min-w-[200px] flex-col overflow-hidden rounded-lg bg-card text-card-foreground shadow-md",
           selected && "shadow-glow ring-1 ring-primary",
         )}
         title={layer?.name ?? "raw"}
@@ -126,7 +126,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
           )}
         />
         <div
-          className="flex items-center gap-1 bg-surface pl-3 pr-1"
+          className="box-border flex shrink-0 items-center gap-1 overflow-hidden bg-surface pl-3 pr-1"
           style={{ height: TABLE_HEADER_H }}
         >
           <span
@@ -259,7 +259,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         {state !== "sigil" ? (
           <button
             type="button"
-            className="col-add nodrag nopan w-full px-2 text-left font-mono text-2xs text-muted-foreground hover:bg-surface-hover"
+            className="col-add nodrag nopan box-border flex w-full shrink-0 items-center overflow-hidden px-2 text-left font-mono text-2xs leading-none text-muted-foreground hover:bg-surface-hover"
             style={{ height: TABLE_FOOTER_H }}
             onClick={(e) => {
               e.stopPropagation();

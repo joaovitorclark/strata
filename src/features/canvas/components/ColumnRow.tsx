@@ -72,7 +72,10 @@ function ColumnRowImpl({
 
   return (
     <div
-      className={cn("relative flex items-center gap-1.5 px-2", isSel && "bg-surface-hover")}
+      className={cn(
+        "col-row relative box-border flex shrink-0 items-center gap-1.5 overflow-hidden px-2",
+        isSel && "bg-surface-hover",
+      )}
       style={{ height: rowH }}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}

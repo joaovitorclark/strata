@@ -5,6 +5,7 @@ export type { HeightSample, LodState } from "./heightSample";
 export type HeightRow = {
   id: string;
   state: LodState;
+  density: HeightSample["density"];
   offsetHeight: number;
   predicted: number;
   delta: number;
@@ -161,12 +162,16 @@ const TABLES: Record<string, HeightSample["table"]> = {
   "wide.right": wideRightTable(),
 };
 
-export function heightSamples(ids: string[], states: LodState[]): HeightSample[] {
+export function heightSamples(
+  ids: string[],
+  states: LodState[],
+  density: HeightSample["density"] = "cozy",
+): HeightSample[] {
   return ids.flatMap((id) =>
     states.map((state) => {
       const table = TABLES[id];
       if (!table) throw new Error(`no fixture table builder for ${id}`);
-      return { id, state, table };
+      return { id, state, table, density };
     }),
   );
 }

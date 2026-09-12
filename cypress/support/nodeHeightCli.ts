@@ -12,5 +12,7 @@ if (!raw) {
 }
 
 const samples = JSON.parse(raw) as HeightSample[];
-const out = samples.map((s) => nodeHeight(s.table, { state: s.state, density: "cozy" }));
+const out = samples.map((s) =>
+  nodeHeight(s.table, { state: s.state, density: s.density ?? "cozy" }),
+);
 process.stdout.write(JSON.stringify(out));

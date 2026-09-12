@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { useNodeId, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
+import { useNodeId, useUpdateNodeInternals } from "@xyflow/react";
 import type { TableNodeData } from "@/features/canvas/actions";
 import { ColumnRow, type ColumnRowProps } from "@/features/canvas/components/ColumnRow";
 import { computeVirtualWindow } from "@/features/canvas/hooks/useVirtualWindow";
@@ -8,23 +8,17 @@ import { keyColumns, type LodState } from "@/features/canvas/utils/lod";
 import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
 import {
   COLUMN_VIRTUALIZE_THRESHOLD,
-  COLUMN_VIRTUAL_VIEW_ROWS,
+  columnVirtualViewportCss,
+  columnVirtualViewportPx,
 } from "@/features/canvas/utils/scaleLimits";
 
 const OVERSCAN = 5;
-
-// Alturas reservadas dentro do nó da tabela (para o header, botão de adicionar
-// e padding) — descontadas da altura do nó para obter o viewport disponível.
-const NODE_HEADER_H = 34;
-const NODE_ADD_BTN_H = 30;
-const NODE_PADDING = 8;
-const VIEWPORT_MIN_H = 120;
 
 function scrollToColumnIndex(el: HTMLDivElement, index: number, rowH: number): void {
   if (index < 0) return;
   const rowTop = index * rowH;
   const rowBottom = rowTop + rowH;
-  const viewportH = el.clientHeight || COLUMN_VIRTUAL_VIEW_ROWS * rowH;
+  const viewportH = el.clientHeight || columnVirtualViewportPx(rowH);
   if (rowTop < el.scrollTop) el.scrollTop = rowTop;
   else if (rowBottom > el.scrollTop + viewportH) el.scrollTop = rowBottom - viewportH;
 }
@@ -78,29 +72,10 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
   const scrollRef = useRef<HTMLDivElement>(null);
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
-  const { getNode } = useReactFlow();
   const setScrollTop = useTableScrollStore((s) => s.setScrollTop);
   const [scrollTop, setScrollTopLocal] = useState(0);
-  const [nodeH, setNodeH] = useState<number | null>(null);
   const rowH = useCanvasRowH();
-  const viewHFallback = COLUMN_VIRTUAL_VIEW_ROWS * rowH;
-
-  useEffect(() => {
-    if (!scrollable || !nodeId) return;
-    let raf = 0;
-    const tick = () => {
-      const n = getNode(nodeId);
-      const h = n?.measured?.height ?? n?.height ?? null;
-      setNodeH((prev) => (prev === h ? prev : h));
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [scrollable, nodeId, getNode]);
-
-  const viewportH = nodeH
-    ? Math.max(VIEWPORT_MIN_H, nodeH - NODE_HEADER_H - NODE_ADD_BTN_H - NODE_PADDING)
-    : viewHFallback;
+  const viewportH = columnVirtualViewportPx(rowH);
 
   const publishScroll = useCallback(
     (next: number) => {
@@ -159,14 +134,14 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     const shown = peekSet ? scoped : keyColumns(data, pinned);
     const hidden = peekSet ? 0 : data.columns.length - shown.length;
     return (
-      <div>
+      <div className="flex flex-col overflow-hidden">
         {shown.map((c) => (
           <ColumnRow key={c.name} {...rowProps} column={c} />
         ))}
         {hidden > 0 ? (
           <button
             type="button"
-            className="nodrag nopan w-full px-2 text-left font-mono text-2xs text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+            className="nodrag nopan box-border flex w-full shrink-0 items-center overflow-hidden px-2 text-left font-mono text-2xs leading-none text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             style={{ height: rowH }}
             onClick={(e) => {
               e.stopPropagation();
@@ -182,7 +157,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
 
   if (!scrollable) {
     return (
-      <div>
+      <div className="flex flex-col overflow-hidden">
         {columns.map((c) => (
           <ColumnRow key={c.name} {...rowProps} column={c} />
         ))}
@@ -203,7 +178,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     <div
       ref={scrollRef}
       className="nowheel nodrag nopan overflow-y-auto"
-      style={{ maxHeight: viewportH }}
+      style={{ height: columnVirtualViewportCss() }}
       onScroll={(e) => {
         const top = e.currentTarget.scrollTop;
         setScrollTopLocal(top);

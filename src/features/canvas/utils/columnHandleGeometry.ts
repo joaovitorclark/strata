@@ -5,6 +5,7 @@ import {
   COLUMN_VIRTUAL_ROW_H,
   COLUMN_VIRTUALIZE_THRESHOLD,
   COLUMN_VIRTUAL_VIEW_ROWS,
+  columnVirtualViewportPx,
 } from './scaleLimits';
 
 /** Alturas fixas alinhadas ao CSS / nodeMetrics. */
@@ -12,7 +13,7 @@ export const TABLE_HEADER_H = 34;
 export const TABLE_EXTERNAL_BAR_H = 28;
 export const TABLE_FOOTER_H = 26;
 
-export const COLUMN_SCROLL_VIEW_H = COLUMN_VIRTUAL_VIEW_ROWS * COLUMN_VIRTUAL_ROW_H;
+export const COLUMN_SCROLL_VIEW_H = columnVirtualViewportPx(COLUMN_VIRTUAL_ROW_H);
 
 const PORT_INSET = 8;
 

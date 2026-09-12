@@ -98,6 +98,44 @@ As quatro bibliotecas pedidas estão **no mesmo chunk** `index-DxBFXPVz.js` (pro
 Nota: um único payload de ~2.1 MB gzip no first load é o custo de canvas + parser + editor + export Excel no mesmo grafo. Separar `@xyflow/react` (canvas), `@uiw/react-codemirror` (gaveta, on-demand), `xlsx` (só no export) e `@dbml/core` (parse) reduziria o parse inicial; **não foi feito neste plano** — seria uma decisão de performance, não de verificação.
 Bloqueio: —
 
+## Task 43 — VERDE
+
+Commit: (this commit)
+Portões que EU rodei: `npm run build` → 0; `npm run cy:run:stress` **duas vezes** → 7/7 as duas. `stress-node-height` delta **0** em todos os estados e nas duas densidades; as tabelas das duas corridas são **idênticas**.
+Linhas do inventário: n/a (Task 47). Premissa da 39 paga.
+
+**+3 px no estado keys:** o lado errado era o **render**, não a previsão. `lodHeight` já dava 110 (34+25+25+26). O botão `+N more` era `inline-block` num bloco e ganhava ~3px de strut da line box. `wide.left`/`wide.right` (só `div.col-row`, sem o botão) ficavam +1, dentro da tolerância. Cartão em `flex flex-col` + botão `flex` mata o strut. Não empurrei a previsão.
+
+Viewport: `height: calc(var(--row-h) * 14)` e `computeVirtualWindow.viewportHeight = columnVirtualViewportPx(rowH)` — a mesma constante, passada, sem medição do DOM. Por construção: cozy 410, compact 354.
+
+Corrida 1 = corrida 2:
+
+| id | density | state | offsetHeight | predicted | delta |
+| --- | --- | --- | --- | --- | --- |
+| wide.hub | cozy | sigil | 34 | 34 | 0 |
+| wide.hub | cozy | keys | 110 | 110 | 0 |
+| wide.hub | cozy | full | 410 | 410 | 0 |
+| wide.left | cozy | sigil | 34 | 34 | 0 |
+| wide.left | cozy | keys | 110 | 110 | 0 |
+| wide.left | cozy | full | 110 | 110 | 0 |
+| wide.right | cozy | sigil | 34 | 34 | 0 |
+| wide.right | cozy | keys | 110 | 110 | 0 |
+| wide.right | cozy | full | 110 | 110 | 0 |
+| wide.hub | compact | sigil | 34 | 34 | 0 |
+| wide.hub | compact | keys | 102 | 102 | 0 |
+| wide.hub | compact | full | 354 | 354 | 0 |
+| wide.left | compact | sigil | 34 | 34 | 0 |
+| wide.left | compact | keys | 102 | 102 | 0 |
+| wide.left | compact | full | 102 | 102 | 0 |
+| wide.right | compact | sigil | 34 | 34 | 0 |
+| wide.right | compact | keys | 102 | 102 | 0 |
+| wide.right | compact | full | 102 | 102 | 0 |
+
+Decisões: spec de altura agora cobre cozy e compact (toggle Densidade). Não toquei em `SKIP_INITIAL_FIT_TABLES`.
+Preocupações: —
+Bloqueio: —
+
+
 
 
 

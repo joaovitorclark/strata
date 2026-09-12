@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { keyColumns, lodHeight, resolveLod, SIGIL_H } from "@/features/canvas/utils/lod";
-import { COLUMN_VIRTUAL_ROW_H } from "@/features/canvas/utils/scaleLimits";
+import {
+  COLUMN_VIRTUAL_ROW_H,
+  columnVirtualViewportCss,
+  columnVirtualViewportPx,
+} from "@/features/canvas/utils/scaleLimits";
 
 describe("resolveLod", () => {
   it("collapses to a sigil when zoomed out", () => {
@@ -76,5 +80,33 @@ describe("lodHeight", () => {
   it("keeps sigil height independent of row density", () => {
     expect(lodHeight(data, "sigil", [], 21)).toBe(SIGIL_H);
     expect(lodHeight(data, "sigil", [], 25)).toBe(SIGIL_H);
+  });
+
+  it("columnVirtualViewportPx is 14×rowH and the CSS uses --row-h", () => {
+    expect(columnVirtualViewportPx(25)).toBe(350);
+    expect(columnVirtualViewportPx(21)).toBe(294);
+    expect(columnVirtualViewportCss()).toBe("calc(var(--row-h) * 14)");
+  });
+
+  it("full virtualised height is header + 14×rowH + footer (Task 43)", () => {
+    const wide = {
+      columns: Array.from({ length: 187 }, (_, i) => ({ name: `c${i}` })),
+      meta: { pks: ["c0"], fks: [] },
+    } as never;
+    expect(lodHeight(wide, "full")).toBe(34 + 14 * 25 + 26);
+    expect(lodHeight(wide, "full")).toBe(410);
+    expect(lodHeight(wide, "full", [], 21)).toBe(34 + 14 * 21 + 26);
+    expect(lodHeight(wide, "full", [], 21)).toBe(354);
+  });
+
+  it("keys with a +N more row is header + (keys+1)×rowH + footer", () => {
+    const hub = {
+      columns: [{ name: "id" }, ...Array.from({ length: 186 }, (_, i) => ({ name: `c${i}` }))],
+      meta: { pks: ["id"], fks: [] },
+    } as never;
+    expect(lodHeight(hub, "keys")).toBe(34 + 2 * 25 + 26);
+    expect(lodHeight(hub, "keys")).toBe(110);
+    expect(lodHeight(hub, "keys", [], 21)).toBe(34 + 2 * 21 + 26);
+    expect(lodHeight(hub, "keys", [], 21)).toBe(102);
   });
 });

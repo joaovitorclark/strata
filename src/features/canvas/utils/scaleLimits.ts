@@ -16,6 +16,16 @@ export function rowHeightForDensity(density: CanvasDensity = "cozy"): number {
 /** Linhas visíveis no viewport virtual (scroll interno). */
 export const COLUMN_VIRTUAL_VIEW_ROWS = 14;
 
+/** Altura explícita do viewport virtualizado: 14 linhas, sem medição do DOM. */
+export function columnVirtualViewportPx(rowH: number = COLUMN_VIRTUAL_ROW_H): number {
+  return COLUMN_VIRTUAL_VIEW_ROWS * rowH;
+}
+
+/** CSS token: `--row-h` is set on the canvas wrap (`--row-cozy` / `--row-compact`). */
+export function columnVirtualViewportCss(): string {
+  return `calc(var(--row-h) * ${COLUMN_VIRTUAL_VIEW_ROWS})`;
+}
+
 /** Overscan acima/abaixo do viewport virtual. */
 export const COLUMN_VIRTUAL_OVERSCAN = 3;
 
