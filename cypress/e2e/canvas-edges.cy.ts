@@ -30,14 +30,9 @@ describe("canvas edges", () => {
     });
   });
 
-  it("lineage edge paints when Mostrar linhagem is checked", () => {
-    cy.get(".layers-panel").then(($p) => {
-      if ($p.hasClass("is-collapsed")) {
-        cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-      }
-    });
-    cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-    cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
+  it("lineage edge paints when Linhagem is checked", () => {
+    cy.get('[data-testid="edge-visibility"]').click();
+    cy.get('[role="menuitemcheckbox"]').contains("Linhagem").click();
     cy.get(".lineage-port-handle").should("have.length.at.least", 8);
     cy.get('[data-testid^="rf__edge-lin:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {

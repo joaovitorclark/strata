@@ -15,12 +15,8 @@ function lineageEntryCount(dbml: string): number {
 }
 
 function enableLineageMode(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if ($p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("not.have.class", "is-collapsed");
+  cy.get('[data-testid="left-panel-layers"]').click({ force: true });
+  cy.get(".layers-panel").should("be.visible");
   cy.get(".layers-panel__lineage-btn").click();
   cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
   cy.get(".lineage-port-handle").should("have.length.at.least", 8);

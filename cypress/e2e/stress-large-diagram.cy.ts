@@ -75,7 +75,7 @@ describe("stress large diagram", () => {
     });
     cy.get(".react-flow__viewport").then(($vp) => {
       const z0 = readScale($vp[0] as HTMLElement);
-      cy.get('[data-testid="rf__controls"] .react-flow__controls-zoomin').click({ force: true });
+      cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
       cy.get(".react-flow__viewport").should(($after) => {
         const z1 = readScale($after[0] as HTMLElement);
         expect(z1, "zoom in moved scale").to.not.eq(z0);

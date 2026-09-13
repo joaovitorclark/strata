@@ -18,16 +18,42 @@ export function waitForCanvas(): void {
   cy.get(".react-flow__viewport")
     .should("have.attr", "style")
     .and("match", /scale\(|matrix\(/);
+  // InitialFitHelper starts from identity translate(0,0) scale(1); wait until
+  // it has applied so zoom helpers do not race the first fit.
+  cy.get(".react-flow__viewport").should(($v) => {
+    const style = $v.attr("style") ?? "";
+    const z = viewportScaleOf(style);
+    const t = /translate\(\s*(-?[\d.]+)px,\s*(-?[\d.]+)px\s*\)/.exec(style);
+    const moved = t != null && (Number(t[1]) !== 0 || Number(t[2]) !== 0);
+    const identityMatrix =
+      /matrix\(\s*1(?:\.0+)?,\s*0(?:\.0+)?,\s*0(?:\.0+)?,\s*1(?:\.0+)?,\s*0(?:\.0+)?,\s*0(?:\.0+)?\s*\)/.test(
+        style,
+      );
+    expect(z !== 1 || moved, "initial fit applied").to.eq(true);
+    expect(identityMatrix, "viewport still identity matrix").to.eq(false);
+  });
 }
 
-/** Layers panel sits over RF Controls; collapse it so zoom/edge specs can click them. */
+/** Layers panel sits in the left tab (S02); kept as a no-op so callers stay valid. */
 export function collapseLayersPanel(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if (!$p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("have.class", "is-collapsed");
+  /* overlays no longer cover React Flow controls */
+}
+
+export function openLayersTab(): void {
+  cy.get('[data-testid="left-panel-layers"]').click({ force: true });
+  cy.get(".layers-panel").should("be.visible");
+}
+
+export function setEdgeVisibility(kind: "Relações" | "Linhagem", on: boolean): void {
+  cy.get('[data-testid="edge-visibility"]').click();
+  cy.get('[role="menuitemcheckbox"]')
+    .contains(kind)
+    .then(($item) => {
+      const checked =
+        $item.attr("data-state") === "checked" || $item.attr("aria-checked") === "true";
+      if (checked !== on) cy.wrap($item).click();
+      else cy.get("body").type("{esc}");
+    });
 }
 
 export function translateOf(style: string | undefined): { x: number; y: number } {
@@ -120,8 +146,10 @@ export function zoomUntil(
       throw new Error(`zoom ${direction} stuck at scale ${z}`);
     }
     const btn =
-      direction === "out" ? ".react-flow__controls-zoomout" : ".react-flow__controls-zoomin";
-    cy.get('[data-testid="rf__controls"]').find(btn).click({ force: true });
+      direction === "out"
+        ? '[data-testid="canvas-toolbar"] [data-zoom="out"]'
+        : '[data-testid="canvas-toolbar"] [data-zoom="in"]';
+    cy.get(btn).click({ force: true });
     cy.get(".react-flow__viewport").should(($next) => {
       const n = viewportScaleOf($next.attr("style"));
       if (direction === "out") expect(n).to.be.lessThan(z);

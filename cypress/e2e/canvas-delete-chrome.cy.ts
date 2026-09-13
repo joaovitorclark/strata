@@ -41,13 +41,8 @@ function columnNameSpan(tableId: string, name: string) {
 }
 
 function showLineageEdges(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if ($p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-  cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
+  cy.get('[data-testid="edge-visibility"]').click();
+  cy.get('[role="menuitemcheckbox"]').contains("Linhagem").click();
   cy.get(".edge-path--lineage").should("have.length.at.least", 1);
 }
 

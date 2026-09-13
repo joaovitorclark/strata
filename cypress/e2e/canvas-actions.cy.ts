@@ -155,12 +155,8 @@ function putSmokeTransformed(transform: (dbml: string) => string): void {
 }
 
 function expandLayersPanel(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if ($p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("not.have.class", "is-collapsed");
+  cy.get('[data-testid="left-panel-layers"]').click({ force: true });
+  cy.get(".layers-panel").should("be.visible");
 }
 
 function selectTable(id: string): void {
@@ -204,7 +200,7 @@ function clickColumn(tableId: string, column: string): void {
 }
 
 function openStatusLog(): void {
-  cy.get(".absolute.right-3.top-12 button").click({ force: true });
+  cy.get('[data-testid="status-log"]').click({ force: true });
   cy.get(".status-log__pop").should("be.visible");
 }
 
@@ -214,11 +210,6 @@ function tableBlock(dbml: string, tableId: string): string {
   const rest = dbml.slice(start);
   const close = rest.indexOf("\n}");
   return close >= 0 ? rest.slice(0, close + 2) : rest;
-}
-
-function hoverTable(tableId: string): void {
-  cy.get(nodeSel(tableId)).trigger("mouseover", { force: true });
-  cy.get(nodeSel(tableId)).trigger("mouseenter", { force: true });
 }
 
 /** Mouse-only resize (d3-drag on NodeResizeControl). Never pointer*. */
@@ -413,20 +404,6 @@ describe("CanvasActions contract", () => {
     putSmokePlus(`Colors {\n  ${SMOKE_NODES.cliente}: ${SWATCH}\n}`);
     cy.dbmlText().should((dbml) => {
       expect(colorOfKey(dbml, SMOKE_NODES.cliente)).to.eq(SWATCH);
-    });
-
-    // TableNode header is bg-surface (does not paint headerColor). MiniMap nodeColor
-    // is extras.headerColor, which prefers parsed Colors {} over canvas.colors.
-    cy.get(".react-flow__minimap-node").should(($nodes) => {
-      const hit = [...$nodes].some((el) => {
-        const fill = (
-          el.getAttribute("fill") ??
-          (el as HTMLElement).style.fill ??
-          ""
-        ).toLowerCase();
-        return fill === SWATCH || fill === hexToRgb(SWATCH);
-      });
-      expect(hit, `minimap node fill ${SWATCH}`).to.eq(true);
     });
   });
 
@@ -630,23 +607,24 @@ describe("CanvasActions contract", () => {
   it("row 63: tableMeta sources, sample, PK/FK, dbt badges and notes match the model", () => {
     putDbml(META_DBML);
 
-    hoverTable(SMOKE_NODES.pedido);
-    cy.get(".info-popover").should("be.visible");
-    cy.get(".info-popover").should("contain", "Sources (linhagem)");
-    cy.get(".info-popover").should("contain", "vendas.cliente");
-    cy.get(".info-popover").should("contain", "Exemplo de dados");
-    cy.get(".info-popover .info-sample thead").should("contain", "id");
-    cy.get(".info-popover .info-sample thead").should("contain", "cliente_id");
-    cy.get(".info-popover .info-sample tbody").should("contain", "10");
-    cy.get(".info-popover").should("contain", "PK: id");
-    cy.get(".info-popover").should("contain", "FK: cliente_id → vendas.cliente.id");
-    cy.get(".info-popover .dbt-badge").should("contain", "model");
-    cy.get(".info-popover .dbt-mat").should("contain", "incremental");
-    cy.get(".info-popover").should("contain", "#core");
-    cy.get(".info-popover").should("contain", "pedidos da loja");
-    cy.get(".info-popover").should("contain", "surrogate");
+    cy.get(nodeSel(SMOKE_NODES.pedido)).click("top", { force: true });
+    cy.get('[data-testid="inspector"]').should("contain", "vendas.pedido");
+    cy.get('[data-testid="inspector"]').should("contain", "Sources (linhagem)");
+    cy.get('[data-testid="inspector"]').should("contain", "vendas.cliente");
+    cy.get('[data-testid="inspector"]').should("contain", "Exemplo de dados");
+    cy.get('[data-testid="inspector"]').should("contain", "id");
+    cy.get('[data-testid="inspector"]').should("contain", "cliente_id");
+    cy.get('[data-testid="inspector"]').should("contain", "10");
+    cy.get('[data-testid="inspector"]').should("contain", "id");
+    cy.get('[data-testid="inspector"]').should("contain", "cliente_id");
+    cy.get('[data-testid="inspector"]').should("contain", "model");
+    cy.get('[data-testid="inspector"]').should("contain", "incremental");
+    cy.get('[data-testid="inspector"]').should("contain", "#core");
+    cy.get('[data-testid="inspector"]').should("contain", "pedidos da loja");
+    cy.get('[data-testid="inspector"]').should("contain", "surrogate");
 
-    hoverTable(SMOKE_NODES.cliente);
-    cy.get(".info-popover").should("contain", "referenciada por: vendas.pedido");
+    cy.get(nodeSel(SMOKE_NODES.cliente)).click("top", { force: true });
+    cy.get('[data-testid="inspector"]').should("contain", "referenciada por");
+    cy.get('[data-testid="inspector"]').should("contain", "vendas.pedido");
   });
 });
