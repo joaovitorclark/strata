@@ -7,7 +7,7 @@
 > The parity inventory closed at **254 ☑ · 0 ☐ · 6 dropped** of 260.
 >
 > LocalDrawDB is **frozen and archival**: read it for reference, never write to it. And **parity
-> with it no longer governs** — see [`docs/ux-direction.md`](docs/ux-direction.md), which is the
+> with it no longer governs** — see [`docs/ux-ui-research.md`](docs/ux-ui-research.md), which is the
 > document that describes what the work is now.
 
 ## What Strata is
