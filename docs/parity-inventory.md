@@ -48,14 +48,14 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 36 | Shortcut | Escape clears selection / closes modals | src/help/gestures.ts:23 | ☑ shell-shortcuts.cy.ts |
 | 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☑ shell-shortcuts.cy.ts |
 | 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☑ shell-shortcuts.cy.ts |
-| 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☐ no Plan 3 spec |
+| 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☑ canvas-select-sync.cy.ts |
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
-| 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☐ no Plan 3 spec |
+| 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
 | 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☐ TableNode has no ⓘ (Task 15); no Plan 3 spec for TableInfoPopover |
-| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☐ no Plan 3 spec |
+| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-select-sync.cy.ts (Cmd/Ctrl+click; rubber-band does not stick — panOnDrag default true disables selectionOnDrag) |
 | 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
-| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☐ canvas-selection.cy.ts / shell-shortcuts.cy.ts only clear table selection |
+| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | dropped — CommandPalette window-capture Escape calls clearCanvasSelection() before Canvas's stacked handler; first press already clears the table. canvas-select-sync.cy.ts records the attempt. |
 | 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ canvas-actions.cy.ts |
 | 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☑ canvas-actions.cy.ts |
 | 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☑ canvas-actions.cy.ts |
@@ -74,7 +74,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 62 | Canvas | `onToggleGroup` collapses or expands a TableGroup | src/canvas/actions.ts:42 | ☑ canvas-actions.cy.ts |
 | 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☑ canvas-actions.cy.ts |
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
-| 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☐ no Plan 3 spec |
+| 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | dropped — XYDrag does not latch from the harness on GroupNode's dragHandle (label and edge tried; members stay at dx=0). canvas-select-sync.cy.ts records the attempt. Do not rewrite GroupNode. |
 | 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☑ canvas-create.cy.ts |
 | 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ canvas-create.cy.ts |
 | 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | dropped — ColumnRow does not mount `fl:` handles (LDB TableColumnList swaps to them in lineage mode); canvas-create.cy.ts counted 0. Canvas onConnect already accepts `fl:`. Do not add handles. |
@@ -82,10 +82,10 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☑ canvas-delete-chrome.cy.ts |
 | 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☑ canvas-delete-chrome.cy.ts |
 | 72 | Canvas | Click the canvas pane clears table selection (column selection is kept) | src/canvas/Canvas.tsx:584 | ☑ canvas-selection.cy.ts |
-| 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☐ canvas-selection.cy.ts asserts select+inspector+tree, not editor scroll from a canvas click |
-| 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☐ no Plan 3 spec |
-| 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☐ no Plan 3 spec |
-| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☐ canvas-lod.cy.ts covers zoom in/out only; fit view and lock untested |
+| 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☑ canvas-select-sync.cy.ts |
+| 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☑ canvas-select-sync.cy.ts |
+| 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☑ canvas-select-sync.cy.ts |
+| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☑ canvas-select-sync.cy.ts (fit view + lock; zoom in/out already canvas-lod.cy.ts) |
 | 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ stress-large-diagram.cy.ts |
 | 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ canvas-delete-chrome.cy.ts |
 | 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ canvas-delete-chrome.cy.ts (Table menu Delete + confirm; no × on TableNode) |
@@ -98,10 +98,10 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☑ canvas-delete-chrome.cy.ts |
 | 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☑ canvas-delete-chrome.cy.ts |
 | 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☑ canvas-delete-chrome.cy.ts |
-| 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☐ no Plan 3 spec |
+| 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☑ canvas-select-sync.cy.ts |
 | 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☑ canvas-palette.cy.ts |
 | 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☑ canvas-palette.cy.ts |
-| 92 | Canvas | Stale-model banner tells the user the canvas shows the last valid model while DBML is invalid | src/canvas/Canvas.tsx:533 | ☐ no Plan 3 spec |
+| 92 | Canvas | Stale-model banner tells the user the canvas shows the last valid model while DBML is invalid | src/canvas/Canvas.tsx:533 | ☑ canvas-select-sync.cy.ts |
 | 93 | Panel:ColumnPanel | Collapse/expand the column editor (persisted in localStorage) | src/canvas/ColumnPanel.tsx:133 | ☑ |
 | 94 | Panel:ColumnPanel | Close the column editor (clears selected column) | src/canvas/ColumnPanel.tsx:142 | ☑ |
 | 95 | Panel:ColumnPanel | Rename the column via the Nome field (Enter or blur) | src/canvas/ColumnPanel.tsx:154 | ☑ |
@@ -256,7 +256,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 244 | Editor | Drag the vertical resizer to change editor width | src/App.tsx:1740 | dropped — Strata is canvas-first; SourceDrawer is a bottom overlay, not a split pane (identity §6) |
 | 245 | Editor | Type DBML in CodeMirror (line numbers, fold gutter, SQL highlighting) | src/editor/Editor.tsx:81 | ☑ |
 | 246 | Editor | Fold consecutive `//` comment lines or `{ ... }` blocks via the fold gutter | src/editor/dbmlFold.ts:9 | ☑ |
-| 247 | Editor | Moving the cursor to a table block pans/selects that table on the canvas | src/editor/Editor.tsx:42 | ☐ no Plan 3 spec |
+| 247 | Editor | Moving the cursor to a table block pans/selects that table on the canvas | src/editor/Editor.tsx:42 | ☑ canvas-select-sync.cy.ts |
 | 248 | Editor | Blur (leaving the editor) commits edits and may open the rename-confirm modal | src/editor/Editor.tsx:44 | ☑ |
 | 249 | Editor | Click the error banner to jump to the error line and uncollapse the editor | src/editor/Editor.tsx:95 | ☑ |
 | 250 | Editor | Outline chevron collapses or expands the outline panel | src/editor/Outline.tsx:106 | ☑ |
