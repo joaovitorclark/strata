@@ -1,9 +1,14 @@
 # AGENTS.md — Strata
 
 > Orientation for AI agents and humans working in this repository.
-> **Status: migrated and under verification.** The application is here — 207 files under `src/`,
-> 67 under `server/`, 133 test files. LocalDrawDB is **frozen and archival**: read it for reference,
-> never write to it.
+>
+> **Status: migrated and verified. The current phase is user experience.** The application is here —
+> 207 files under `src/`, 67 under `server/`, 133 test files, 880 unit tests, 83 Cypress specs.
+> The parity inventory closed at **254 ☑ · 0 ☐ · 6 dropped** of 260.
+>
+> LocalDrawDB is **frozen and archival**: read it for reference, never write to it. And **parity
+> with it no longer governs** — see [`docs/ux-direction.md`](docs/ux-direction.md), which is the
+> document that describes what the work is now.
 
 ## What Strata is
 
