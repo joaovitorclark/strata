@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS loja.cliente (
 ) USING DELTA;
 
 -- @group: vendas
--- @origen: loja.cliente
 -- @fk: cliente_id -> loja.cliente.id
 CREATE TABLE IF NOT EXISTS loja.pedido (
   id BIGINT NOT NULL,
@@ -17,6 +16,8 @@ CREATE TABLE IF NOT EXISTS loja.pedido (
   criado_em TIMESTAMP,
   PRIMARY KEY (id)
 ) USING DELTA;
+-- @lineage loja.pedido
+--   cliente_id <- loja.cliente.id
 
 -- @layercolors
 --   bronze: #b08d57

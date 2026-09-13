@@ -5,7 +5,9 @@ import {
   saveViaPaletteShortcut,
   SMOKE_NODES,
   waitForCanvas,
+  zoomUntil,
 } from "./canvas-support";
+import { LOD_FULL_ABOVE } from "../../src/features/canvas/utils/lod";
 
 /**
  * React Flow `useKeyPress(deleteKeyCode)` listens on `document`.
@@ -40,7 +42,7 @@ function columnNameSpan(tableId: string, name: string) {
   return cy.get(nodeSel(tableId)).contains(".col-row span", new RegExp(`^${name}$`));
 }
 
-function showLineageEdges(): void {
+function showFieldLineageEdges(): void {
   cy.get(".layers-panel").then(($p) => {
     if ($p.hasClass("is-collapsed")) {
       cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
@@ -48,7 +50,11 @@ function showLineageEdges(): void {
   });
   cy.get(".layers-panel").should("not.have.class", "is-collapsed");
   cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
-  cy.get(".edge-path--lineage").should("have.length.at.least", 1);
+  cy.get(".layers-panel__lineage-btn").click();
+  cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
+  collapseLayersPanel();
+  zoomUntil((z) => z > LOD_FULL_ABOVE, "in");
+  cy.get(".edge-path--field-lineage").should("have.length.at.least", 1);
 }
 
 /** Mouse-only resize (d3-drag on NodeResizeControl). Never pointer*. */
@@ -154,15 +160,16 @@ describe("canvas deletion and node chrome", () => {
     });
   });
 
-  it("row 71: Delete on a selected lineage edge removes that Lineage entry from the DBML", () => {
-    showLineageEdges();
+  it("row 71: Delete on a selected field-lineage edge removes that mapping from the DBML", () => {
+    showFieldLineageEdges();
 
     cy.dbmlText().then((before) => {
-      expect(before).to.include("vendas.resumo < vendas.pedido");
+      expect(before).to.include("vendas.resumo.id < vendas.pedido.id");
     });
 
-    cy.get(".edge-path--lineage").click({ force: true });
-    cy.get(".edge-path--lineage")
+    cy.get(".edge-path--field-lineage").first().click({ force: true });
+    cy.get(".edge-path--field-lineage")
+      .first()
       .closest("[data-testid^='rf__edge-']")
       .should("have.class", "selected");
 
@@ -170,7 +177,10 @@ describe("canvas deletion and node chrome", () => {
     saveViaPaletteShortcut();
 
     cy.dbmlText().should((after) => {
-      expect(after, "L1 lineage entry gone").to.not.include("vendas.resumo < vendas.pedido");
+      const beforeCount = 2;
+      const afterCount = (after.match(/^\s*vendas\.resumo\.\w+ < vendas\.pedido\.\w+/gm) ?? [])
+        .length;
+      expect(afterCount, "one field mapping gone").to.eq(beforeCount - 1);
       expect((after.match(/^\s*Ref:/gm) ?? []).length, "FK Ref untouched").to.eq(1);
       expect(after).to.include("Table vendas.resumo {");
       expect(after).to.include("Table vendas.pedido {");

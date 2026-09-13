@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseDbml } from '@/features/schema/model/parse';
 import { autolayoutLineagePositions, autolayoutPositions } from '@/features/canvas/utils/autolayout';
-import { pickLineageHandles } from '@/features/canvas/utils/lineageHandles';
 import { nodeHeight, nodeWidth } from '@/features/canvas/utils/nodeMetrics';
 
 const MARGIN = 16;
@@ -276,9 +275,9 @@ Table silver.c {
 Table gold.d {
   id bigint [pk]
 }
-Lineage {
-  silver.c < raw.a
-  gold.d < silver.c
+LineageFields {
+  silver.c.id < raw.a.id
+  gold.d.id < silver.c.id
 }
 `);
     const pos = autolayoutLineagePositions(parsed);
@@ -286,7 +285,7 @@ Lineage {
     expect(pos['silver.c'].x).toBeLessThan(pos['gold.d'].x);
   });
 
-  it('dentro da camada: maiores à esquerda e alvo L1 à direita da origem', () => {
+  it('dentro da camada: maiores à esquerda e alvo derivado à direita da origem', () => {
     const parsed = parseDbml(`
 Table bronze.src {
   id bigint [pk]
@@ -297,19 +296,14 @@ Table silver.mid {
 Table gold.dst {
   id bigint [pk]
 }
-Lineage {
-  silver.mid < bronze.src
-  gold.dst < silver.mid
+LineageFields {
+  silver.mid.id < bronze.src.id
+  gold.dst.id < silver.mid.id
 }
 `);
     const pos = autolayoutLineagePositions(parsed);
     expect(pos['bronze.src'].x).toBeLessThan(pos['silver.mid'].x);
     expect(pos['silver.mid'].x).toBeLessThan(pos['gold.dst'].x);
-    const src = parsed.tables.find((t) => t.id === 'bronze.src')!;
-    const mid = parsed.tables.find((t) => t.id === 'silver.mid')!;
-    const handles = pickLineageHandles(pos['bronze.src'], pos['silver.mid'], src, mid);
-    expect(handles.sourceHandle).toBe('lin-r-s');
-    expect(handles.targetHandle).toBe('lin-l-t');
   });
 
   it('maiores primeiro à esquerda na mesma camada (inverso do compacto normal)', () => {
@@ -354,8 +348,8 @@ Table raw.erp_order_lines {
   order_id bigint
   qty int
 }
-Lineage {
-  raw.erp_order_lines < raw.erp_orders
+LineageFields {
+  raw.erp_order_lines.order_id < raw.erp_orders.id
 }
 `);
     const pos = autolayoutLineagePositions(parsed);
@@ -383,10 +377,10 @@ Lineage {
 ${Array.from({ length: 8 }, (_, i) => `Table bronze.t${i} {\n  id bigint [pk]\n  c string\n}`).join('\n')}
 ${Array.from({ length: 6 }, (_, i) => `Table silver.s${i} {\n  id bigint [pk]\n  c string\n}`).join('\n')}
 ${Array.from({ length: 4 }, (_, i) => `Table gold.g${i} {\n  id bigint [pk]\n}`).join('\n')}
-Lineage {
-  silver.s0 < bronze.t0
-  silver.s1 < bronze.t1
-  gold.g0 < silver.s0
+LineageFields {
+  silver.s0.id < bronze.t0.id
+  silver.s1.id < bronze.t1.id
+  gold.g0.id < silver.s0.id
 }
 `);
     const pos = autolayoutLineagePositions(parsed);

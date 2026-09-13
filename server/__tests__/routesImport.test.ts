@@ -60,8 +60,8 @@ describe('runImport — arquivos .dbml no input', () => {
     expect(out.dbml).toContain('@dimensoes: #112233');
     expect(out.dbml).toContain('silver.fato_venda.venda_key: #ff0000');
     expect(out.dbml).toContain('LayerGroup prata [color: #c0c0c0] {');
-    expect(out.dbml).toMatch(/Lineage\s*\{[^}]*silver\.fato_venda < silver\.dim_cliente/);
     expect(out.dbml).toMatch(/LineageFields\s*\{/);
+    expect(out.dbml).not.toContain('Lineage {');
     expect(out.dbml).toMatch(/Records silver\.dim_cliente/);
     expect(out.lineageFieldCount).toBe(1);
   });

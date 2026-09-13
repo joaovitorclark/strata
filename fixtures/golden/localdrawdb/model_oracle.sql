@@ -9,7 +9,6 @@ CREATE TABLE loja.cliente (
 COMMENT ON TABLE loja.cliente IS 'Dimensão de clientes';
 
 -- @group: vendas
--- @origen: loja.cliente
 -- @fk: cliente_id -> loja.cliente.id
 CREATE TABLE loja.pedido (
   id NUMBER(19),
@@ -20,6 +19,8 @@ CREATE TABLE loja.pedido (
   CONSTRAINT fk_pedido_1 FOREIGN KEY (cliente_id)
     REFERENCES loja.cliente (id)
 );
+-- @lineage loja.pedido
+--   cliente_id <- loja.cliente.id
 
 -- @layercolors
 --   bronze: #b08d57

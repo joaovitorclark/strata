@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { dbmlToModel, modelToDbml } from '../dbmlIo.ts';
 import { mergeModel, sqlToModel } from '../sqlImport.ts';
 
-describe('mergeModel linhagem', () => {
-  it('une L1/L2 do editor com input sem perder entradas', () => {
+describe('mergeModel linhagem de campo', () => {
+  it('une LineageFields do editor com input sem perder entradas', () => {
     const editorDbml = `Table raw.a {
   id bigint [pk]
 }
@@ -27,7 +27,6 @@ LineageFields {
 }
 `;
     const inputSql = `
--- @origem: raw.b
 CREATE TABLE silver.y (
   id BIGINT,
   val STRING, -- @mapeamento <- raw.b.id
@@ -44,21 +43,18 @@ CREATE TABLE raw.b (
     const merged = mergeModel(base, incoming);
     const dbml = modelToDbml(merged);
 
-    expect(dbml).toContain('silver.x < raw.a');
-    expect(dbml).toContain('silver.y < raw.b');
+    expect(dbml).not.toContain('Lineage {');
     expect(dbml).toContain('silver.x.val < raw.a.id');
     expect(dbml).toContain('silver.y.val < raw.b.id');
 
     const round = dbmlToModel(dbml);
-    expect(round.lineage?.map((l) => l.target).sort()).toEqual(['silver.x', 'silver.y']);
     expect(round.lineageFields).toHaveLength(2);
   });
 
-  it('dedupe L1 por target+source e L2 por par completo', () => {
+  it('dedupe L2 por par completo', () => {
     const base = {
       tables: [],
       refs: [],
-      lineage: [{ target: 'silver.t', sources: ['raw.a'] }],
       lineageFields: [
         {
           targetTable: 'silver.t',
@@ -72,7 +68,6 @@ CREATE TABLE raw.b (
     const incoming = {
       tables: [],
       refs: [],
-      lineage: [{ target: 'silver.t', sources: ['raw.a', 'raw.b'] }],
       lineageFields: [
         {
           targetTable: 'silver.t',
@@ -84,7 +79,6 @@ CREATE TABLE raw.b (
       ],
     };
     const merged = mergeModel(base, incoming);
-    expect(merged.lineage).toEqual([{ target: 'silver.t', sources: ['raw.a', 'raw.b'] }]);
     expect(merged.lineageFields?.[0].note).toBe('input');
   });
 });

@@ -265,19 +265,6 @@ Ref: silver.bridge_conta_contato.sk_conta > silver.dim_conta.sk_conta
 Ref: silver.bridge_conta_contato.sk_contato > silver.dim_contato.sk_contato
 Ref: gold.fato_cliente_mes.sk_conta > silver.dim_conta.sk_conta
 
-Lineage {
-  silver.dim_conta < staging.crm_conta
-  silver.dim_produto < staging.catalogo_produto
-  silver.dim_contato < staging.crm_contato
-  silver.fato_pedido < staging.erp_pedido, staging.gateway_pagamento
-  silver.fato_pedido_item < staging.erp_pedido_item
-  silver.fato_pagamento < staging.gateway_pagamento
-  silver.fato_evento_marketing < staging.web_evento
-  gold.kpi_vendas_dia < silver.fato_pedido
-  gold.fato_cliente_mes < silver.fato_pedido, silver.fato_pagamento
-  gold.report_executivo < gold.kpi_vendas_dia, gold.fato_cliente_mes
-}
-
 LineageFields {
   silver.dim_conta.conta_natural_id < staging.crm_conta.conta_id
   silver.dim_conta.razao_social < staging.crm_conta.razao_social

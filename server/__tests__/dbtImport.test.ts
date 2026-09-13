@@ -156,9 +156,8 @@ describe('manifestToModel (dbt-docs)', () => {
     expect(raw.schema).toBe('bronze');
   });
 
-  it('depends_on vira lineage L1', () => {
-    const lin = model.lineage?.find((l) => l.target === 'pedido');
-    expect(lin?.sources).toContain('raw_pedido');
+  it('ref()/source() do SQL não criam linhagem de tabela', () => {
+    expect(model.lineageFields ?? []).toEqual([]);
   });
 });
 
@@ -183,9 +182,9 @@ describe('dbtFilesToModel (projeto em pasta)', () => {
     expect(model.tables.find((t) => t.name === 'pedido')).toBeDefined();
   });
 
-  it('extrai lineage de ref()/source() do SQL com nomes qualificados', () => {
-    const lin = model.lineage?.find((l) => l.target === 'prata.pedido');
-    expect(lin?.sources).toContain('bronze.raw_pedido');
+  it('extrai materialization/tags do SQL sem linhagem a partir de ref()/source()', () => {
+    expect(model.lineageFields ?? []).toEqual([]);
+    expect(model.tables.find((t) => t.name === 'pedido')?.materialization).toBe('incremental');
   });
 
   it('retorna null quando não há artefatos dbt', () => {
@@ -220,7 +219,6 @@ describe('round-trip dbt: export (F2) → import (F3)', () => {
         },
       ],
       refs: [{ from: { table: 'pedido', column: 'cliente_id' }, to: { table: 'dim_cliente', column: 'id' }, kind: '>' }],
-      lineage: [{ target: 'pedido', sources: ['raw_pedido'] }],
     };
   }
 
@@ -262,13 +260,12 @@ describe('fixtures examples/dbt', () => {
     return out;
   }
 
-  it('projeto em pasta parseia orders/customers/raw_* com lineage', async () => {
+  it('projeto em pasta parseia orders/customers/raw_* sem linhagem de tabela', async () => {
     const model = dbtFilesToModel(await readFolder())!;
     const names = model.tables.map((t) => t.name).sort();
     expect(names).toEqual(['customers', 'orders', 'raw_customers', 'raw_orders']);
     expect(model.tables.find((t) => t.name === 'raw_orders')!.resourceType).toBe('source');
-    const lin = model.lineage?.find((l) => l.target === 'marts.orders');
-    expect(lin?.sources).toEqual(expect.arrayContaining(['raw.raw_orders', 'marts.customers']));
+    expect(model.lineageFields ?? []).toEqual([]);
   });
 
   it('manifest.json produz as mesmas tabelas e a FK orders→customers', async () => {

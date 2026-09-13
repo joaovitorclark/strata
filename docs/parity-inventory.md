@@ -53,7 +53,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
 | 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | dropped — trigger is table hover (`hoveredTableId` → TableInfoPopover); ⓘ affordance deliberately not restored. Same popover content; hover verified in canvas-select-sync.cy.ts and canvas-actions.cy.ts (row 63). |
 | 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-select-sync.cy.ts (Cmd/Ctrl+click; rubber-band does not stick — panOnDrag default true disables selectionOnDrag) |
-| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
+| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | dropped — superseded by field-only lineage (this spec) |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
 | 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | dropped — CommandPalette window-capture Escape calls clearCanvasSelection() before Canvas's stacked handler; first press already clears the table. canvas-select-sync.cy.ts records the attempt. |
 | 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ canvas-actions.cy.ts |
@@ -76,8 +76,8 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
 | 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | dropped — XYDrag does not latch from the harness on GroupNode's dragHandle (label and edge tried; members stay at dx=0). canvas-select-sync.cy.ts records the attempt. Do not rewrite GroupNode. |
 | 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☑ canvas-create.cy.ts |
-| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ canvas-create.cy.ts |
-| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | dropped — ColumnRow does not mount `fl:` handles (LDB TableColumnList swaps to them in lineage mode); canvas-create.cy.ts counted 0. Canvas onConnect already accepts `fl:`. Do not add handles. |
+| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | dropped — superseded by field-only lineage (this spec) |
+| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☑ cypress/e2e/s01-field-lineage.cy.ts |
 | 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☑ canvas-create.cy.ts |
 | 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☑ canvas-delete-chrome.cy.ts |
 | 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☑ canvas-delete-chrome.cy.ts |
@@ -125,9 +125,9 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 113 | Panel:LayersPanel | Insert preset "Inbound / Staging / Solutions" | src/canvas/LayersPanel.tsx:160 | ☑ |
 | 114 | Panel:LayersPanel | Insert preset "SOR / SOT / Spec" | src/canvas/LayersPanel.tsx:160 | ☑ |
 | 115 | Panel:LayersPanel | "Esmaecer (em vez de esconder)" dims hidden layers instead of hiding them | src/canvas/LayersPanel.tsx:176 | ☑ |
-| 116 | Panel:LayersPanel | "Mostrar linhagem" shows or hides L1 lineage edges | src/canvas/LayersPanel.tsx:182 | ☑ |
+| 116 | Panel:LayersPanel | "Mostrar linhagem" shows or hides L1 lineage edges | src/canvas/LayersPanel.tsx:182 | dropped — superseded by field-only lineage (this spec) |
 | 117 | Panel:LayersPanel | "Mostrar relacionamentos" shows or hides FK relation edges | src/canvas/LayersPanel.tsx:186 | ☑ |
-| 118 | Panel:LayersPanel | "Mostrar linhagem de campos" shows or hides L2 field-lineage edges | src/canvas/LayersPanel.tsx:190 | ☑ |
+| 118 | Panel:LayersPanel | "Mostrar linhagem de campos" shows or hides L2 field-lineage edges | src/canvas/LayersPanel.tsx:190 | dropped — superseded by field-only lineage (this spec) |
 | 119 | Panel:LayersPanel | "Modo linhagem" toggles lineage-edit mode | src/canvas/LayersPanel.tsx:197 | ☑ |
 | 120 | Panel:LayersPanel | Search box filters the table list by id | src/canvas/LayersPanel.tsx:212 | ☑ |
 | 121 | Panel:LayersPanel | Click (or double-click) a table name to pan/focus it on the canvas | src/canvas/LayersPanel.tsx:226 | ☑ |

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { dbmlToModel, modelToDbml } from '../dbmlIo.ts';
+import { tableLineageFrom } from '../model.ts';
 import { sqlToModel } from '../sqlImport.ts';
 import { modelToInputSql } from '../sqlExport.ts';
 import { parseDbml } from '../../src/features/schema/model/parse.ts';
@@ -14,17 +15,18 @@ const demoSql = readFileSync(
 );
 
 describe('lineage DBML round-trip', () => {
-  it('modelToDbml emite Lineage e LineageFields', () => {
+  it('modelToDbml emite só LineageFields (linhagem derivada de campo)', () => {
     const model = sqlToModel(demoSql);
     const dbml = modelToDbml(model);
-    expect(dbml).toContain('Lineage {');
-    expect(dbml).toContain('silver.dim_conta < staging.crm_conta');
+    expect(dbml).not.toContain('Lineage {');
     expect(dbml).toContain('LineageFields {');
     expect(dbml).toContain('silver.dim_conta.conta_natural_id < staging.crm_conta.conta_id');
     expect(dbml).toContain("note: 'SUM(valor_bruto) por dia'");
     const parsed = parseDbml(dbml);
     expect(parsed.error).toBeUndefined();
-    expect(parsed.lineage.some((l) => l.target === 'silver.dim_conta')).toBe(true);
+    expect(tableLineageFrom(parsed.lineageFields).some((l) => l.target === 'silver.dim_conta')).toBe(
+      true,
+    );
     expect(
       parsed.lineageFields.some(
         (f) => f.targetTable === 'silver.fato_pedido' && f.targetColumn === 'pedido_natural_id',
@@ -32,7 +34,7 @@ describe('lineage DBML round-trip', () => {
     ).toBe(true);
   });
 
-  it('dbmlToModel preserva linhagem do editor', () => {
+  it('dbmlToModel preserva linhagem de campo e descarta Lineage {}', () => {
     const dbml = `Table raw.orders {
   id bigint [pk]
 }
@@ -51,7 +53,6 @@ LineageFields {
 }
 `;
     const model = dbmlToModel(dbml);
-    expect(model.lineage).toEqual([{ target: 'silver.fact_orders', sources: ['raw.orders'] }]);
     expect(model.lineageFields?.[0]).toMatchObject({
       targetTable: 'silver.fact_orders',
       targetColumn: 'order_id',
@@ -60,26 +61,23 @@ LineageFields {
       note: 'copia direta',
     });
     const back = modelToDbml(model);
-    expect(back).toContain('Lineage {');
+    expect(back).not.toContain('Lineage {');
     expect(back).toContain('LineageFields {');
-    expect(dbmlToModel(back).lineage).toEqual(model.lineage);
+    expect(dbmlToModel(back).lineageFields).toEqual(model.lineageFields);
   });
 });
 
 describe('lineage SQL round-trip', () => {
-  it('demo_lakehouse_oracle import → export → reimport preserva L1/L2', () => {
+  it('demo_lakehouse_oracle import → export → reimport preserva LineageFields', () => {
     const model0 = sqlToModel(demoSql);
-    expect(model0.lineage?.length).toBeGreaterThan(0);
     expect(model0.lineageFields?.length).toBeGreaterThan(0);
 
     const exported = modelToInputSql(model0, 'oracle');
-    expect(exported).toContain('-- @origen: staging.crm_conta');
+    expect(exported).not.toContain('-- @origen:');
     expect(exported).toContain('-- @lineage silver.dim_conta');
     expect(exported).toContain('--   conta_natural_id <- staging.crm_conta.conta_id');
 
     const model1 = sqlToModel(exported);
-    const dimLineage = model1.lineage?.find((l) => l.target === 'silver.dim_conta');
-    expect(dimLineage?.sources).toContain('staging.crm_conta');
     expect(
       model1.lineageFields?.some(
         (f) =>
@@ -93,7 +91,7 @@ describe('lineage SQL round-trip', () => {
     const dbml = modelToDbml(model1);
     const parsed = parseDbml(dbml);
     expect(parsed.error).toBeUndefined();
-    expect(parsed.lineage.length).toBeGreaterThan(0);
     expect(parsed.lineageFields.length).toBeGreaterThan(0);
+    expect(dbml).not.toContain('Lineage {');
   });
 });
