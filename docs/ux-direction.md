@@ -206,9 +206,42 @@ property `dbtRoundtrip`, `dbtMetaRoundtrip` and the golden fixtures already test
 **Decided:** parity no longer governs · the chrome belongs in the frame, not floating over the
 canvas · tree click must navigate · lineage and a code surface stay.
 
-**Open:** the editable artifact (§5) · whether to adopt shareable focus links · how far to go in
-rebuilding the canvas's information architecture · what happens to the inventory rows that a UX
-change deliberately invalidates.
+**Open:** the editable artifact (§5) · **how lineage L1 and L2 should coexist (§6.1)** · whether to
+adopt shareable focus links · how far to go in rebuilding the canvas's information architecture ·
+what happens to the inventory rows that a UX change deliberately invalidates.
+
+### 6.1 Open question: L1 and L2 lineage together are too much
+
+**Three kinds of edge can be on at once today**, each with its own independent toggle in the layers
+panel: foreign-key relations, table-level lineage (L1), and field-level lineage (L2). On a 75-table
+model that is visual noise, and it is the single biggest contributor to the canvas feeling cluttered
+after the floating chrome in §2.
+
+`identity.md` §7 gave the three a distinct visual language — FK solid with a crow's foot, lineage
+dashed and animated, field lineage thinner and dashed — which works when a handful are visible and
+stops working when hundreds are.
+
+**Ask for solutions rather than assuming one.** The instinct is "show one at a time instead of all
+three", and that may be right, but it is one option among several and the trade-offs have not been
+worked through. Raw material for whoever takes this on:
+
+- **They answer different questions.** FK is *structure* ("this column references that one"). L1 is
+  *flow* ("this table is built from those"). L2 is *derivation* ("this field comes from that
+  field"). A user is almost never asking all three at once — which is an argument for modes rather
+  than toggles.
+- **They live at different zoom levels.** L2 is meaningless unless columns are visible, so it only
+  makes sense at the Full level of detail. L1 reads fine at Sigil, where columns are hidden
+  entirely. That correspondence is suggestive: **level of detail and lineage level may be the same
+  control**, not two.
+- **L2 cannot currently be created at all** (§7, row 68 — the `fl:` handles are never rendered). So
+  whatever is decided, the creation gesture has to be built anyway. There is no legacy behaviour to
+  preserve here, which makes it the cheapest of the three to redesign.
+- **Focus may beat filtering.** Liam's answer to a crowded diagram is relationship highlighting —
+  dim everything not connected to what you are looking at — rather than turning categories off.
+  Strata already has edge peek, which is the same idea applied to one edge.
+
+The question to answer is not "which toggles" but **"what is the user trying to see, and what is
+the smallest control that gets them there"**.
 
 ---
 
