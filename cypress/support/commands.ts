@@ -7,6 +7,17 @@ declare global {
       dragNode(id: string, dx: number, dy: number): Chainable<void>;
       /** Activate a committed fixture project (smoke / wide / large) and visit `/`. */
       seedProject(name: FixtureProject): Chainable<void>;
+      /** Re-seed, restore committed DBML+canvas, reload. Built on seedProject. */
+      resetFixture(name: FixtureProject): Chainable<void>;
+      /** Persisted document of the active project (`GET /api/project`). */
+      dbmlText(): Chainable<string>;
+      /** Connect two column handles with mouse events (never pointer*). */
+      connectHandles(
+        fromNode: string,
+        fromHandle: string,
+        toNode: string,
+        toHandle: string,
+      ): Chainable<void>;
     }
   }
 }
@@ -85,3 +96,63 @@ Cypress.Commands.add("seedProject", (name: FixtureProject) => {
     cy.visit("/");
   });
 });
+
+Cypress.Commands.add("dbmlText", () => {
+  return cy
+    .request("GET", "/api/project")
+    .then((res) => res.body?.dbml ?? "")
+    .then((t: string) => t as unknown as Cypress.Chainable<string>);
+});
+
+function fixtureProjectDir(name: FixtureProject): string {
+  return `cypress/fixtures/data/domains/local/projects/${name}`;
+}
+
+/** STRATA_DATA_DIR is this folder; a save overwrites the committed files. */
+function checkoutFixtureFiles(name: FixtureProject) {
+  const rel = fixtureProjectDir(name);
+  cy.exec(`git checkout -- "${rel}/project.dbml" "${rel}/canvas.json"`);
+}
+
+Cypress.Commands.add("resetFixture", (name: FixtureProject) => {
+  checkoutFixtureFiles(name);
+  cy.seedProject(name);
+  cy.readFile(`${fixtureProjectDir(name)}/project.dbml`).then((dbml) => {
+    cy.request("PUT", "/api/project", { dbml, canvas: {} });
+  });
+  cy.reload();
+});
+
+Cypress.Commands.add(
+  "connectHandles",
+  (fromNode: string, fromHandle: string, toNode: string, toHandle: string) => {
+    const sel = (n: string, h: string) => `[data-nodeid="${n}"][data-handleid="${h}"]`;
+
+    cy.get(sel(fromNode, fromHandle)).then(($src) => {
+      const s = $src[0].getBoundingClientRect();
+      const sx = s.left + s.width / 2;
+      const sy = s.top + s.height / 2;
+
+      cy.get(sel(toNode, toHandle)).then(($dst) => {
+        const d = $dst[0].getBoundingClientRect();
+        const dx = d.left + d.width / 2;
+        const dy = d.top + d.height / 2;
+
+        // Start on the handle: React Flow binds this through the Handle's
+        // onMouseDown prop.
+        cy.wrap($src).trigger("mousedown", { button: 0, clientX: sx, clientY: sy, force: true });
+
+        // Move on the document: React Flow registers mousemove/mouseup there,
+        // not on the handle. Two moves — the first opens the connection, the
+        // second positions it over the target.
+        cy.document()
+          .trigger("mousemove", { clientX: (sx + dx) / 2, clientY: (sy + dy) / 2, force: true })
+          .trigger("mousemove", { clientX: dx, clientY: dy, force: true });
+
+        // Release over the target handle. The drop target is resolved from the
+        // element under these coordinates, so they must be the target's centre.
+        cy.wrap($dst).trigger("mouseup", { clientX: dx, clientY: dy, force: true });
+      });
+    });
+  },
+);
