@@ -3,7 +3,6 @@ import { dbmlToModel, modelToDbml } from './dbmlIo.ts';
 import { mergeModel, sqlToModel } from './sqlImport.ts';
 import { dbtFilesToModel } from './dbtImport.ts';
 import {
-  DATA_DIR,
   ROOT,
   getActiveInputDir,
   getActiveId,
@@ -29,7 +28,7 @@ import type { Model } from './model.ts';
 import { registerExportRoutes } from './routes/exportRoutes.ts';
 import { registerDomainRoutes } from './routes/domainRoutes.ts';
 import { isGitAvailable } from './git.ts';
-import { getActiveDomainSlug } from './domainContext.ts';
+import { getActiveDomainSlug, baseDataDir } from './domainContext.ts';
 import { seedGitIfNeeded } from './domains.ts';
 
 type ProjectBody = { dbml?: string; canvas?: unknown };
@@ -195,7 +194,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     }
     return {
       root: ROOT,
-      dataDir: DATA_DIR,
+      dataDir: baseDataDir(),
       inputDir,
       port: Number(process.env.PORT ?? 5174),
       pinnedProject: pin,

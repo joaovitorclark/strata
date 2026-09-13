@@ -25,6 +25,8 @@ beforeEach(async () => {
 afterEach(async () => {
   delete process.env.LOCALDRAWDB_DATA_DIR;
   delete process.env.LOCALDRAWDB_DOMAIN;
+  delete process.env.STRATA_DATA_DIR;
+  delete process.env.STRATA_DOMAIN;
   vi.resetModules();
   await fs.rm(tmpDir, { recursive: true, force: true });
 });
@@ -391,5 +393,17 @@ describe('GET /api/meta', () => {
     const res = await app.inject({ method: 'GET', url: '/api/meta' });
     await app.close();
     expect((res.json() as { activeDomain: string | null }).activeDomain).toBe('meta-dom');
+  });
+
+  it('reporta baseDataDir() quando STRATA_DATA_DIR está setado', async () => {
+    delete process.env.LOCALDRAWDB_DATA_DIR;
+    process.env.STRATA_DATA_DIR = tmpDir;
+    vi.resetModules();
+    const app = await buildApp();
+    const res = await app.inject({ method: 'GET', url: '/api/meta' });
+    await app.close();
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { dataDir: string };
+    expect(body.dataDir).toBe(tmpDir);
   });
 });
