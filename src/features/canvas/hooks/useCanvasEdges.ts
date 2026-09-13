@@ -1,17 +1,16 @@
 // Arestas do canvas: rebuild estrutural separado do highlight (Fase 3 perf).
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Edge } from "@xyflow/react";
-import type { ParseResult, ParsedFieldLineage } from '@/features/schema/model/parse';
-import type { LineageLink } from '@/infrastructure/api';
+import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
+import type { LodState } from "@/features/canvas/utils/lod";
 import {
   EXTERNAL_SOURCE_HANDLE,
   EXTERNAL_TARGET_HANDLE,
   externalSourceHandle,
   externalTargetHandle,
   type AggregatedCrossLink,
-} from '../utils/pageFilter';
-import { edgeClassForTier, edgeFocusTier } from '../utils/edgeFocus';
-import { DEFAULT_LINEAGE_SOURCE, DEFAULT_LINEAGE_TARGET, isLineageHandle, pickLineageHandles } from '../utils/lineageHandles';
+} from "../utils/pageFilter";
+import { edgeClassForTier, edgeFocusTier } from "../utils/edgeFocus";
 
 type RefEndpoints = { fromTbl: string; fromCol: string; toTbl: string; toCol: string };
 
@@ -24,23 +23,26 @@ type FocusFieldMapping = {
 
 type SelectedColumn = { table: string; column: string } | null;
 
+export const AGGREGATED_LINEAGE_PREFIX = "fla:";
+
 export type EdgeBuildInput = {
   parsed: ParseResult;
   aggregatedCrossLinks: AggregatedCrossLink[];
-  lineage: LineageLink[];
   lineageFields: ParsedFieldLineage[];
+  lodByTable: Record<string, LodState>;
   positions: Record<string, { x: number; y: number }>;
   relationsVisible: boolean;
-  showLineageEdges: boolean;
-  fieldLineageVisible: boolean;
+  lineageVisible: boolean;
   lineageMode: boolean;
   focusTables: string[];
   focusedFieldMapping: FocusFieldMapping;
   selectedColumn: SelectedColumn;
   onRemoveRef: (a: string, ac: string, b: string, bc: string) => void;
-  onRemoveLineage: (source: string, target: string) => void;
   onRemoveFieldLineage: (
-    sourceTable: string, sourceColumn: string, targetTable: string, targetColumn: string,
+    sourceTable: string,
+    sourceColumn: string,
+    targetTable: string,
+    targetColumn: string,
   ) => void;
 };
 
@@ -59,30 +61,151 @@ function mergeEdgeState(prev: Edge[], next: Edge[]): Edge[] {
   });
 }
 
+function fieldEdgeId(m: ParsedFieldLineage): string {
+  return `fl:${m.sourceTable}.${m.sourceColumn}->${m.targetTable}.${m.targetColumn}`;
+}
+
+function pairKey(sourceTable: string, targetTable: string): string {
+  return `${sourceTable}\u0000${targetTable}`;
+}
+
+function lodOf(lodByTable: Record<string, LodState>, tableId: string): LodState {
+  return lodByTable[tableId] ?? "keys";
+}
+
+function fieldEdgeVisible(
+  m: ParsedFieldLineage,
+  lineageMode: boolean,
+  focusSet: Set<string>,
+  focusedEdgeId: string | null,
+  selectedColumn: SelectedColumn,
+): boolean {
+  if (lineageMode) return true;
+  if (selectedColumn) {
+    return m.targetTable === selectedColumn.table || m.sourceTable === selectedColumn.table;
+  }
+  return focusSet.has(m.targetTable) || focusSet.has(m.sourceTable) || fieldEdgeId(m) === focusedEdgeId;
+}
+
+/** Pure builder: field edges when both ends are `full`, else one aggregated edge per pair. */
+export function buildLineageCanvasEdges(
+  lineageFields: ParsedFieldLineage[],
+  lodByTable: Record<string, LodState>,
+  opts: {
+    lineageVisible: boolean;
+    lineageMode: boolean;
+    focusTables: string[];
+    focusedFieldMapping: FocusFieldMapping;
+    selectedColumn: SelectedColumn;
+    onRemoveFieldLineage: EdgeBuildInput["onRemoveFieldLineage"];
+  },
+): Edge[] {
+  if (!opts.lineageVisible) return [];
+
+  const groups = new Map<string, ParsedFieldLineage[]>();
+  for (const m of lineageFields) {
+    const key = pairKey(m.sourceTable, m.targetTable);
+    const list = groups.get(key);
+    if (list) list.push(m);
+    else groups.set(key, [m]);
+  }
+
+  const focusSet = new Set(opts.focusTables);
+  const focusedEdgeId = opts.focusedFieldMapping
+    ? `fl:${opts.focusedFieldMapping.sourceTable}.${opts.focusedFieldMapping.sourceColumn}->${opts.focusedFieldMapping.targetTable}.${opts.focusedFieldMapping.targetColumn}`
+    : null;
+
+  const out: Edge[] = [];
+  for (const group of groups.values()) {
+    const first = group[0];
+    const bothFull =
+      lodOf(lodByTable, first.sourceTable) === "full" && lodOf(lodByTable, first.targetTable) === "full";
+
+    if (bothFull) {
+      for (const m of group) {
+        if (
+          !fieldEdgeVisible(m, opts.lineageMode, focusSet, focusedEdgeId, opts.selectedColumn)
+        ) {
+          continue;
+        }
+        const id = fieldEdgeId(m);
+        out.push({
+          id,
+          source: m.sourceTable,
+          target: m.targetTable,
+          sourceHandle: `fl:s:${m.sourceColumn}`,
+          targetHandle: `fl:t:${m.targetColumn}`,
+          type: "fieldLineage",
+          selected: id === focusedEdgeId,
+          interactionWidth: 24,
+          reconnectable: false,
+          data: {
+            label: `${m.sourceColumn}→${m.targetColumn}`,
+            mapping: {
+              sourceTable: m.sourceTable,
+              sourceColumn: m.sourceColumn,
+              targetTable: m.targetTable,
+              targetColumn: m.targetColumn,
+            },
+            onRemove: () =>
+              opts.onRemoveFieldLineage(
+                m.sourceTable,
+                m.sourceColumn,
+                m.targetTable,
+                m.targetColumn,
+              ),
+          },
+        });
+      }
+      continue;
+    }
+
+    if (first.sourceTable === first.targetTable) continue;
+
+    out.push({
+      id: `${AGGREGATED_LINEAGE_PREFIX}${first.sourceTable}->${first.targetTable}`,
+      source: first.sourceTable,
+      target: first.targetTable,
+      type: "lineage",
+      interactionWidth: 24,
+      reconnectable: false,
+      data: {
+        count: group.length,
+        mappings: group.map((m) => ({
+          sourceTable: m.sourceTable,
+          sourceColumn: m.sourceColumn,
+          targetTable: m.targetTable,
+          targetColumn: m.targetColumn,
+        })),
+      },
+    });
+  }
+  return out;
+}
+
 function buildStructuralEdges(
   input: EdgeBuildInput,
-  prevLin: Map<string, Edge>,
-  onRemoveRef: EdgeBuildInput['onRemoveRef'],
-  onRemoveLineage: EdgeBuildInput['onRemoveLineage'],
-  onRemoveFieldLineage: EdgeBuildInput['onRemoveFieldLineage'],
+  onRemoveRef: EdgeBuildInput["onRemoveRef"],
+  onRemoveFieldLineage: EdgeBuildInput["onRemoveFieldLineage"],
 ): Edge[] {
-  const {
-    parsed, aggregatedCrossLinks, lineage, lineageFields, positions,
-    relationsVisible, showLineageEdges, fieldLineageVisible, lineageMode,
-    focusTables, focusedFieldMapping, selectedColumn,
-  } = input;
+  const { parsed, aggregatedCrossLinks, lineageFields, lodByTable, relationsVisible } = input;
 
   const relEdges: Edge[] = relationsVisible
     ? [
         ...parsed.refs.map((r) => {
-          const endpoints: RefEndpoints = { fromTbl: r.source, fromCol: r.fromCol, toTbl: r.target, toCol: r.toCol };
+          const endpoints: RefEndpoints = {
+            fromTbl: r.source,
+            fromCol: r.fromCol,
+            toTbl: r.target,
+            toCol: r.toCol,
+          };
           return {
             id: r.id,
             source: r.source,
             target: r.target,
             sourceHandle: `s:${r.fromCol}`,
             targetHandle: `t:${r.toCol}`,
-            type: 'relation',
+            type: "relation",
             interactionWidth: 24,
             data: {
               fromRel: r.fromRel,
@@ -93,19 +216,19 @@ function buildStructuralEdges(
           };
         }),
         ...aggregatedCrossLinks.map((link) => {
-          if (link.direction === 'out') {
+          if (link.direction === "out") {
             return {
               id: link.id,
               source: link.visibleTable,
               target: link.stubId,
               sourceHandle: externalSourceHandle(link.stubId),
               targetHandle: EXTERNAL_TARGET_HANDLE,
-              type: 'relation',
-              className: 'edge--external',
+              type: "relation",
+              className: "edge--external",
               interactionWidth: 12,
               data: {
-                fromRel: '1' as const,
-                toRel: '1' as const,
+                fromRel: "1" as const,
+                toRel: "1" as const,
                 externalSummary: true,
                 linkCount: link.count,
                 stubLabel: link.stubLabel,
@@ -119,12 +242,12 @@ function buildStructuralEdges(
             target: link.visibleTable,
             sourceHandle: EXTERNAL_SOURCE_HANDLE,
             targetHandle: externalTargetHandle(link.stubId),
-            type: 'relation',
-            className: 'edge--external',
+            type: "relation",
+            className: "edge--external",
             interactionWidth: 12,
             data: {
-              fromRel: '1' as const,
-              toRel: '1' as const,
+              fromRel: "1" as const,
+              toRel: "1" as const,
               externalSummary: true,
               linkCount: link.count,
               stubLabel: link.stubLabel,
@@ -135,80 +258,16 @@ function buildStructuralEdges(
       ]
     : [];
 
-  const tableById = new Map(parsed.tables.map((t) => [t.id, t] as const));
-  const linEdges: Edge[] = showLineageEdges
-    ? lineage.map((l) => {
-        const id = `lin:${l.source}->${l.target}`;
-        const prior = prevLin.get(id);
-        const edge: Edge = {
-          id,
-          source: l.source,
-          target: l.target,
-          type: 'lineage',
-          interactionWidth: 24,
-          data: { onRemove: () => onRemoveLineage(l.source, l.target) },
-        };
-        if (prior?.sourceHandle && prior?.targetHandle && isLineageHandle(prior.sourceHandle)) {
-          edge.sourceHandle = prior.sourceHandle;
-          edge.targetHandle = prior.targetHandle;
-        } else {
-          const sp = positions[l.source];
-          const tp = positions[l.target];
-          const srcTable = tableById.get(l.source);
-          const tgtTable = tableById.get(l.target);
-          const handles =
-            sp && tp
-              ? pickLineageHandles(sp, tp, srcTable, tgtTable)
-              : { sourceHandle: DEFAULT_LINEAGE_SOURCE, targetHandle: DEFAULT_LINEAGE_TARGET };
-          edge.sourceHandle = handles.sourceHandle;
-          edge.targetHandle = handles.targetHandle;
-        }
-        return edge;
-      })
-    : [];
+  const lineageEdges = buildLineageCanvasEdges(lineageFields, lodByTable, {
+    lineageVisible: input.lineageVisible,
+    lineageMode: input.lineageMode,
+    focusTables: input.focusTables,
+    focusedFieldMapping: input.focusedFieldMapping,
+    selectedColumn: input.selectedColumn,
+    onRemoveFieldLineage,
+  });
 
-  const focusSet = new Set(focusTables);
-  const focusedEdgeId = focusedFieldMapping
-    ? `fl:${focusedFieldMapping.sourceTable}.${focusedFieldMapping.sourceColumn}->${focusedFieldMapping.targetTable}.${focusedFieldMapping.targetColumn}`
-    : null;
-  const fieldEdges: Edge[] = [];
-  if (fieldLineageVisible && (lineageMode || focusSet.size > 0 || focusedEdgeId || selectedColumn)) {
-    for (const m of lineageFields) {
-      const id = `fl:${m.sourceTable}.${m.sourceColumn}->${m.targetTable}.${m.targetColumn}`;
-      // No modo linhagem, todas as arestas de campo aparecem (suaves); fora dele, só sob foco/seleção.
-      const visible = lineageMode
-        ? true
-        : selectedColumn
-          ? m.targetTable === selectedColumn.table || m.sourceTable === selectedColumn.table
-          : focusSet.has(m.targetTable) ||
-            focusSet.has(m.sourceTable) ||
-            id === focusedEdgeId;
-      if (!visible) continue;
-      fieldEdges.push({
-        id,
-        source: m.sourceTable,
-        target: m.targetTable,
-        sourceHandle: `fl:s:${m.sourceColumn}`,
-        targetHandle: `fl:t:${m.targetColumn}`,
-        type: 'fieldLineage',
-        selected: id === focusedEdgeId,
-        interactionWidth: 24,
-        data: {
-          label: `${m.sourceColumn}→${m.targetColumn}`,
-          mapping: {
-            sourceTable: m.sourceTable,
-            sourceColumn: m.sourceColumn,
-            targetTable: m.targetTable,
-            targetColumn: m.targetColumn,
-          },
-          onRemove: () =>
-            onRemoveFieldLineage(m.sourceTable, m.sourceColumn, m.targetTable, m.targetColumn),
-        },
-      });
-    }
-  }
-
-  return [...relEdges, ...linEdges, ...fieldEdges];
+  return [...relEdges, ...lineageEdges];
 }
 
 function edgeTouchesFocus(
@@ -216,10 +275,10 @@ function edgeTouchesFocus(
   focusTables: string[],
   aggregatedCrossLinks: AggregatedCrossLink[],
 ): boolean {
-  if (e.type === 'fieldLineage') {
+  if (e.type === "fieldLineage") {
     return !!e.selected || focusTables.includes(e.source) || focusTables.includes(e.target);
   }
-  if (e.className?.includes('edge--external')) {
+  if (e.className?.includes("edge--external")) {
     return (
       focusTables.includes(e.source) ||
       focusTables.includes(e.target) ||
@@ -242,7 +301,7 @@ function applyEdgeHighlight(
 ): Edge {
   if (selectedColumn) {
     const tier = edgeFocusTier(e, selectedColumn);
-    const active = e.selected || tier === 'primary';
+    const active = e.selected || tier === "primary";
     const highlightCls = edgeClassForTier(e, tier, !!e.selected);
     return {
       ...e,
@@ -251,40 +310,41 @@ function applyEdgeHighlight(
       data: {
         ...e.data,
         highlighted: active,
-        dimmed: tier === 'dimmed' && !e.selected,
-        muted: tier === 'secondary' && !e.selected,
-        emphasized: tier === 'primary' && !e.selected,
+        dimmed: tier === "dimmed" && !e.selected,
+        muted: tier === "secondary" && !e.selected,
+        emphasized: tier === "primary" && !e.selected,
       },
     };
   }
 
-  // Modo linhagem: arestas de campo aparecem suaves por padrão e fortes ao tocar a seleção.
-  if (lineageMode && e.type === 'fieldLineage') {
+  if (lineageMode && e.type === "fieldLineage") {
     const strong = e.selected || touches;
     return {
       ...e,
       animated: false,
-      className: strong ? 'edge--highlight edge--field-lineage' : 'edge--field-lineage edge--field-lineage-soft',
+      className: strong
+        ? "edge--highlight edge--field-lineage"
+        : "edge--field-lineage edge--field-lineage-soft",
       data: { ...e.data, highlighted: strong, dimmed: false, muted: false, emphasized: false },
     };
   }
 
   const active = e.selected || touches;
   const highlightCls =
-    e.type === 'lineage'
+    e.type === "lineage"
       ? active
-        ? 'edge--highlight edge--lineage'
-        : 'edge--dimmed'
-      : e.type === 'fieldLineage'
+        ? "edge--highlight edge--lineage"
+        : "edge--dimmed"
+      : e.type === "fieldLineage"
         ? active
-          ? 'edge--highlight edge--field-lineage'
-          : 'edge--dimmed'
+          ? "edge--highlight edge--field-lineage"
+          : "edge--dimmed"
         : active
-          ? 'edge--highlight'
-          : 'edge--dimmed';
+          ? "edge--highlight"
+          : "edge--dimmed";
   return {
     ...e,
-    animated: active && e.type !== 'fieldLineage' && !e.selected,
+    animated: active && e.type !== "fieldLineage" && e.type !== "lineage" && !e.selected,
     className: focusActive || e.selected ? highlightCls : undefined,
     data: {
       ...e.data,
@@ -299,10 +359,12 @@ function highlightPatchEqual(a: Edge, b: Edge): boolean {
   return (
     a.className === b.className &&
     a.animated === b.animated &&
-    (a.data as { highlighted?: boolean })?.highlighted === (b.data as { highlighted?: boolean })?.highlighted &&
+    (a.data as { highlighted?: boolean })?.highlighted ===
+      (b.data as { highlighted?: boolean })?.highlighted &&
     (a.data as { dimmed?: boolean })?.dimmed === (b.data as { dimmed?: boolean })?.dimmed &&
     (a.data as { muted?: boolean })?.muted === (b.data as { muted?: boolean })?.muted &&
-    (a.data as { emphasized?: boolean })?.emphasized === (b.data as { emphasized?: boolean })?.emphasized
+    (a.data as { emphasized?: boolean })?.emphasized ===
+      (b.data as { emphasized?: boolean })?.emphasized
   );
 }
 
@@ -315,64 +377,64 @@ export function useCanvasEdges(
     inputRef.current = input;
   });
 
-  const fieldFocusKey = input.fieldLineageVisible
+  const fieldFocusKey = input.lineageVisible
     ? [
-        input.focusTables.join('\u0000'),
-        input.focusedFieldMapping?.sourceTable ?? '',
-        input.focusedFieldMapping?.sourceColumn ?? '',
-        input.focusedFieldMapping?.targetTable ?? '',
-        input.focusedFieldMapping?.targetColumn ?? '',
-        input.selectedColumn?.table ?? '',
-        input.selectedColumn?.column ?? '',
-      ].join('\u0002')
-    : '';
+        input.focusTables.join("\u0000"),
+        input.focusedFieldMapping?.sourceTable ?? "",
+        input.focusedFieldMapping?.sourceColumn ?? "",
+        input.focusedFieldMapping?.targetTable ?? "",
+        input.focusedFieldMapping?.targetColumn ?? "",
+        input.selectedColumn?.table ?? "",
+        input.selectedColumn?.column ?? "",
+      ].join("\u0002")
+    : "";
 
   const structureKey = [
     input.parsed.refs,
     input.aggregatedCrossLinks,
     input.parsed.tables,
-    input.lineage,
     input.lineageFields,
+    input.lodByTable,
     input.relationsVisible,
-    input.showLineageEdges,
-    input.fieldLineageVisible,
+    input.lineageVisible,
     input.lineageMode,
     input.positions,
     fieldFocusKey,
-  ].join('\u0001');
+  ].join("\u0001");
 
-  // Rebuild estrutural (refs, linhagem, L2 visível) — sem highlight.
   useEffect(() => {
     const cur = inputRef.current;
     setEdges((prev) => {
-      const prevLin = new Map(
-        prev.filter((e) => e.type === 'lineage').map((e) => [e.id, e] as const),
-      );
       const built = mergeEdgeState(
         prev,
-        buildStructuralEdges(cur, prevLin, cur.onRemoveRef, cur.onRemoveLineage, cur.onRemoveFieldLineage),
+        buildStructuralEdges(cur, cur.onRemoveRef, cur.onRemoveFieldLineage),
       );
       return built;
     });
   }, [structureKey, setEdges]);
 
   const highlightKey = [
-    input.focusTables.join('\u0000'),
-    input.selectedColumn?.table ?? '',
-    input.selectedColumn?.column ?? '',
+    input.focusTables.join("\u0000"),
+    input.selectedColumn?.table ?? "",
+    input.selectedColumn?.column ?? "",
     String(input.lineageMode),
-  ].join('\u0001');
+  ].join("\u0001");
 
-  // Highlight/de-emphasis: patch leve, sem reconstruir arestas do parsed.
   useEffect(() => {
     const cur = inputRef.current;
     const focusActive = cur.focusTables.length > 0;
     setEdges((prev) => {
       let changed = false;
       const next = prev.map((e) => {
-        if (e.type !== 'relation' && e.type !== 'lineage' && e.type !== 'fieldLineage') return e;
+        if (e.type !== "relation" && e.type !== "lineage" && e.type !== "fieldLineage") return e;
         const touches = edgeTouchesFocus(e, cur.focusTables, cur.aggregatedCrossLinks);
-        const patched = applyEdgeHighlight(e, touches, focusActive, cur.selectedColumn, cur.lineageMode);
+        const patched = applyEdgeHighlight(
+          e,
+          touches,
+          focusActive,
+          cur.selectedColumn,
+          cur.lineageMode,
+        );
         if (highlightPatchEqual(e, patched)) return e;
         changed = true;
         return patched;

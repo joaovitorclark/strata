@@ -40,7 +40,6 @@ export const EMPTY_PARSE: ParseResult = {
   refs: [],
   records: [],
   layerGroups: [],
-  lineage: [],
   lineageFields: [],
   rolenames: [],
   colors: {},
@@ -71,8 +70,8 @@ Table loja.pedido {
 
 Ref: loja.pedido.cliente_id > loja.cliente.id
 
-Lineage {
-  loja.pedido < loja.cliente
+LineageFields {
+  loja.pedido.cliente_id < loja.cliente.id
 }
 `;
 

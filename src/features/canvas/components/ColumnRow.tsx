@@ -1,10 +1,12 @@
 import { memo, useCallback, useRef, type PointerEvent } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Position, useNodeId, useStore } from "@xyflow/react";
 import { Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TableMeta } from "@/features/canvas/actions";
 import type { ColumnView } from "@/features/schema/model/parse";
 import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
+import { resolveLod } from "@/features/canvas/utils/lod";
+import { useSchemaStore } from "@/features/schema/store";
 
 export type ColumnRowProps = {
   column: ColumnView;
@@ -45,6 +47,13 @@ function ColumnRowImpl({
   const isPinned = pinned.includes(c.name);
   const isUnique = Boolean((c as ColumnView & { unique?: boolean }).unique);
   const rowH = useCanvasRowH();
+  const lineageMode = useSchemaStore((s) => s.lineageMode);
+  const nodeId = useNodeId() ?? "";
+  const lodPin = useSchemaStore((s) => (nodeId ? s.nodeLod[nodeId] : undefined));
+  const selected = useSchemaStore((s) => s.selectedTableIds.includes(nodeId));
+  const zoom = useStore((s) => s.transform[2]);
+  const lod = resolveLod(zoom, { pinned: lodPin, selected });
+  const showFieldHandles = lineageMode && lod === "full";
 
   const downPos = useRef<{ x: number; y: number } | null>(null);
   const isInteractiveChild = useCallback(
@@ -86,6 +95,14 @@ function ColumnRowImpl({
         id={`t:${c.name}`}
         className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-fk"
       />
+      {showFieldHandles ? (
+        <Handle
+          type="target"
+          position={Position.Left}
+          id={`fl:t:${c.name}`}
+          className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-lineage"
+        />
+      ) : null}
       {isPk ? (
         <span className="size-1.5 shrink-0 rounded-full bg-key-pk" aria-hidden />
       ) : isFk ? (
@@ -144,6 +161,14 @@ function ColumnRowImpl({
         id={`s:${c.name}`}
         className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-fk"
       />
+      {showFieldHandles ? (
+        <Handle
+          type="source"
+          position={Position.Right}
+          id={`fl:s:${c.name}`}
+          className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-lineage"
+        />
+      ) : null}
     </div>
   );
 }

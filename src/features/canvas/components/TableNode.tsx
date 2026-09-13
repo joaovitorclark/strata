@@ -10,11 +10,9 @@ import {
 } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
-import { LineagePorts } from "@/features/canvas/components/LineagePorts";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
 import { resolveLod } from "@/features/canvas/utils/lod";
-import { isLineageHandle } from "@/features/canvas/utils/lineageHandles";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
 import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
@@ -74,11 +72,11 @@ function participatingColumns(tableId: string, edge: PeekEdge): string[] | undef
     if (mapping.sourceTable === tableId) cols.add(mapping.sourceColumn);
     if (mapping.targetTable === tableId) cols.add(mapping.targetColumn);
   }
-  if (edge.source === tableId && edge.sourceHandle && !isLineageHandle(edge.sourceHandle)) {
-    cols.add(edge.sourceHandle.replace(/^[st]:/, ""));
+  if (edge.source === tableId && edge.sourceHandle) {
+    cols.add(edge.sourceHandle.replace(/^(?:fl:)?[st]:/, ""));
   }
-  if (edge.target === tableId && edge.targetHandle && !isLineageHandle(edge.targetHandle)) {
-    cols.add(edge.targetHandle.replace(/^[st]:/, ""));
+  if (edge.target === tableId && edge.targetHandle) {
+    cols.add(edge.targetHandle.replace(/^(?:fl:)?[st]:/, ""));
   }
   return [...cols].filter(Boolean);
 }
@@ -92,15 +90,13 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
   const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
   const lineageMode = useSchemaStore((s) => s.lineageMode);
-  const lineageVisible = useSchemaStore((s) => s.lineageVisible);
-  const showLineagePorts = lineageMode || lineageVisible;
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
 
   useEffect(() => {
-    if (!showLineagePorts || !nodeId) return;
+    if (!nodeId) return;
     updateNodeInternals(nodeId);
-  }, [showLineagePorts, nodeId, updateNodeInternals]);
+  }, [nodeId, updateNodeInternals, lineageMode]);
   const edges = useEdges();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -123,14 +119,9 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
 
   return (
     <div
-      className={cn(
-        "relative table-node-shell",
-        lineageMode && "table-node-shell--lineage",
-        showLineagePorts && "table-node-shell--lineage-ports",
-      )}
+      className={cn("relative table-node-shell", lineageMode && "table-node-shell--lineage")}
       style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}
     >
-      {showLineagePorts ? <LineagePorts /> : null}
       <NodeResizeControl
         position="bottom-right"
         minWidth={200}

@@ -61,7 +61,7 @@
       "tags": "Tags",
       "colour": "Cor",
       "noColour": "Sem cor",
-      "sources": "Sources (linhagem)",
+      "sources": "Origens (mapeamentos)",
       "sample": "Exemplo de dados",
       "referencedBy": "referenciada por",
       "comments": "Comentários",
@@ -74,6 +74,7 @@
       "removeRelation": "Remover relação",
       "removeLineage": "Remover linhagem",
       "derivedFrom": "derivado de",
+      "fieldCount": "{{count}} campos",
       "externalLinks": "{{count}} ligações → {{label}}"
     }
   },
