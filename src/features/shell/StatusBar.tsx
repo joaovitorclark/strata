@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ChevronUp,
   CircleAlert,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +28,18 @@ export type StatusBarProps = {
   zoomPercent?: number;
   density?: Density;
   dbmlOpen?: boolean;
+  recordsOpen?: boolean;
   onProblemsClick?: () => void;
   onDbmlToggle?: () => void;
+  onRecordsToggle?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onFitView?: () => void;
   onDensityChange?: (density: Density) => void;
+  statusLog?: ReactNode;
+  problemsContent?: ReactNode;
+  problemsOpen?: boolean;
+  onProblemsOpenChange?: (open: boolean) => void;
 };
 
 export function StatusBar({
@@ -40,12 +47,18 @@ export function StatusBar({
   zoomPercent = 100,
   density: densityProp,
   dbmlOpen = false,
+  recordsOpen = false,
   onProblemsClick,
   onDbmlToggle,
+  onRecordsToggle,
   onZoomIn,
   onZoomOut,
   onFitView,
   onDensityChange,
+  statusLog,
+  problemsContent,
+  problemsOpen,
+  onProblemsOpenChange,
 }: StatusBarProps = {}) {
   const { t } = useTranslation();
   const [uncontrolledDensity, setUncontrolledDensity] = useState<Density>("cozy");
@@ -70,6 +83,27 @@ export function StatusBar({
   const hasProblems = problemCount > 0;
   const ProblemIcon = hasProblems ? CircleAlert : CircleCheck;
 
+  const problemsButton = (
+    <button
+      type="button"
+      onClick={onProblemsClick}
+      aria-label={t("shell.problemsLabel", { count: problemCount })}
+      className={cn(
+        FOCUS,
+        "inline-flex h-6 items-center gap-1.5 rounded-md px-1.5",
+        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+      )}
+    >
+      <ProblemIcon
+        size={ICON_SIZE}
+        strokeWidth={ICON_STROKE}
+        className={hasProblems ? "text-warning" : "text-success"}
+      />
+      <span>{t("shell.problems")}</span>
+      <span className="tabular-nums text-muted-foreground">{problemCount}</span>
+    </button>
+  );
+
   return (
     <TooltipProvider delayDuration={300}>
       <div
@@ -80,29 +114,32 @@ export function StatusBar({
           "text-xs text-sidebar-foreground"
         }
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={onProblemsClick}
-              aria-label={t("shell.problemsLabel", { count: problemCount })}
-              className={cn(
-                FOCUS,
-                "inline-flex h-6 items-center gap-1.5 rounded-md px-1.5",
-                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              )}
+        {problemsContent ? (
+          <Popover open={problemsOpen} onOpenChange={onProblemsOpenChange}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>{problemsButton}</PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("shell.problems")}</TooltipContent>
+            </Tooltip>
+            <PopoverContent
+              align="start"
+              side="top"
+              sideOffset={4}
+              data-testid="problems-popover"
+              className="w-auto max-w-[min(420px,calc(100vw-16px))] p-2"
             >
-              <ProblemIcon
-                size={ICON_SIZE}
-                strokeWidth={ICON_STROKE}
-                className={hasProblems ? "text-warning" : "text-success"}
-              />
-              <span>{t("shell.problems")}</span>
-              <span className="tabular-nums text-muted-foreground">{problemCount}</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{t("shell.problems")}</TooltipContent>
-        </Tooltip>
+              {problemsContent}
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>{problemsButton}</TooltipTrigger>
+            <TooltipContent side="top">{t("shell.problems")}</TooltipContent>
+          </Tooltip>
+        )}
+
+        {statusLog}
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -128,6 +165,32 @@ export function StatusBar({
           </TooltipTrigger>
           <TooltipContent side="top">{t("shell.dbml")}</TooltipContent>
         </Tooltip>
+
+        {onRecordsToggle ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={onRecordsToggle}
+                aria-label={t("shell.records")}
+                aria-expanded={recordsOpen}
+                className={cn(
+                  FOCUS,
+                  "inline-flex h-6 items-center gap-1 rounded-md px-1.5",
+                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                )}
+              >
+                <span>{t("shell.records")}</span>
+                <ChevronUp
+                  size={ICON_SIZE}
+                  strokeWidth={ICON_STROKE}
+                  className={cn("transition-transform", recordsOpen ? "rotate-0" : "rotate-180")}
+                />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">{t("shell.records")}</TooltipContent>
+          </Tooltip>
+        ) : null}
 
         <div className="ml-auto flex items-center gap-1">
           <Tooltip>
