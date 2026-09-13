@@ -121,16 +121,20 @@ export function AppShell({
             className="relative grid min-h-0"
             style={{ gridTemplateColumns: shellColumns(treeCollapsed, inspectorCollapsed) }}
           >
-            <Slot name="rail" as="aside" className="min-h-0 overflow-hidden">
+            <Slot name="rail" as="aside" className="relative z-20 min-h-0 overflow-hidden">
               {rail}
             </Slot>
-            <Slot name="tree" as="aside" className="min-h-0 min-w-0 overflow-hidden">
+            <Slot name="tree" as="aside" className="relative z-20 min-h-0 min-w-0 overflow-hidden">
               {tree}
             </Slot>
-            <Slot name="canvas" as="main" className="strata-canvas min-h-0 min-w-0">
+            <Slot name="canvas" as="main" className="strata-canvas relative z-0 min-h-0 min-w-0">
               {canvas}
             </Slot>
-            <Slot name="inspector" as="aside" className="min-h-0 min-w-0 overflow-hidden">
+            <Slot
+              name="inspector"
+              as="aside"
+              className="relative z-20 min-h-0 min-w-0 overflow-hidden"
+            >
               {inspector}
             </Slot>
             <Slot name="drawer" className="absolute inset-x-0 bottom-0 z-10">
