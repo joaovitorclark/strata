@@ -104,20 +104,9 @@ Cypress.Commands.add("dbmlText", () => {
     .then((t: string) => t as unknown as Cypress.Chainable<string>);
 });
 
-function fixtureProjectDir(name: FixtureProject): string {
-  return `cypress/fixtures/data/domains/local/projects/${name}`;
-}
-
-/** STRATA_DATA_DIR is this folder; a save overwrites the committed files. */
-function checkoutFixtureFiles(name: FixtureProject) {
-  const rel = fixtureProjectDir(name);
-  cy.exec(`git checkout -- "${rel}/project.dbml" "${rel}/canvas.json"`);
-}
-
 Cypress.Commands.add("resetFixture", (name: FixtureProject) => {
-  checkoutFixtureFiles(name);
   cy.seedProject(name);
-  cy.readFile(`${fixtureProjectDir(name)}/project.dbml`).then((dbml) => {
+  cy.readFile(`cypress/fixtures/data/domains/local/projects/${name}/project.dbml`).then((dbml) => {
     cy.request("PUT", "/api/project", { dbml, canvas: {} });
   });
   cy.reload();

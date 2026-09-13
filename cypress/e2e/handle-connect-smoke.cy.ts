@@ -6,12 +6,6 @@ describe("connectHandles helper", () => {
     waitForCanvas();
   });
 
-  afterEach(() => {
-    cy.exec(
-      'git checkout -- "cypress/fixtures/data/domains/local/projects/smoke/project.dbml" "cypress/fixtures/data/domains/local/projects/smoke/canvas.json"',
-    );
-  });
-
   it("actually creates a Ref in the DBML", () => {
     cy.dbmlText().then((before) => {
       expect((before.match(/^\s*Ref:/gm) ?? []).length, "fixture baseline").to.equal(1);

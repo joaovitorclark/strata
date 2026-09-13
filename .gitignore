@@ -5,6 +5,8 @@ dist-win/
 .DS_Store
 *.local
 data/
+.e2e-data/
+.e2e-data-*/
 cypress/reports/
 cypress/screenshots/
 cypress/videos/

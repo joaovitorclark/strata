@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "dev:server": "tsx watch server/index.ts",
     "start": "cross-env NODE_ENV=production tsx server/index.ts",
-    "e2e:serve": "cross-env STRATA_DATA_DIR=cypress/fixtures/data STRATA_DOMAIN=local PORT=5174 npm run start",
+    "e2e:serve": "node scripts/e2e-serve.mjs",
     "cy:open": "cypress open",
     "cy:run": "cypress run --spec 'cypress/e2e/!(stress-)*.cy.ts'",
     "cy:run:stress": "cypress run --config-file cypress.stress.config.ts"
