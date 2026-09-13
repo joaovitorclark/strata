@@ -51,7 +51,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☑ canvas-select-sync.cy.ts |
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
-| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☐ TableNode has no ⓘ (Task 15); no Plan 3 spec for TableInfoPopover |
+| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | dropped — trigger is table hover (`hoveredTableId` → TableInfoPopover); ⓘ affordance deliberately not restored. Same popover content; hover verified in canvas-select-sync.cy.ts and canvas-actions.cy.ts (row 63). |
 | 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-select-sync.cy.ts (Cmd/Ctrl+click; rubber-band does not stick — panOnDrag default true disables selectionOnDrag) |
 | 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
@@ -276,7 +276,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 - **219** `POST /api/export/png` — the client helper exists; neither LocalDrawDB `App.tsx` nor Strata Workspace calls it. Capturing a PNG would require rewriting Canvas. Dropped rather than inventing a screenshot path.
 - **244** Drag the vertical editor resizer — Strata is canvas-first; the DBML editor is a bottom SourceDrawer, not a split pane (identity §6).
 - **77** MiniMap lite colouring: LocalDrawDB never hides the minimap; above `MINIMAP_MAX_TABLES` it paints with a uniform token fill. Ported in Onda S (`stress-large-diagram.cy.ts`).
-- **42** TableNode (Task 15 restyle) has no ⓘ control. Metadata-on-hover is composed as `TableInfoPopover` driven by `hoveredTableId` — still ☐ until live ReactFlow.
+- **42** TableNode (Task 15 restyle) has no ⓘ control. Metadata-on-hover is composed as `TableInfoPopover` driven by `hoveredTableId`. Plan 4 Task 54 kept hover and dropped the ⓘ row; see Plan 4 recount.
 
 ## Task 29 honest recount (Wave M)
 
@@ -328,5 +328,18 @@ Live Cypress restored the three Task 40 drops and ticked MiniMap lite:
 **Count after Onda S: 209 ☑ · 49 ☐ · 2 dropped.**
 
 Dropped remaining are Task 26's **219** and **244**.
+
+## Plan 4 recount (Tasks 48–54)
+
+Live Cypress closed the remaining canvas mutation surface. Specs: `canvas-actions.cy.ts`, `canvas-create.cy.ts`, `canvas-delete-chrome.cy.ts`, `canvas-palette.cy.ts`, `canvas-select-sync.cy.ts`. Helpers: `cy.connectHandles` (Task 48 guard), `cy.reconnectHandle` (row 69 guard), `cy.dbmlText`. Server writes `.e2e-data/` (Task 48b); committed fixtures stay clean.
+
+Dropped this plan (harness/component not rewritten to make a spec pass):
+
+- **42** — ⓘ not restored; hover trigger covers `TableInfoPopover` (`canvas-select-sync.cy.ts`)
+- **46** — CommandPalette capture Escape clears the table on the first press
+- **65** — GroupNode `dragHandle` does not latch XYDrag from the harness
+- **68** — `ColumnRow` does not mount `fl:` handles
+
+**Count after Plan 4 Task 54: 254 ☑ · 0 ☐ · 6 dropped.**
 
 
