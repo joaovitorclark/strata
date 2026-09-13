@@ -89,18 +89,18 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ stress-large-diagram.cy.ts |
 | 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ canvas-delete-chrome.cy.ts |
 | 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ canvas-delete-chrome.cy.ts (Table menu Delete + confirm; no × on TableNode) |
-| 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☐ no Plan 3 spec |
-| 81 | Canvas | Pick a swatch in the table palette to set the header colour | src/canvas/TableNode.tsx:129 | ☐ no Plan 3 spec |
-| 82 | Canvas | "Sem cor (usar camada)" clears the table header colour | src/canvas/TableNode.tsx:136 | ☐ no Plan 3 spec |
-| 83 | Canvas | Pick a layer in the table palette to assign the table to that layer | src/canvas/TableNode.tsx:144 | ☐ no Plan 3 spec |
-| 84 | Canvas | "sem camada" clears the table's layer assignment | src/canvas/TableNode.tsx:148 | ☐ no Plan 3 spec |
+| 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☑ canvas-palette.cy.ts |
+| 81 | Canvas | Pick a swatch in the table palette to set the header colour | src/canvas/TableNode.tsx:129 | ☑ canvas-palette.cy.ts |
+| 82 | Canvas | "Sem cor (usar camada)" clears the table header colour | src/canvas/TableNode.tsx:136 | ☑ canvas-palette.cy.ts |
+| 83 | Canvas | Pick a layer in the table palette to assign the table to that layer | src/canvas/TableNode.tsx:144 | ☑ canvas-palette.cy.ts |
+| 84 | Canvas | "sem camada" clears the table's layer assignment | src/canvas/TableNode.tsx:148 | ☑ canvas-palette.cy.ts |
 | 85 | Canvas | Drag the bottom-right corner to resize the table | src/canvas/TableNode.tsx:57 | ☑ canvas-delete-chrome.cy.ts |
 | 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☑ canvas-delete-chrome.cy.ts |
 | 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☑ canvas-delete-chrome.cy.ts |
 | 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☑ canvas-delete-chrome.cy.ts |
 | 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☐ no Plan 3 spec |
-| 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☐ no Plan 3 spec |
-| 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☐ no Plan 3 spec |
+| 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☑ canvas-palette.cy.ts |
+| 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☑ canvas-palette.cy.ts |
 | 92 | Canvas | Stale-model banner tells the user the canvas shows the last valid model while DBML is invalid | src/canvas/Canvas.tsx:533 | ☐ no Plan 3 spec |
 | 93 | Panel:ColumnPanel | Collapse/expand the column editor (persisted in localStorage) | src/canvas/ColumnPanel.tsx:133 | ☑ |
 | 94 | Panel:ColumnPanel | Close the column editor (clears selected column) | src/canvas/ColumnPanel.tsx:142 | ☑ |
