@@ -80,6 +80,59 @@ Sources include PostgreSQL, MySQL, SQLite, BigQuery, Prisma, Rails and Drizzle. 
 init` wires it into CI so the diagram stays in sync with the schema; a web "Quick View" visualises
 any SQL schema instantly.
 
+### 3.1 What the visual experience actually is
+
+Driven and looked at, not inferred. It is built on **React Flow** — the same library Strata uses —
+so nothing observed here is out of reach.
+
+**The node.** Icon plus table name in the header, then one row per column, each row separated by a
+**1px divider** so the node reads as a *table* rather than a list. A column row contains exactly two
+things: the name, and a glyph on the left that carries the semantics — key for primary, link for
+foreign, filled diamond for not-null, hollow for nullable. **No type is shown. No badges. No colour
+per table.** Everything is grey; green appears only on key glyphs. Edges are thinner and quieter
+than the nodes: hairline, curved, neutral.
+
+**Compare one row of Strata's node:** layer edge · icon · name · `⋯` menu · coloured dot · column
+name · type · PK/FK badge. **Eight visual elements against Liam's two** — plus mauve, blue, green,
+yellow, peach, a layer colour and a table header colour all competing, where Liam has grey and one
+green.
+
+That is the whole of the appeal. It is not a better palette or nicer icons. It is **subtraction**.
+
+**The chrome.** One floating pill, centred at the bottom: `— 53% +`, fit, layout, and
+`show: All Fields ▾`. One overlay, one place, predictable. Strata has eight at `z-20` across five
+corners.
+
+**And `show: All Fields` is Strata's Level-of-Detail, exposed as an explicit control** rather than
+driven by zoom. That difference is worth taking seriously: an explicit density selector is
+*predictable* — the user decides what they see — while a zoom-driven one changes the content under
+them as they navigate. Strata already has the machinery (`resolveLod`, `lodHeight`, the three
+states); what it lacks is the control.
+
+### 3.2 The trap in copying it
+
+**Liam can subtract because it is a viewer.** It never needs an edit affordance, so the eight
+elements in Strata's row — the `⋯` menu, the type, the badges, the colour control — simply do not
+exist for it. Removing them from Strata to look like Liam would remove the editing.
+
+The resolution is **progressive disclosure**, which `identity.md` §1 already claims as a principle
+and the implementation does not honour: Liam's calm at rest, Strata's affordances on demand. Type
+and editing chrome appear on hover, on selection, or in the inspector — not on all 187 rows all the
+time.
+
+Concretely, to take from Liam without becoming it:
+
+1. **Two elements per row at rest** — glyph and name. Type moves to hover or the inspector.
+2. **Glyphs instead of lettered badges**, carrying key, nullability and FK in one mark.
+3. **Row dividers**, so a table reads as a table.
+4. **Monochrome plus one accent.** Colour only where it means something; layer colour on the node
+   edge is enough without also colouring the header.
+5. **Edges quieter than nodes.**
+6. **One control pill**, not eight overlays.
+7. **An explicit density control** alongside (or instead of) zoom-driven LOD.
+
+Each of those is subtraction, and none of them costs an affordance.
+
 **What it does that Strata should learn from:**
 
 - **Relationship highlighting** as a primary navigation aid, not a hover nicety.
