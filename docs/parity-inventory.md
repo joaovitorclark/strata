@@ -49,7 +49,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 37 | Shortcut | "?" opens or toggles the shortcuts-and-gestures overlay | src/help/gestures.ts:24 | ☑ shell-shortcuts.cy.ts |
 | 38 | Shortcut | Cmd/Ctrl+Y also redoes (wired in App, not listed by `shortcutsFromCommands`) | src/App.tsx:669 | ☑ shell-shortcuts.cy.ts |
 | 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☐ no Plan 3 spec |
-| 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☐ no Plan 3 spec |
+| 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☐ no Plan 3 spec |
 | 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☐ TableNode has no ⓘ (Task 15); no Plan 3 spec for TableInfoPopover |
 | 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☐ no Plan 3 spec |
@@ -75,10 +75,10 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☑ canvas-actions.cy.ts |
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
 | 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☐ no Plan 3 spec |
-| 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☐ no Plan 3 spec |
-| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☐ no Plan 3 spec |
-| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☐ no Plan 3 spec |
-| 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☐ no Plan 3 spec |
+| 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☑ canvas-create.cy.ts |
+| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ canvas-create.cy.ts |
+| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | dropped — ColumnRow does not mount `fl:` handles (LDB TableColumnList swaps to them in lineage mode); canvas-create.cy.ts counted 0. Canvas onConnect already accepts `fl:`. Do not add handles. |
+| 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☑ canvas-create.cy.ts |
 | 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☐ no Plan 3 spec |
 | 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☐ no Plan 3 spec |
 | 72 | Canvas | Click the canvas pane clears table selection (column selection is kept) | src/canvas/Canvas.tsx:584 | ☑ canvas-selection.cy.ts |
