@@ -210,6 +210,43 @@ canvas · tree click must navigate · lineage and a code surface stay.
 rebuilding the canvas's information architecture · what happens to the inventory rows that a UX
 change deliberately invalidates.
 
+---
+
+## 7. Known defects carried forward
+
+Plan 4 closed at **254 ☑ · 0 ☐ · 6 dropped** of 260 — zero unchecked, which was the criterion.
+Four of the six drops are real defects rather than deliberate decisions, and they are deferred here
+rather than fixed because fixing them inside the current canvas architecture would be thrown away by
+§2's rework.
+
+| Row | Defect |
+| --- | --- |
+| 68 | **Field-level lineage cannot be created.** `ColumnRow.tsx` mounts the relation handles (`t:` at :86, `s:` at :144) but never the `fl:s:` / `fl:t:` ones — while `Canvas.tsx:533,546` already contains the logic to *accept* those connections. The canvas knows how to receive L2 lineage; the handles you would drag from do not exist. |
+| 46 | **Escape's two-stage behaviour is broken.** A capture-phase listener in the command palette clears the table on the first press, so the column is never dropped first. This is the *second* appearance of that exact pathology — the Delete key was dead for the same reason (a capture listener calling `preventDefault` with no handler behind it). |
+| 43 | **Rubber-band selection does not work.** `selectionOnDrag` is inert while `panOnDrag` remains the default, so dragging the pane always pans. `⌘`/`Ctrl`-click multi-select does work. |
+| 65 | **TableGroup drag is unverified**, not known-broken. The group's drag handle does not latch React Flow's drag in the test harness; production may well move the members. Unknown. |
+
+### The seam pattern, and why the sweep missed it
+
+Row 68 is the **fifth** instance of one thing: something exists on one side of a seam and nothing
+calls it from the other.
+
+1. `LineagePorts` — component built, never mounted.
+2. `TableInfoPopover` — the ⓘ affordance never added.
+3. `removeSelectedRef` — callback never passed through.
+4. `focusTableWithPan` — never called from `SchemaTree`, which is the surface that needs it most.
+5. `fl:` handles — JSX elements never rendered, while the receiving logic exists.
+
+A sweep for components never referenced outside tests found only unused shadcn primitives, and
+concluded nothing was hiding. **That sweep was too narrow**: it catches shape 1 and misses the other
+four. The general shape is *defined or handled but never produced* — a handler for a connection
+nobody can start, a callback nobody passes, a prop nobody sets.
+
+A useful check before the rework: for every branch that consumes an identifier (`fl:`, a handle id,
+an action name), find the code that produces it. Where nothing does, that is a dead affordance.
+
+---
+
 **Known and unfixed**, found the same session, unrelated to any of the above:
 
 - `vite.config.ts` lost LocalDrawDB's `/api` → Fastify proxy, so `npm run dev` serves the frontend
