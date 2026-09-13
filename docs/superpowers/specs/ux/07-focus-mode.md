@@ -26,7 +26,7 @@ referencia. Para linhagem: upstream = sources dos mapeamentos cujo target é a t
 - Calcula o **fecho transitivo** dos mapeamentos de campo nos dois sentidos a partir de
   `(tabela, coluna)`.
 - Canvas: foco nas tabelas do caminho; nessas tabelas, colunas **fora** do caminho ficam com
-  `opacity .35`; colunas do caminho recebem fundo `--rel-lineage/15`. Nós no caminho são forçados
+  `opacity .35`; colunas do caminho recebem fundo `--primary/15`. Nós no caminho são forçados
   para `full` **só enquanto o rastreio dura** (pin temporário, não grava `nodeLod`).
 - Arestas do caminho: `--rel-active` 2px com a animação `lineage-flow` (única animação ligada).
 - Pill: `⇢ cliente_id · 5 campos em 3 tabelas · ✕`.

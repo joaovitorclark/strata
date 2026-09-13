@@ -2,6 +2,13 @@
 
 **Onda:** 3 · **Depende de:** S05 · **Pesquisa:** P2.1 · **Referências:** erwin key area, Liam row dividers
 
+## 0. Aprovado em protótipo (2026-09-13)
+Protótipo: <https://claude.ai/code/artifact/e7eb89c8-b3fa-4573-88ed-2196afa656e4> — aprovado como
+está. Isso fecha: **tipo sempre visível**; **glifo de nulidade mantido**; **notação IE como padrão**;
+nível de detalhe como **menu único** na pill; linhagem em **mauve**; linha com linhagem clicável
+inicia o rastreio (S08). Onde esta spec e o protótipo divergirem, **o protótipo vence** e a
+divergência vai no relatório.
+
 ## 1. Princípio
 Hierarquia, não subtração: tudo que o modelador precisa continua no nó, mas com **uma** cor por
 significado e ações só em hover/seleção.

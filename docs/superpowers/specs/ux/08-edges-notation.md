@@ -7,9 +7,13 @@
 | Tipo | Repouso | Hover / conectada à seleção | Foco/rastreio (S08) |
 | --- | --- | --- | --- |
 | FK | 1px `--rel-muted`, `smoothstep` raio 8 | 1.5px `--rel-fk` | 2px `--rel-active` |
-| Linhagem de campo | 1px `--rel-lineage` tracejado `4 3`, **sem animação** | 1.5px, tracejado | 2px `--rel-active` + `lineage-flow` |
-| Linhagem agregada (S01) | 1.5px `--rel-lineage` tracejado + rótulo pill `3 campos` 10px | 2px + tooltip com mapeamentos | igual |
+| Linhagem de campo | 1px **mauve** (`--rel-lineage` passa a resolver para `--primary`) tracejado `4 3`, **sem animação** | 1.5px, tracejado | 2px, tracejado `6 4` + `lineage-flow` |
+| Linhagem agregada (S01) | 1.5px mauve tracejado + rótulo pill `3 campos` 10px | 2px + tooltip com mapeamentos | igual |
 
+- **Decisão de produto (2026-09-13): linhagem é mauve.** Em `globals.css`/`tailwind.config.ts`,
+  `--rel-lineage` passa a apontar para o mauve (`--ctp-mauve`) nos dois temas. Como seleção também é
+  mauve, o que distingue estado ativo de repouso é **espessura, tracejado e animação**, não cor.
+  FK fica azul (`--rel-fk`) em IE e cinza (`--rel-muted`) em mínima. Atualizar `identity.md` §3 e §7.
 - **Animação só em foco/rastreio.** Remova animação padrão de `LineageEdge`/`FieldLineageEdge`.
 - Rótulos de aresta aparecem só em hover/seleção (exceto contagem da agregada).
 - Arestas renderizam **abaixo** dos nós (`zIndex` 0) e a aresta em hover sobe para 1000.
