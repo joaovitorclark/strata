@@ -79,25 +79,25 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ canvas-create.cy.ts |
 | 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | dropped — ColumnRow does not mount `fl:` handles (LDB TableColumnList swaps to them in lineage mode); canvas-create.cy.ts counted 0. Canvas onConnect already accepts `fl:`. Do not add handles. |
 | 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☑ canvas-create.cy.ts |
-| 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☐ no Plan 3 spec |
-| 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☐ no Plan 3 spec |
+| 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☑ canvas-delete-chrome.cy.ts |
+| 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☑ canvas-delete-chrome.cy.ts |
 | 72 | Canvas | Click the canvas pane clears table selection (column selection is kept) | src/canvas/Canvas.tsx:584 | ☑ canvas-selection.cy.ts |
 | 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☐ canvas-selection.cy.ts asserts select+inspector+tree, not editor scroll from a canvas click |
 | 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☐ no Plan 3 spec |
 | 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☐ no Plan 3 spec |
 | 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☐ canvas-lod.cy.ts covers zoom in/out only; fit view and lock untested |
 | 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ stress-large-diagram.cy.ts |
-| 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☐ no Plan 3 spec |
-| 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☐ no Plan 3 spec |
+| 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ canvas-delete-chrome.cy.ts |
+| 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ canvas-delete-chrome.cy.ts (Table menu Delete + confirm; no × on TableNode) |
 | 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☐ no Plan 3 spec |
 | 81 | Canvas | Pick a swatch in the table palette to set the header colour | src/canvas/TableNode.tsx:129 | ☐ no Plan 3 spec |
 | 82 | Canvas | "Sem cor (usar camada)" clears the table header colour | src/canvas/TableNode.tsx:136 | ☐ no Plan 3 spec |
 | 83 | Canvas | Pick a layer in the table palette to assign the table to that layer | src/canvas/TableNode.tsx:144 | ☐ no Plan 3 spec |
 | 84 | Canvas | "sem camada" clears the table's layer assignment | src/canvas/TableNode.tsx:148 | ☐ no Plan 3 spec |
-| 85 | Canvas | Drag the bottom-right corner to resize the table | src/canvas/TableNode.tsx:57 | ☐ no Plan 3 spec |
-| 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☐ no Plan 3 spec |
-| 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☐ no Plan 3 spec |
-| 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☐ no Plan 3 spec |
+| 85 | Canvas | Drag the bottom-right corner to resize the table | src/canvas/TableNode.tsx:57 | ☑ canvas-delete-chrome.cy.ts |
+| 86 | Canvas | "+ coluna" adds a new column to the table | src/canvas/TableNode.tsx:215 | ☑ canvas-delete-chrome.cy.ts |
+| 87 | Canvas | Double-click a column name to rename it inline (Enter commits, Escape cancels) | src/canvas/TableColumnList.tsx:114 | ☑ canvas-delete-chrome.cy.ts |
+| 88 | Canvas | Alt+click a column jumps to that column in the DBML editor | src/canvas/TableNode.tsx:199 | ☑ canvas-delete-chrome.cy.ts |
 | 89 | Canvas | Collapse/expand a TableGroup via the chevron on its label | src/canvas/GroupNode.tsx:48 | ☐ no Plan 3 spec |
 | 90 | Canvas | Open the group colour palette and pick a colour for the TableGroup box | src/canvas/GroupNode.tsx:88 | ☐ no Plan 3 spec |
 | 91 | Canvas | "Sem cor" clears the TableGroup colour | src/canvas/GroupNode.tsx:99 | ☐ no Plan 3 spec |
