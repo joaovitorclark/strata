@@ -4,7 +4,9 @@ import { parseTypeName, qualifiedName } from './model.ts';
 import type { Column, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
 
 const require = createRequire(import.meta.url);
-const { Parser } = require('node-sql-parser') as { Parser: new () => { astify: Function } };
+const { Parser } = require('node-sql-parser') as {
+  Parser: new () => { astify: (sql: string, opt?: { database?: string }) => unknown };
+};
 
 const sqlParser = new Parser();
 
@@ -234,24 +236,6 @@ function sanitizeCreateTable(stmt: string): { schema?: string; name: string; bod
   return { schema, name, body, raw };
 }
 
-function splitTopLevel(inner: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let cur = '';
-  for (const ch of inner) {
-    if (ch === '(') depth++;
-    else if (ch === ')') depth--;
-    if (ch === ',' && depth === 0) {
-      parts.push(cur.trim());
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  if (cur.trim()) parts.push(cur.trim());
-  return parts;
-}
-
 type ParseColResult = { columns: Column[]; compositePks: string[][] };
 
 function applyPkSets(columns: Column[], pkNames: string[], compositePks: string[][]): void {
@@ -385,22 +369,33 @@ export function createTableToTable(stmt: string, dialect: SqlDialect = 'ansi'): 
     const ast = sqlParser.astify(`CREATE TABLE ${san.name} ${san.body}`, {
       database: parserDialect(dialect),
     });
-    const node = Array.isArray(ast) ? ast[0] : ast;
-    const defs: any[] = node.create_definitions ?? [];
+    type ColumnTypeDef = { dataType?: string; length?: number; scale?: number };
+    type CreateDefinition = {
+      resource?: string;
+      constraint_type?: string;
+      definition?: unknown[] | ColumnTypeDef;
+      column?: string | { column?: string; value?: string };
+      nullable?: { type?: string };
+    };
+    type CreateTableAst = { create_definitions?: CreateDefinition[] };
+    const node = (Array.isArray(ast) ? ast[0] : ast) as CreateTableAst;
+    const defs: CreateDefinition[] = node.create_definitions ?? [];
 
     const pkCols = new Set<string>();
     for (const d of defs) {
       if (d.resource === 'constraint' && d.constraint_type === 'primary key') {
-        const cols = resolvePkColumnNames(d.definition ?? []);
+        const cols = resolvePkColumnNames(Array.isArray(d.definition) ? d.definition : []);
         if (cols.length > 1) compositePks.push(cols);
         cols.forEach((c) => pkCols.add(c));
       }
     }
     for (const d of defs) {
       if (d.resource !== 'column') continue;
-      const colName = d.column?.column ?? d.column?.value ?? d.column;
+      const colName =
+        typeof d.column === 'string' ? d.column : (d.column?.column ?? d.column?.value);
       if (typeof colName !== 'string') continue;
-      const def = d.definition ?? {};
+      const def: ColumnTypeDef =
+        d.definition && !Array.isArray(d.definition) ? d.definition : {};
       const args =
         def.length != null
           ? def.scale != null

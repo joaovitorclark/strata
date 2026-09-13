@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { dbmlToModel, modelToDbml } from '../dbmlIo.ts';
 import { parseDbml } from '../../src/features/schema/model/parse.ts';
-import type { Model, Column } from '../model.ts';
+import type { Model } from '../model.ts';
 
 // ---- 1. Compatibilidade retroativa ----
 

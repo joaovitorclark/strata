@@ -3,6 +3,7 @@ import {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -51,12 +52,7 @@ import {
 } from "@/features/schema/model/edit";
 import { exportInputL2Warning } from "@/features/schema/model/exportWarnings";
 import { layerColorOf, layersFromGroups, tableLayerMap } from "@/features/schema/model/layers";
-import {
-  lineOfColumn,
-  lineOfTable,
-  resolveTableId,
-  tableAtLine,
-} from "@/features/schema/model/lineLocate";
+import { lineOfTable, resolveTableId, tableAtLine } from "@/features/schema/model/lineLocate";
 import { organize } from "@/features/schema/model/organize";
 import {
   findDuplicateColumnName,
@@ -152,7 +148,10 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const loadedRef = useRef(false);
   const prevDbmlRef = useRef("");
-  const editorRef = useRef<SourceDrawerHandle>(null);
+  const editorRef = useRef<SourceDrawerHandle | null>(null);
+  const assignEditorRef = useCallback((handle: SourceDrawerHandle | null) => {
+    editorRef.current = handle;
+  }, []);
   const baselineRef = useRef<Snapshot | null>(null);
   const commitTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const lastPanTableRef = useRef<string | null>(null);
@@ -331,12 +330,18 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const [canvasModel, setCanvasModel] = useState<ParseResult>(EMPTY_PARSE);
   useEffect(() => {
-    if (!parsed.error) setCanvasModel(parsed);
+    if (!parsed.error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- last valid parse; render-time setState tripped ResizeObserver on undo
+      setCanvasModel(parsed);
+    }
   }, [parsed]);
 
   const [canvasModelDeferred, setCanvasModelDeferred] = useState<ParseResult>(EMPTY_PARSE);
   useEffect(() => {
-    if (!parsedDeferred.error) setCanvasModelDeferred(parsedDeferred);
+    if (!parsedDeferred.error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- same last-good-parse hold for the deferred canvas model
+      setCanvasModelDeferred(parsedDeferred);
+    }
   }, [parsedDeferred]);
 
   const activeModel = useMemo(() => (parsed.error ? canvasModel : parsed), [parsed, canvasModel]);
@@ -671,15 +676,17 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   );
 
   const colorsRef = useRef(colors);
-  colorsRef.current = colors;
   const modelRef = useRef(activeModel);
-  modelRef.current = activeModel;
   const lineageRef = useRef(lineage);
-  lineageRef.current = lineage;
   const layersArrRef = useRef(layersArr);
-  layersArrRef.current = layersArr;
   const layerMembershipRef = useRef<Record<string, string>>(layerMembership);
-  layerMembershipRef.current = layerMembership;
+  useLayoutEffect(() => {
+    colorsRef.current = colors;
+    modelRef.current = activeModel;
+    lineageRef.current = lineage;
+    layersArrRef.current = layersArr;
+    layerMembershipRef.current = layerMembership;
+  });
 
   const nodeExtras = useMemo(
     () =>
@@ -781,10 +788,9 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
           ),
       tableMeta: (id) => tableMetaOf(id, modelRef, lineageRef),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable identity; handlers read refs
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers read refs; layers is the one render-time field
+    [layersArr],
   );
-  actions.layers = layersArr;
 
   const handleCreateLineage = useCallback(
     (source: string, target: string) => {
@@ -1283,9 +1289,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     actions,
     layerOf,
     layersArr,
-    editorRef,
-    prevDbmlRef,
-    baselineRef,
+    assignEditorRef,
     commandContext,
     treeTables,
     undo,

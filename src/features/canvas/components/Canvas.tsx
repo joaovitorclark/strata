@@ -419,7 +419,6 @@ export function Canvas(props: Props) {
     lineageMode,
     lineageVisible,
     fieldLineageVisible,
-    crossRefs,
     aggregatedCrossLinks,
   ]);
 

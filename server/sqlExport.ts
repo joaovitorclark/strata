@@ -142,6 +142,7 @@ function oracleCreateTable(t: Table, refs: Ref[]): string {
 }
 
 function emitInserts(t: Table, dialect: 'spark' | 'oracle'): string[] {
+  void dialect;
   if (!t.records?.rows.length) return [];
   const qn = qualifiedName(t);
   const cols = t.records.columns.length ? t.records.columns : t.columns.map((c) => c.name);

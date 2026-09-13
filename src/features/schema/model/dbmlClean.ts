@@ -274,7 +274,7 @@ export function parseLineageFieldsBlock(block: string): ParsedFieldLineage[] {
   for (const rawLine of inner.split('\n')) {
     const line = rawLine.trim();
     if (!line || line.startsWith('//')) continue;
-    const m = /^([^\s<]+)\s*<\s*([^\s\[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(line);
+    const m = /^([^\s<]+)\s*<\s*([^\s[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(line);
     if (!m) continue;
     const target = splitTableColumn(m[1].trim());
     const source = splitTableColumn(m[2].trim());

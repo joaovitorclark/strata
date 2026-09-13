@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo } from "react";
 import type { ExternalLinkBadge, TableMeta } from "@/features/canvas/actions";
 import type { NodeExtras } from "@/features/canvas/hooks/useCanvasNodes";
 import {
@@ -91,14 +91,9 @@ export function resolveActivePageIds(
  * Copiado do App.tsx do LocalDrawDB — helper local, não uma relocação exportada.
  */
 export function useStable<T>(value: T): T {
-  const ref = useRef(value);
-  const sig = JSON.stringify(value);
-  const sigRef = useRef(sig);
-  if (sig !== sigRef.current) {
-    sigRef.current = sig;
-    ref.current = value;
-  }
-  return ref.current;
+  const serialized = JSON.stringify(value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- identity keyed by JSON snapshot
+  return useMemo(() => value, [serialized]);
 }
 
 export function applyRenames(

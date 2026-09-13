@@ -19,7 +19,7 @@ export interface BoardInstance {
   startedAt: string;
 }
 
-type KillableHandle = { server: ChildProcess; web: ChildProcess | null };
+export type KillableHandle = { server: ChildProcess; web: ChildProcess | null };
 
 export interface InstanceManagerDeps {
   startInstance: (opts: {
@@ -32,7 +32,14 @@ export interface InstanceManagerDeps {
   findFreePort: (start: number, host?: string, exclude?: Set<number>) => Promise<number>;
 }
 
-const defaultDeps: InstanceManagerDeps = { startInstance: startInstance as any, stopInstance, findFreePort };
+const defaultDeps: InstanceManagerDeps = {
+  startInstance: async (opts) => {
+    const handle = await startInstance(opts);
+    return { server: handle.server, web: handle.web };
+  },
+  stopInstance,
+  findFreePort,
+};
 
 export function createInstanceManager(deps: InstanceManagerDeps = defaultDeps) {
   const instances = new Map<string, { meta: BoardInstance; handle: KillableHandle }>();

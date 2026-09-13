@@ -8,12 +8,13 @@
  * teste + vi.resetModules() antes de cada import dinâmico, porque
  * domainContext.ts guarda o domínio ativo em estado de módulo.
  */
+import type { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { createInstanceManager } from '../controlboardInstances.ts';
+import { createInstanceManager, type KillableHandle } from '../controlboardInstances.ts';
 
 let tmpDir: string;
 
@@ -31,8 +32,11 @@ afterEach(async () => {
 
 function fakeInstanceManager() {
   return createInstanceManager({
-    startInstance: async () => ({ server: new EventEmitter() as any, web: new EventEmitter() as any }),
-    stopInstance: (handle: any) => {
+    startInstance: async () => ({
+      server: new EventEmitter() as unknown as ChildProcess,
+      web: new EventEmitter() as unknown as ChildProcess,
+    }),
+    stopInstance: (handle: KillableHandle) => {
       // Simula o processo realmente saindo, senão stopByDomainAndWait
       // ficaria preso até o timeout em todo teste que apaga um domínio
       // com instâncias rodando.

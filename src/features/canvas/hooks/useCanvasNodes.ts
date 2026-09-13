@@ -1,6 +1,6 @@
 // Gestão de nós do canvas (padrão Structura): separa estrutura (parsed) de layout
 // (posições, propriedade do React Flow). Evita o snap-back ao arrastar.
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Node } from "@xyflow/react";
 import type { ColumnView, ParseResult, TableView } from '@/features/schema/model/parse';
 import type { ExternalLinkBadge, TableMeta, TableNodeData } from '../actions';

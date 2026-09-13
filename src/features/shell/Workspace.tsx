@@ -57,53 +57,149 @@ function DraggableOverlay({
 
 export function Workspace(props: WorkspaceProps) {
   const { t } = useTranslation();
-  const ws = useWorkspace(props);
+  const {
+    domain,
+    onRepoChanged,
+    dbml,
+    positions,
+    sizes,
+    collapsedGroups,
+    canvasPages,
+    activePageIds,
+    past,
+    future,
+    saveState,
+    autoSave,
+    currentProjectId,
+    projects,
+    pinnedProjectId,
+    currentProject,
+    status,
+    logs,
+    paletteOpen,
+    setPaletteOpen,
+    helpOpen,
+    setHelpOpen,
+    sourceDrawerOpen,
+    setSourceDrawerOpen,
+    setRenameModalOpen,
+    layersPanelCollapsed,
+    setLayersPanelCollapsed,
+    recordsPanelOpen,
+    setRecordsPanelOpen,
+    problemsPanelOpen,
+    setProblemsPanelOpen,
+    focusTableId,
+    focusNonce,
+    fitViewTrigger,
+    pageWizardOpen,
+    setPageWizardOpen,
+    pageWizardTableCount,
+    railItem,
+    setRailItem,
+    density,
+    setDensity,
+    committedDbml,
+    savedDbml,
+    markCommitted,
+    parsed,
+    activeModel,
+    canvasActiveModel,
+    canvasStubs,
+    canvasView,
+    canvasLineage,
+    canvasParsePending,
+    modelIssues,
+    nodeExtras,
+    actions,
+    layerOf,
+    layersArr,
+    assignEditorRef,
+    commandContext,
+    treeTables,
+    undo,
+    redo,
+    handleSave,
+    handleAutolayout,
+    handleImport,
+    handleOrganize,
+    handleAddTable,
+    handleAddMetadata,
+    bumpFitView,
+    handleExportOption,
+    handleDbmlChange,
+    handleCreateRef,
+    handleRemoveRef,
+    handleRemoveTable,
+    handleRemoveTables,
+    handleCreateLineage,
+    handleRemoveLineage,
+    handleCreateFieldLineage,
+    handleRemoveFieldLineage,
+    handleAddFieldLineage,
+    handleUpdateFieldLineage,
+    handleToggleGroup,
+    handleChangeActivePages,
+    handleBackToDomains,
+    switchProject,
+    handleCreateProject,
+    handleRenameProject,
+    handleDuplicateProject,
+    handleDeleteProject,
+    focusTableWithPan,
+    focusTableInEditor,
+    handleEditorCursorLine,
+    goToLine,
+    goToColumn,
+    clearFocusTable,
+    migrateTableId,
+  } = useWorkspace(props);
   const [diffOpen, setDiffOpen] = useState(false);
   const hoveredTableId = useSchemaStore((s) => s.hoveredTableId);
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
-  const hoveredMeta = hoveredTableId ? ws.actions.tableMeta(hoveredTableId) : null;
+  const hoveredMeta = hoveredTableId ? actions.tableMeta(hoveredTableId) : null;
 
   const saveLabel =
-    ws.saveState === "saving"
+    saveState === "saving"
       ? t("shell.saving")
-      : ws.saveState === "saved"
+      : saveState === "saved"
         ? t("shell.saved")
-        : ws.saveState === "error"
+        : saveState === "error"
           ? t("shell.saveError")
           : t("shell.save");
 
-  const pinnedLabel = ws.pinnedProjectId
-    ? ws.projects.find((p) => p.id === ws.pinnedProjectId)?.name
+  const pinnedLabel = pinnedProjectId
+    ? projects.find((p) => p.id === pinnedProjectId)?.name
     : undefined;
 
   return (
-    <CanvasActionsCtx.Provider value={ws.actions}>
+    <CanvasActionsCtx.Provider value={actions}>
       <div data-canvas-actions="ready" className="contents">
         <AppShell
           navbar={
             <Navbar
-              domain={ws.domain?.name}
-              project={ws.currentProject?.name}
-              onSearch={() => ws.setPaletteOpen(true)}
-              onExportOption={ws.handleExportOption}
-              onBackToDomains={props.onBackToDomains ? ws.handleBackToDomains : undefined}
+              domain={domain?.name}
+              project={currentProject?.name}
+              onSearch={() => setPaletteOpen(true)}
+              onExportOption={handleExportOption}
+              onBackToDomains={props.onBackToDomains ? handleBackToDomains : undefined}
               leading={
                 <>
-                  {ws.projects.length > 0 ? (
+                  {projects.length > 0 ? (
                     <ProjectSwitcher
-                      projects={ws.projects}
-                      currentProjectId={ws.currentProjectId}
-                      saveState={ws.saveState}
-                      onSwitch={ws.switchProject}
-                      onCreate={ws.handleCreateProject}
-                      onRename={ws.handleRenameProject}
-                      onDuplicate={ws.handleDuplicateProject}
-                      onDelete={ws.handleDeleteProject}
+                      projects={projects}
+                      currentProjectId={currentProjectId}
+                      saveState={saveState}
+                      onSwitch={switchProject}
+                      onCreate={handleCreateProject}
+                      onRename={handleRenameProject}
+                      onDuplicate={handleDuplicateProject}
+                      onDelete={handleDeleteProject}
                       pinnedLabel={pinnedLabel}
                     />
                   ) : null}
-                  {ws.domain?.hasGit ? (
-                    <GitPanel domain={ws.domain} onRepoChanged={ws.onRepoChanged} />
+                  {domain?.hasGit ? (
+                    <GitPanel domain={domain} onRepoChanged={onRepoChanged} />
                   ) : null}
                 </>
               }
@@ -111,74 +207,74 @@ export function Workspace(props: WorkspaceProps) {
           }
           rail={
             <WorkspaceShellRail
-              railItem={ws.railItem}
-              onTables={() => ws.setRailItem("tables")}
+              railItem={railItem}
+              onTables={() => setRailItem("tables")}
               onLayers={() => {
-                ws.setLayersPanelCollapsed(false);
-                ws.setRailItem("layers");
+                setLayersPanelCollapsed(false);
+                setRailItem("layers");
               }}
               onLineage={() => {
                 toggleLineageMode();
-                ws.setRailItem("lineage");
+                setRailItem("lineage");
               }}
               onCode={() => {
-                ws.setSourceDrawerOpen(!ws.sourceDrawerOpen);
-                ws.setRailItem("code");
+                setSourceDrawerOpen(!sourceDrawerOpen);
+                setRailItem("code");
               }}
               onSearch={() => {
-                ws.setPaletteOpen(true);
-                ws.setRailItem("search");
+                setPaletteOpen(true);
+                setRailItem("search");
               }}
-              onSettings={() => ws.setRailItem("settings")}
+              onSettings={() => setRailItem("settings")}
             />
           }
-          tree={<SchemaTree tables={ws.treeTables} layerOf={ws.layerOf} />}
+          tree={<SchemaTree tables={treeTables} layerOf={layerOf} />}
           canvas={
             <div className="relative h-full min-h-0 w-full">
               <Canvas
-                parsed={ws.canvasActiveModel}
-                nodeExtras={ws.nodeExtras}
-                positions={ws.positions}
-                sizes={ws.sizes}
+                parsed={canvasActiveModel}
+                nodeExtras={nodeExtras}
+                positions={positions}
+                sizes={sizes}
                 onPositionsChange={(p) => useSchemaStore.getState().setPositions(p)}
-                onCreateRef={ws.handleCreateRef}
-                onRemoveRef={ws.handleRemoveRef}
-                onRemoveTable={ws.handleRemoveTable}
-                onRemoveTables={ws.handleRemoveTables}
-                staleWarning={!!ws.parsed.error || ws.canvasParsePending}
-                lineage={ws.canvasLineage}
-                lineageFields={ws.canvasActiveModel.lineageFields ?? []}
-                onCreateLineage={ws.handleCreateLineage}
-                onRemoveLineage={ws.handleRemoveLineage}
-                onRemoveFieldLineage={ws.handleRemoveFieldLineage}
-                onCreateFieldLineage={ws.handleCreateFieldLineage}
-                layerOf={ws.layerOf}
-                collapsedGroups={ws.collapsedGroups}
-                onToggleGroup={ws.handleToggleGroup}
-                focusTableId={ws.focusTableId}
-                focusNonce={ws.focusNonce}
-                onFocusTableDone={ws.clearFocusTable}
-                onTableClick={ws.focusTableInEditor}
-                fitViewTrigger={ws.fitViewTrigger}
-                externalStubs={ws.canvasStubs}
-                crossRefs={ws.canvasView.crossRefs}
-                density={ws.density}
+                onCreateRef={handleCreateRef}
+                onRemoveRef={handleRemoveRef}
+                onRemoveTable={handleRemoveTable}
+                onRemoveTables={handleRemoveTables}
+                staleWarning={!!parsed.error || canvasParsePending}
+                lineage={canvasLineage}
+                lineageFields={canvasActiveModel.lineageFields ?? []}
+                onCreateLineage={handleCreateLineage}
+                onRemoveLineage={handleRemoveLineage}
+                onRemoveFieldLineage={handleRemoveFieldLineage}
+                onCreateFieldLineage={handleCreateFieldLineage}
+                layerOf={layerOf}
+                collapsedGroups={collapsedGroups}
+                onToggleGroup={handleToggleGroup}
+                focusTableId={focusTableId}
+                focusNonce={focusNonce}
+                onFocusTableDone={clearFocusTable}
+                onTableClick={focusTableInEditor}
+                fitViewTrigger={fitViewTrigger}
+                externalStubs={canvasStubs}
+                crossRefs={canvasView.crossRefs}
+                density={density}
               />
               <EditorChrome
-                past={ws.past.length}
-                future={ws.future.length}
-                saveState={ws.saveState}
-                autoSave={ws.autoSave}
+                past={past.length}
+                future={future.length}
+                saveState={saveState}
+                autoSave={autoSave}
                 saveLabel={saveLabel}
-                onUndo={ws.undo}
-                onRedo={ws.redo}
-                onOrganize={ws.handleOrganize}
-                onAddTable={ws.handleAddTable}
-                onAddMetadata={ws.handleAddMetadata}
-                onImport={ws.handleImport}
+                onUndo={undo}
+                onRedo={redo}
+                onOrganize={handleOrganize}
+                onAddTable={handleAddTable}
+                onAddMetadata={handleAddMetadata}
+                onImport={handleImport}
                 onDiff={() => setDiffOpen((open) => !open)}
-                onSave={() => ws.handleSave()}
-                onAutoSave={() => useSchemaStore.getState().setAutoSave(!ws.autoSave)}
+                onSave={() => handleSave()}
+                onAutoSave={() => useSchemaStore.getState().setAutoSave(!autoSave)}
               />
               <button
                 type="button"
@@ -189,12 +285,12 @@ export function Workspace(props: WorkspaceProps) {
                 )}
                 title={t("shell.help")}
                 aria-label={t("shell.help")}
-                onClick={() => ws.setHelpOpen(true)}
+                onClick={() => setHelpOpen(true)}
               >
                 ?
               </button>
               <div className="absolute right-3 top-12 z-20">
-                <StatusLog status={ws.status} saveState={ws.saveState} logs={ws.logs} />
+                <StatusLog status={status} saveState={saveState} logs={logs} />
               </div>
               {hoveredMeta?.has ? (
                 <div className="pointer-events-none absolute right-3 top-24 z-20">
@@ -203,77 +299,77 @@ export function Workspace(props: WorkspaceProps) {
               ) : null}
               <DraggableOverlay storageKey="ldb.panel.layers.pos" className="top-10">
                 <LayersPanel
-                  layers={ws.layersArr}
-                  tables={ws.activeModel.tables.map((tbl) => ({ id: tbl.id }))}
-                  onAddLayer={ws.actions.onAddLayer}
-                  onFocusTable={ws.focusTableWithPan}
-                  onAutolayout={ws.handleAutolayout}
-                  pages={ws.canvasPages}
-                  activePageIds={ws.activePageIds}
-                  onChangeActivePages={ws.handleChangeActivePages}
-                  collapsed={ws.layersPanelCollapsed}
-                  onCollapsedChange={ws.setLayersPanelCollapsed}
+                  layers={layersArr}
+                  tables={activeModel.tables.map((tbl) => ({ id: tbl.id }))}
+                  onAddLayer={actions.onAddLayer}
+                  onFocusTable={focusTableWithPan}
+                  onAutolayout={handleAutolayout}
+                  pages={canvasPages}
+                  activePageIds={activePageIds}
+                  onChangeActivePages={handleChangeActivePages}
+                  collapsed={layersPanelCollapsed}
+                  onCollapsedChange={setLayersPanelCollapsed}
                 />
               </DraggableOverlay>
               <DraggableOverlay storageKey="ldb.panel.column.pos" className="left-64 top-10">
                 <ColumnPanel
-                  dbml={ws.dbml}
-                  tables={ws.activeModel.tables}
+                  dbml={dbml}
+                  tables={activeModel.tables}
                   onApply={(next) => {
-                    ws.markCommitted(next);
-                    ws.handleDbmlChange(next);
+                    markCommitted(next);
+                    handleDbmlChange(next);
                   }}
                   onRenameColumn={(table, oldName, newName) =>
-                    ws.actions.onRenameColumn(table, oldName, newName)
+                    actions.onRenameColumn(table, oldName, newName)
                   }
-                  onGoToColumn={ws.goToColumn}
-                  mappings={ws.activeModel.lineageFields ?? []}
-                  onAddMapping={ws.handleAddFieldLineage}
-                  onUpdateMapping={ws.handleUpdateFieldLineage}
+                  onGoToColumn={goToColumn}
+                  mappings={activeModel.lineageFields ?? []}
+                  onAddMapping={handleAddFieldLineage}
+                  onUpdateMapping={handleUpdateFieldLineage}
                   onRemoveMapping={(st, sc, tc) => {
                     const tt = useSchemaStore.getState().selectedTable;
-                    if (tt) ws.handleRemoveFieldLineage(st, sc, tt, tc);
+                    if (tt) handleRemoveFieldLineage(st, sc, tt, tc);
                   }}
                 />
               </DraggableOverlay>
               <div className="absolute bottom-0 left-0 right-0 z-20">
                 <RecordsPanel
-                  records={ws.activeModel.records}
-                  tables={ws.activeModel.tables}
-                  refs={ws.activeModel.refs}
-                  lineageFields={ws.activeModel.lineageFields}
-                  dbml={ws.dbml}
+                  records={activeModel.records}
+                  tables={activeModel.tables}
+                  refs={activeModel.refs}
+                  lineageFields={activeModel.lineageFields}
+                  dbml={dbml}
                   onApply={(next) => {
-                    ws.markCommitted(next);
-                    ws.handleDbmlChange(next);
+                    markCommitted(next);
+                    handleDbmlChange(next);
                     useSchemaStore.getState().setSaveState("dirty");
                   }}
-                  onFocusTable={ws.focusTableWithPan}
-                  open={ws.recordsPanelOpen}
-                  onOpenChange={ws.setRecordsPanelOpen}
+                  onFocusTable={focusTableWithPan}
+                  open={recordsPanelOpen}
+                  onOpenChange={setRecordsPanelOpen}
                 />
               </div>
               <div className="absolute bottom-10 right-3 z-20">
                 <ProblemsPanel
-                  issues={ws.modelIssues}
-                  onFocusTable={ws.focusTableWithPan}
-                  onGoToLine={ws.goToLine}
-                  open={ws.problemsPanelOpen}
-                  onOpenChange={ws.setProblemsPanelOpen}
+                  issues={modelIssues}
+                  onFocusTable={focusTableWithPan}
+                  onGoToLine={goToLine}
+                  open={problemsPanelOpen}
+                  onOpenChange={setProblemsPanelOpen}
                 />
               </div>
-              {ws.railItem === "settings" ? (
+              {railItem === "settings" ? (
                 <div className="absolute bottom-12 right-3 z-20 w-72 rounded-md border border-border bg-card p-2 shadow-md">
-                  {ws.projects.length > 0 ? (
+                  {projects.length > 0 ? (
                     <ProjectSwitcher
-                      projects={ws.projects}
-                      currentProjectId={ws.currentProjectId}
-                      saveState={ws.saveState}
-                      onSwitch={ws.switchProject}
-                      onCreate={ws.handleCreateProject}
-                      onRename={ws.handleRenameProject}
-                      onDuplicate={ws.handleDuplicateProject}
-                      onDelete={ws.handleDeleteProject}
+                      projects={projects}
+                      currentProjectId={currentProjectId}
+                      saveState={saveState}
+                      onSwitch={switchProject}
+                      onCreate={handleCreateProject}
+                      onRename={handleRenameProject}
+                      onDuplicate={handleDuplicateProject}
+                      onDelete={handleDeleteProject}
                       pinnedLabel={pinnedLabel}
                     />
                   ) : (
@@ -284,76 +380,68 @@ export function Workspace(props: WorkspaceProps) {
                 </div>
               ) : null}
               <PageImportWizard
-                open={ws.pageWizardOpen}
-                tableCount={ws.pageWizardTableCount}
-                pages={ws.canvasPages}
+                open={pageWizardOpen}
+                tableCount={pageWizardTableCount}
+                pages={canvasPages}
                 onConfirm={(pageIds) => {
-                  ws.handleChangeActivePages(pageIds);
-                  ws.setPageWizardOpen(false);
+                  handleChangeActivePages(pageIds);
+                  setPageWizardOpen(false);
                 }}
                 onDismiss={() => {
                   useSchemaStore.getState().setActivePageIds([]);
-                  ws.setPageWizardOpen(false);
+                  setPageWizardOpen(false);
                 }}
               />
             </div>
           }
           inspector={
             <Inspector
-              tableMeta={ws.actions.tableMeta}
-              layerOf={ws.layerOf}
-              colorOf={ws.actions.colorOf}
-              onSetColor={ws.actions.onSetColor}
-              layers={ws.layersArr}
-              tables={ws.activeModel.tables}
+              tableMeta={actions.tableMeta}
+              layerOf={layerOf}
+              colorOf={actions.colorOf}
+              onSetColor={actions.onSetColor}
+              layers={layersArr}
+              tables={activeModel.tables}
             />
           }
           drawer={
             <SourceDrawer
-              ref={ws.editorRef}
-              open={ws.sourceDrawerOpen}
-              onOpenChange={ws.setSourceDrawerOpen}
-              value={ws.dbml}
-              onChange={ws.handleDbmlChange}
-              committedValue={ws.committedDbml}
-              savedValue={ws.savedDbml}
-              onCommitted={ws.markCommitted}
-              onTableRenamed={ws.migrateTableId}
-              error={ws.parsed.error}
-              errorLine={ws.parsed.errorLine}
-              onFocusTable={ws.focusTableWithPan}
-              onCursorLine={ws.handleEditorCursorLine}
-              onGoToError={() => ws.setSourceDrawerOpen(true)}
-              onRenameModalOpenChange={ws.setRenameModalOpen}
+              ref={assignEditorRef}
+              open={sourceDrawerOpen}
+              onOpenChange={setSourceDrawerOpen}
+              value={dbml}
+              onChange={handleDbmlChange}
+              committedValue={committedDbml}
+              savedValue={savedDbml}
+              onCommitted={markCommitted}
+              onTableRenamed={migrateTableId}
+              error={parsed.error}
+              errorLine={parsed.errorLine}
+              onFocusTable={focusTableWithPan}
+              onCursorLine={handleEditorCursorLine}
+              onGoToError={() => setSourceDrawerOpen(true)}
+              onRenameModalOpenChange={setRenameModalOpen}
             />
           }
           statusbar={
             <StatusBar
-              problemCount={ws.modelIssues.length}
+              problemCount={modelIssues.length}
               zoomPercent={100}
-              density={ws.density}
-              dbmlOpen={ws.sourceDrawerOpen}
-              onProblemsClick={() => ws.setProblemsPanelOpen(!ws.problemsPanelOpen)}
-              onDbmlToggle={() => ws.setSourceDrawerOpen(!ws.sourceDrawerOpen)}
-              onFitView={ws.bumpFitView}
-              onDensityChange={ws.setDensity}
+              density={density}
+              dbmlOpen={sourceDrawerOpen}
+              onProblemsClick={() => setProblemsPanelOpen(!problemsPanelOpen)}
+              onDbmlToggle={() => setSourceDrawerOpen(!sourceDrawerOpen)}
+              onFitView={bumpFitView}
+              onDensityChange={setDensity}
             />
           }
         />
-        <CommandPalette
-          open={ws.paletteOpen}
-          onOpenChange={ws.setPaletteOpen}
-          context={ws.commandContext}
-        />
-        <ShortcutsOverlay
-          open={ws.helpOpen}
-          onOpenChange={ws.setHelpOpen}
-          context={ws.commandContext}
-        />
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} context={commandContext} />
+        <ShortcutsOverlay open={helpOpen} onOpenChange={setHelpOpen} context={commandContext} />
         <DbmlDiff
           open={diffOpen}
-          saved={ws.savedDbml}
-          working={ws.dbml}
+          saved={savedDbml}
+          working={dbml}
           onClose={() => setDiffOpen(false)}
         />
       </div>

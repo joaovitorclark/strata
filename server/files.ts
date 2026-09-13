@@ -450,7 +450,7 @@ export async function getActiveInputDir(): Promise<string> {
 export async function loadProjectBySlug(slug: string): Promise<{ dbml: string; canvas: unknown }> {
   const dbmlRaw = await fs.readFile(projectDbmlPath(slug), 'utf8').catch(() => '');
   const canvasRaw = await fs.readFile(projectCanvasPath(slug), 'utf8').catch(() => '{}');
-  let canvas: unknown = {};
+  let canvas: unknown;
   try { canvas = JSON.parse(canvasRaw); } catch { canvas = {}; }
   // CRLF-safe (defensivo): normaliza EOL para LF. No Windows o arquivo pode vir com CRLF
   // (git core.autocrlf); manter LF evita bugs de rename nos regexes do cliente.

@@ -274,7 +274,7 @@ export function layoutExternalStubsOnTop(
   }
 
   const centerX = (minX + maxX) / 2;
-  let startX = centerX - rowWidth / 2;
+  const startX = centerX - rowWidth / 2;
   for (let i = 0; i < sortedStubs.length; i++) {
     out[sortedStubs[i].id] = { x: startX + i * (STUB_W + STUB_GAP), y: STUB_TOP };
   }

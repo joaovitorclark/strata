@@ -599,7 +599,7 @@ function pruneLineageFieldsBlock(block: string, tableId: string): string | null 
     if (!trimmed || trimmed.startsWith('//') || /^LineageFields\s*\{/i.test(trimmed) || trimmed === '}') {
       continue;
     }
-    const m = /^([^\s<]+)\s*<\s*([^\s\[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(trimmed);
+    const m = /^([^\s<]+)\s*<\s*([^\s[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(trimmed);
     if (!m) continue;
     const target = splitTableColumn(m[1].trim());
     const source = splitTableColumn(m[2].trim());

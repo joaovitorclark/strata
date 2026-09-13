@@ -358,7 +358,6 @@ function layoutCluster(
       profile,
     );
     Object.assign(positions, packed.positions);
-    offsetY = packed.maxY + gap;
   }
 
   let out = resolveOverlaps(positions, tables, parsed, metrics, margin);

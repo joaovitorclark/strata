@@ -1,5 +1,5 @@
 // Arestas do canvas: rebuild estrutural separado do highlight (Fase 3 perf).
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { Edge } from "@xyflow/react";
 import type { ParseResult, ParsedFieldLineage } from '@/features/schema/model/parse';
 import type { LineageLink } from '@/infrastructure/api';
@@ -311,7 +311,9 @@ export function useCanvasEdges(
   input: EdgeBuildInput,
 ): void {
   const inputRef = useRef(input);
-  inputRef.current = input;
+  useLayoutEffect(() => {
+    inputRef.current = input;
+  });
 
   const fieldFocusKey = input.fieldLineageVisible
     ? [

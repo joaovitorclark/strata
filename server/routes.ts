@@ -30,6 +30,7 @@ import { registerDomainRoutes } from './routes/domainRoutes.ts';
 import { isGitAvailable } from './git.ts';
 import { getActiveDomainSlug, baseDataDir } from './domainContext.ts';
 import { seedGitIfNeeded } from './domains.ts';
+import { dbmlErrorMessage, errorMessageString, isNotFound } from './unknownError.ts';
 
 type ProjectBody = { dbml?: string; canvas?: unknown };
 type DbmlBody = { dbml?: string };
@@ -41,9 +42,8 @@ type DuplicateBody = { name?: string };
 function parseOr400(dbml: string, reply: FastifyReply): Model | null {
   try {
     return dbmlToModel(dbml);
-  } catch (e: any) {
-    const msg = e?.diags?.[0]?.message ?? e?.diags?.[0]?.error ?? e?.message ?? 'DBML inválido';
-    reply.code(400).send({ error: `DBML inválido: ${msg}` });
+  } catch (e: unknown) {
+    reply.code(400).send({ error: `DBML inválido: ${dbmlErrorMessage(e)}` });
     return null;
   }
 }
@@ -66,9 +66,8 @@ export async function runImport(
   if (baseDbml.trim()) {
     try {
       model = dbmlToModel(baseDbml);
-    } catch (e: any) {
-      const msg = e?.diags?.[0]?.message ?? e?.diags?.[0]?.error ?? e?.message ?? 'DBML inválido';
-      warnings.push(`DBML do projeto ignorado: ${msg}`);
+    } catch (e: unknown) {
+      warnings.push(`DBML do projeto ignorado: ${dbmlErrorMessage(e)}`);
     }
   }
   let merged = model;
@@ -80,9 +79,8 @@ export async function runImport(
     let incoming: Model;
     try {
       incoming = dbmlToModel(content);
-    } catch (e: any) {
-      const msg = e?.diags?.[0]?.message ?? e?.diags?.[0]?.error ?? e?.message ?? 'DBML inválido';
-      warnings.push(`${file}: DBML inválido: ${msg}`);
+    } catch (e: unknown) {
+      warnings.push(`${file}: DBML inválido: ${dbmlErrorMessage(e)}`);
       continue;
     }
     if (incoming.tables.length) {
@@ -165,8 +163,8 @@ async function requireActiveDomain(reply: FastifyReply): Promise<boolean> {
   try {
     await ensureRegistry();
     return true;
-  } catch (e: any) {
-    reply.code(409).send({ error: e?.message ?? 'Nenhum domínio ativo.' });
+  } catch (e: unknown) {
+    reply.code(409).send({ error: errorMessageString(e) ?? 'Nenhum domínio ativo.' });
     return false;
   }
 }
@@ -186,7 +184,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const reg = await readRegistry().catch(() => ({ activeId: '', projects: [] as { slug: string; id: string }[] }));
       pinnedProjectId = reg.projects.find((p) => p.slug === pin)?.id ?? null;
     }
-    let inputDir: string | null = null;
+    let inputDir: string | null;
     try {
       inputDir = await getActiveInputDir();
     } catch {
@@ -231,9 +229,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     try {
       const proj = await getProject(req.params.id);
       return loadProjectBySlug(proj.slug);
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }
@@ -248,9 +246,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const { dbml = '', canvas = {} } = req.body ?? {};
       await saveProjectBySlug(proj.slug, dbml, canvas);
       return { ok: true };
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }
@@ -264,9 +262,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const name = req.body?.name ?? '';
       await renameProject(req.params.id, name);
       return { ok: true };
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }
@@ -281,9 +279,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       await getProject(req.params.id);
       await deleteProject(req.params.id);
       return { ok: true };
-    } catch (e: any) {
-      const msg: string = e?.message ?? '';
-      if (msg.includes('não encontrado')) {
+    } catch (e: unknown) {
+      const msg = errorMessageString(e) ?? '';
+      if (isNotFound(e)) {
         return reply.code(404).send({ error: msg });
       }
       if (msg.toLowerCase().includes('único projeto') || msg.toLowerCase().includes('unico projeto')) {
@@ -302,9 +300,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const meta = await duplicateProject(req.params.id, newName);
       reply.code(201);
       return meta;
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }
@@ -319,9 +317,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       await setActiveProject(req.params.id);
       await seedGitIfNeeded();
       return { ok: true, activeId: req.params.id };
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }
@@ -336,9 +334,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const baseDbml = req.body?.dbml ?? '';
       const inputs = await readImportInputsForSlug(proj.slug);
       return runImport(inputs, baseDbml);
-    } catch (e: any) {
-      if (e?.message?.includes('não encontrado')) {
-        return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) {
+        return reply.code(404).send({ error: errorMessageString(e) });
       }
       throw e;
     }

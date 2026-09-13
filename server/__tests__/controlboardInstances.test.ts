@@ -1,6 +1,11 @@
+import type { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
-import { createInstanceManager } from '../controlboardInstances.ts';
+import { createInstanceManager, type InstanceManagerDeps, type KillableHandle } from '../controlboardInstances.ts';
+
+function fakeProcess(): ChildProcess {
+  return new EventEmitter() as unknown as ChildProcess;
+}
 
 function fakeFindFreePort(start: number, _host?: string, exclude = new Set<number>()) {
   let port = start;
@@ -8,13 +13,16 @@ function fakeFindFreePort(start: number, _host?: string, exclude = new Set<numbe
   return Promise.resolve(port);
 }
 
-function makeDeps() {
-  const stopInstance = vi.fn((handle: any) => {
+function makeDeps(): InstanceManagerDeps {
+  const stopInstance = vi.fn((handle: KillableHandle) => {
     handle.server.emit('exit', 0);
     handle.web?.emit('exit', 0);
   });
-  const startInstance = vi.fn(async () => ({ server: new EventEmitter(), web: new EventEmitter() }));
-  return { startInstance: startInstance as any, stopInstance, findFreePort: fakeFindFreePort };
+  const startInstance = vi.fn<InstanceManagerDeps['startInstance']>(async () => ({
+    server: fakeProcess(),
+    web: fakeProcess(),
+  }));
+  return { startInstance, stopInstance, findFreePort: fakeFindFreePort };
 }
 
 const OPTS_A = { domainSlug: 'vendas', domainName: 'Vendas', projectSlug: 'q1', projectName: 'Q1' };
@@ -57,7 +65,7 @@ describe('createInstanceManager', () => {
     const deps = makeDeps();
     const manager = createInstanceManager(deps);
     await manager.launch(OPTS_A);
-    const handle = await deps.startInstance.mock.results[0].value;
+    const handle = await vi.mocked(deps.startInstance).mock.results[0].value;
     handle.server.emit('exit', 1);
     expect(manager.list()).toHaveLength(0);
   });
@@ -83,13 +91,16 @@ describe('createInstanceManager', () => {
 
   it('launch libera as portas se o spawn falhar', async () => {
     const deps = makeDeps();
-    deps.startInstance = vi.fn(async () => {
+    deps.startInstance = vi.fn<InstanceManagerDeps['startInstance']>(async () => {
       throw new Error('spawn falhou');
-    }) as any;
+    });
     const manager = createInstanceManager(deps);
     await expect(manager.launch(OPTS_A)).rejects.toThrow('spawn falhou');
     // porta deve ter sido liberada — o próximo launch pega a mesma porta de novo, não a próxima
-    deps.startInstance = vi.fn(async () => ({ server: new EventEmitter(), web: new EventEmitter() })) as any;
+    deps.startInstance = vi.fn<InstanceManagerDeps['startInstance']>(async () => ({
+      server: fakeProcess(),
+      web: fakeProcess(),
+    }));
     const b = await manager.launch(OPTS_A);
     expect(b.apiPort).toBe(5174);
   });
@@ -106,8 +117,11 @@ describe('createInstanceManager', () => {
 
   it('stopByDomainAndWait resolve por timeout se o processo nunca emitir exit', async () => {
     const stopInstance = vi.fn(); // não emite 'exit' — simula processo que não morre
-    const startInstance = vi.fn(async () => ({ server: new EventEmitter(), web: new EventEmitter() }));
-    const manager = createInstanceManager({ startInstance: startInstance as any, stopInstance, findFreePort: fakeFindFreePort });
+    const startInstance = vi.fn<InstanceManagerDeps['startInstance']>(async () => ({
+      server: fakeProcess(),
+      web: fakeProcess(),
+    }));
+    const manager = createInstanceManager({ startInstance, stopInstance, findFreePort: fakeFindFreePort });
     await manager.launch(OPTS_A);
     await manager.stopByDomainAndWait('vendas', 20);
     expect(manager.list()).toHaveLength(0);

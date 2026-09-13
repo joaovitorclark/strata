@@ -7,6 +7,23 @@ import { extractRecords } from './dbmlClean.ts';
 import { parseTypeName, qualifiedName } from './model.ts';
 import type { Column, ColumnTest, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
 
+type DbmlField = {
+  name: string;
+  type: { type_name: string };
+  pk?: boolean;
+  not_null?: boolean;
+  unique?: boolean;
+  note?: string;
+};
+type DbmlIndex = { pk?: boolean; columns?: unknown[] };
+type DbmlTable = { name: string; fields: DbmlField[]; indexes?: DbmlIndex[]; note?: string; group?: { name?: string } };
+type DbmlEndpoint = {
+  relation: string;
+  schemaName?: string;
+  tableName: string;
+  fieldNames: string[];
+};
+
 const REL_TO_KIND: Record<string, '>' | '<' | '-' | '<>'> = {
   '*': '>', // muitos -> um (lado "from")
   '1': '-',
@@ -38,7 +55,7 @@ export function dbmlToModel(dbml: string): Model {
 
     for (const t of schema.tables) {
       const compositePks: string[][] = [];
-      const columns: Column[] = t.fields.map((f: any) => {
+      const columns: Column[] = (t as unknown as DbmlTable).fields.map((f) => {
         const { base, args } = parseTypeName(f.type.type_name);
         return {
           name: f.name,
@@ -51,7 +68,7 @@ export function dbmlToModel(dbml: string): Model {
         };
       });
 
-      for (const idx of (t as any).indexes ?? []) {
+      for (const idx of (t as unknown as DbmlTable).indexes ?? []) {
         const cols = (idx.columns ?? []).map(indexColName).filter(Boolean);
         if (idx.pk && cols.length > 1) {
           compositePks.push(cols);
@@ -79,7 +96,7 @@ export function dbmlToModel(dbml: string): Model {
       const [a, b] = r.endpoints;
       const fromEp = a.relation === '*' ? a : b;
       const toEp = fromEp === a ? b : a;
-      const epName = (ep: any) =>
+      const epName = (ep: DbmlEndpoint) =>
         ep.schemaName && ep.schemaName !== 'public'
           ? `${ep.schemaName}.${ep.tableName}`
           : ep.tableName;

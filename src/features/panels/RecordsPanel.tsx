@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -78,12 +78,11 @@ function NoteField({
 }) {
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
-
-  // Sincroniza com o valor externo (ex.: troca de tabela) só quando não está
-  // focado — evita derrubar o que o usuário está digitando.
-  useEffect(() => {
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     if (!focused) setDraft(value);
-  }, [value, focused]);
+  }
 
   return (
     <label className="grid gap-1.5">

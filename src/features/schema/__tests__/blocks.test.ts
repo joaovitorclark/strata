@@ -102,7 +102,7 @@ describe('extractRecords + parseRecords', () => {
 
 import { parseLayerGroup, parseDbml } from '@/features/schema/model/parse';
 import { layersFromGroups, tableLayerMap } from '@/features/schema/model/layers';
-import { setTableLayer, addLayerGroup } from '@/features/schema/model/edit';
+import { setTableLayer } from '@/features/schema/model/edit';
 
 const DBML_WITH_LAYERS = `Table raw.orders {
   id bigint [pk]

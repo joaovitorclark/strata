@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { runExport, type ExportFormat } from '../exportDispatch.ts';
 import type { Model } from '../model.ts';
 import type { InputDialect } from '../sqlExport.ts';
@@ -13,7 +13,7 @@ export async function handleExport(model: Model, body: ExportBody): Promise<{ fi
 
 export function registerExportRoutes(
   app: FastifyInstance,
-  parseOr400: (dbml: string, reply: any) => Model | null,
+  parseOr400: (dbml: string, reply: FastifyReply) => Model | null,
 ): void {
   app.post<{ Body: ExportBody }>('/api/export', async (req, reply) => {
     const model = parseOr400(req.body?.dbml ?? '', reply);
