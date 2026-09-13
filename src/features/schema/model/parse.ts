@@ -4,7 +4,6 @@ import {
   extractRecords,
   type ParsedFieldLineage,
   type ParsedLayerGroup,
-  type ParsedLineage,
   type ParsedRolename,
 } from './dbmlClean';
 import type { ParsedRecords } from './records';
@@ -15,12 +14,10 @@ import { resolveMemberTableIds, tableIdsMatch } from './tableIdMatch';
 export {
   extractRecords,
   parseLayerGroup,
-  parseLineageBlock,
   parseLineageFieldsBlock,
   splitTableColumn,
   type ParsedFieldLineage,
   type ParsedLayerGroup,
-  type ParsedLineage,
   type ParsedRolename,
 } from './dbmlClean';
 
@@ -64,7 +61,6 @@ export type ParseResult = {
   refs: RefView[];
   records: ParsedRecords[];
   layerGroups: ParsedLayerGroup[];
-  lineage: ParsedLineage[];
   lineageFields: ParsedFieldLineage[];
   rolenames: ParsedRolename[];
   /** Cor por tabela (do bloco Colors {}) — id da tabela -> hex/nome. */
@@ -234,9 +230,9 @@ function applyTableGroupMembership(dbml: string, tables: TableView[]): void {
 
 export function parseDbml(dbml: string): ParseResult {
   if (!dbml.trim()) {
-    return { tables: [], refs: [], records: [], layerGroups: [], lineage: [], lineageFields: [], rolenames: [], colors: {}, pins: [] };
+    return { tables: [], refs: [], records: [], layerGroups: [], lineageFields: [], rolenames: [], colors: {}, pins: [] };
   }
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal } =
+  const { clean, records, layerGroups, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal } =
     extractRecords(dbml);
   const colorsMap = Object.fromEntries(colors.map((c) => [c.table, c.color]));
   let db: ParsedDbml;
@@ -246,7 +242,7 @@ export function parseDbml(dbml: string): ParseResult {
     const { rawMessage, cleanLine0 } = formatParseError(e);
     const { message, line } = buildParseError(dbml, rawMessage, cleanLine0, mapCleanLineToOriginal);
     return {
-      tables: [], refs: [], records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins, error: message, errorLine: line,
+      tables: [], refs: [], records, layerGroups, lineageFields, rolenames, colors: colorsMap, pins, error: message, errorLine: line,
     };
   }
 
@@ -328,7 +324,7 @@ export function parseDbml(dbml: string): ParseResult {
     }
   }
 
-  return { tables, refs, records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins };
+  return { tables, refs, records, layerGroups, lineageFields, rolenames, colors: colorsMap, pins };
 }
 
 /** Snippet de colunas de metadados padrão do lakehouse. */

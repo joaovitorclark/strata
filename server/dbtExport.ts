@@ -2,7 +2,7 @@
 // modelo canônico. Distingue source de model, deriva tests por coluna (unique,
 // not_null, accepted_values, relationships) e materialization por camada.
 import yaml from 'js-yaml';
-import { pkCols, qualifiedName } from './model.ts';
+import { pkCols, qualifiedName, tableLineageFrom } from './model.ts';
 import type { Column, ColumnTest, Model, Ref, Table } from './model.ts';
 import { materializationForLayer, resourceTypeForLayer } from '../src/features/schema/model/layers.ts';
 import { splitTableColumn } from '../src/features/schema/model/dbmlClean.ts';
@@ -177,12 +177,13 @@ function findTable(model: Model, ident: string): Table | undefined {
   );
 }
 
-/** Tabelas das quais este model depende (lineage L1 primeiro; refs como fallback). */
+/** Tabelas das quais este model depende (mapeamentos de campo; refs como fallback). */
 function upstreams(t: Table, model: Model): string[] {
-  const lin = (model.lineage ?? []).find(
-    (l) => l.target === t.name || l.target === qualifiedName(t),
+  const qn = qualifiedName(t);
+  const derived = tableLineageFrom(model.lineageFields ?? []).find(
+    (l) => l.target === t.name || l.target === qn,
   );
-  if (lin && lin.sources.length) return lin.sources;
+  if (derived && derived.sources.length) return derived.sources;
   const fromRefs = model.refs.filter((r) => r.from.table === t.name).map((r) => r.to.table);
   return [...new Set(fromRefs)];
 }

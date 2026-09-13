@@ -40,7 +40,6 @@ Ref: b.x > a.id
       refs: [],
       records: [],
       layerGroups: [],
-      lineage: [],
       lineageFields: [],
       rolenames: [],
       colors: {},

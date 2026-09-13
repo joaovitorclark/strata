@@ -1,4 +1,4 @@
-import type { ParsedFieldLineage, ParsedLineage, TableView } from './parse';
+import type { ParsedFieldLineage, TableView } from './parse';
 
 /** Conta colunas em tabelas silver/prata sem mapeamento L2 no modelo. */
 export function countSilverColumnsWithoutL2(
@@ -27,13 +27,9 @@ export function countSilverColumnsWithoutL2(
 export function exportInputL2Warning(
   tables: TableView[],
   lineageFields: ParsedFieldLineage[],
-  lineage: ParsedLineage[] = [],
 ): string | null {
   if (!lineageFields.length) {
-    if (lineage.length) {
-      return 'Aviso: linhagem de campos (L2) não incluída — modelo sem LineageFields; a linhagem de tabelas (L1) foi exportada. Edite Mapeamentos L2 para o nível campo→campo.';
-    }
-    return 'Aviso: export sem linhagem — modelo sem Lineage e LineageFields. Edite Mapeamentos L2 ou importe SQL com @lineage.';
+    return 'Aviso: export sem linhagem — modelo sem LineageFields. Edite Mapeamentos L2 ou importe SQL com @lineage.';
   }
   const missing = countSilverColumnsWithoutL2(tables, lineageFields);
   if (missing === 0) return null;

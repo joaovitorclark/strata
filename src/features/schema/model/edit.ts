@@ -365,51 +365,6 @@ export function addLayerGroup(src: string, name: string, color: string): string 
   return `${src.replace(/\n+$/, '')}\n\nLayerGroup ${id} [color: ${color}] {\n}\n`;
 }
 
-// ---- Lineage (bloco Lineage no DBML) ----
-
-/** Adiciona um par source→target ao bloco Lineage (cria o bloco se não existir). */
-export function addLineageEntry(src: string, source: string, target: string): string {
-  const blocks = splitDbmlBlocks(src);
-  const linBlock = blocks.find((b) => b.type === 'lineage');
-  if (linBlock) {
-    const lines = linBlock.text.split('\n');
-    const existing = lines.find((l) => {
-      const m = /^(\s*)([^\s<]+)\s*</.exec(l);
-      return m && m[2].trim() === target;
-    });
-    if (existing) {
-      if (existing.includes(source)) return src;
-      const updated = existing.replace(/(<\s*.+)$/, `$1, ${source}`);
-      const newText = linBlock.text.replace(existing, updated);
-      return src.replace(linBlock.text, newText);
-    }
-    const close = linBlock.text.lastIndexOf('}');
-    if (close >= 0) {
-      const newText = linBlock.text.slice(0, close) + `  ${target} < ${source}\n` + linBlock.text.slice(close);
-      return src.replace(linBlock.text, newText);
-    }
-  }
-  return `${src.replace(/\n+$/, '')}\n\nLineage {\n  ${target} < ${source}\n}\n`;
-}
-
-/** Remove um par source→target do bloco Lineage. Remove a linha se ficar sem sources. */
-export function removeLineageEntry(src: string, source: string, target: string): string {
-  const blocks = splitDbmlBlocks(src);
-  const linBlock = blocks.find((b) => b.type === 'lineage');
-  if (!linBlock) return src;
-  const updated = linBlock.text.split('\n').map((line) => {
-    const m = /^(\s*)([^\s<]+)\s*<\s*(.+)$/.exec(line);
-    if (!m || m[2].trim() !== target) return line;
-    const sources = m[3].split(',').map((s) => s.trim()).filter((s) => s !== source);
-    if (!sources.length) return null;
-    return `${m[1]}${m[2]} < ${sources.join(', ')}`;
-  }).filter((l): l is string => l !== null).join('\n');
-  if (!/\S/.test(updated.replace(/Lineage\s*\{/i, '').replace('}', ''))) {
-    return src.replace(linBlock.text, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
-  }
-  return src.replace(linBlock.text, updated);
-}
-
 // ---- LineageFields (mapeamento coluna→coluna) ----
 
 function fieldLineageLine(
@@ -570,27 +525,6 @@ function pruneGroupMembers(block: string, tableId: string): string {
     .join('\n');
 }
 
-function pruneLineageBlock(block: string, tableId: string): string | null {
-  if (!/Lineage\s*\{/i.test(block)) return block;
-  const bodyLines: string[] = [];
-  for (const line of block.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('//') || /^Lineage\s*\{/i.test(trimmed) || trimmed === '}') {
-      continue;
-    }
-    const m = /^([^\s<]+)\s*<\s*(.+)$/.exec(trimmed);
-    if (!m) continue;
-    const target = m[1].trim();
-    if (tableMatches(target, tableId)) continue;
-    const sources = m[2].split(',').map((s) => s.trim()).filter((s) => !tableMatches(s, tableId));
-    if (!sources.length) continue;
-    const indent = line.match(/^(\s*)/)?.[1] ?? '  ';
-    bodyLines.push(`${indent}${target} < ${sources.join(', ')}`);
-  }
-  if (!bodyLines.length) return null;
-  return `Lineage {\n${bodyLines.join('\n')}\n}\n`;
-}
-
 function pruneLineageFieldsBlock(block: string, tableId: string): string | null {
   if (!/LineageFields\s*\{/i.test(block)) return block;
   const bodyLines: string[] = [];
@@ -661,8 +595,7 @@ export function removeTable(src: string, tableId: string): string {
         return pruneGroupMembers(b.text, id);
       }
       if (b.type === 'lineage') {
-        const pruned = pruneLineageBlock(b.text, id);
-        return pruned ?? '';
+        return '';
       }
       if (b.type === 'lineageFields') {
         const pruned = pruneLineageFieldsBlock(b.text, id);
