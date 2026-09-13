@@ -1,0 +1,11 @@
+name: localdrawdb
+version: 1.0.0
+config-version: 2
+profile: localdrawdb
+model-paths:
+  - models
+seed-paths:
+  - seeds
+models:
+  localdrawdb:
+    +materialized: view

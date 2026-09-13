@@ -1,0 +1,23 @@
+version: 2
+models:
+  - name: pedido
+    config:
+      materialized: view
+    meta:
+      localdrawdb:
+        schema: loja
+        group: vendas
+        pk:
+          - id
+    columns:
+      - name: id
+        data_type: bigint
+        data_tests:
+          - unique
+          - not_null
+      - name: cliente_id
+        data_type: bigint
+      - name: total
+        data_type: decimal(18,2)
+      - name: criado_em
+        data_type: timestamp

@@ -1,0 +1,37 @@
+Table vendas.cliente {
+  id bigint [pk]
+  nome string
+}
+
+Table vendas.pedido {
+  id bigint [pk]
+  cliente_id bigint
+  total decimal(18,2)
+}
+
+Table vendas.item {
+  id bigint [pk]
+  sku string
+}
+
+Table vendas.resumo {
+  id bigint [pk]
+  total decimal(18,2)
+}
+
+Ref: vendas.pedido.cliente_id > vendas.cliente.id
+
+Lineage {
+  vendas.resumo < vendas.pedido
+}
+
+LayerGroup bronze {
+  vendas.cliente
+}
+LayerGroup prata {
+  vendas.pedido
+  vendas.item
+}
+LayerGroup ouro {
+  vendas.resumo
+}

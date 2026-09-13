@@ -1,0 +1,256 @@
+# Plan 2 run log
+
+Orchestrator log for Stages 4–6. One entry per task. Updated at the end of each task and committed with that task (or in the same wave of commits).
+
+Tasks 11–12 completed before this file existed; recorded here for the table.
+
+---
+
+## Task 11 — VERDE
+Commit: `3a0fefd`
+Portões que EU rodei: `npm run test && npm run build && npm run format:check` → 60/483, build 0, format 0; grep hex legado `src/` vazio
+Linhas do inventário: 0 checadas de 0 atribuídas
+Decisões que tomei sozinho: comentário de `tableColors.ts` sem as palavras Macchiato/Latte (grep do Plano 1)
+Preocupações: comentários de proveniência em `src/index.css` ainda citam Latte/Macchiato
+Bloqueio: —
+
+## Task 12 — VERDE
+Commit: `4e544ed`
+Portões que EU rodei: `npm run test -- src/features/canvas` → 12/62; typecheck 0; format:check 0; `from 'reactflow'` vazio; `nodeInternals` vazio
+Linhas do inventário: 0 checadas de 54 Canvas (geometria só; apresentação nas 13–17)
+Decisões que tomei sozinho: `tableFocusBounds` ficou `measured ?? width` (aprovado pelo humano depois)
+Preocupações: `diagramOverviewBounds` filtrava `n.width && n.height` — viraria Task 12b
+Bloqueio: —
+
+## Task 12b — VERDE
+Commit: `21ec034`
+Portões que EU rodei: `npm run test -- src/features/canvas` → 13 files / 64 tests; `npm run typecheck` → 0; `npm run format:check` → 0
+Linhas do inventário: 0
+Decisões que tomei sozinho: o loop de `diagramOverviewBounds` também passou a `measured?.width ?? width` (e height), não só o filtro. Sem isso um nó só-measured passaria o filtro e contribuiria largura 0. Mesma forma de `tableFocusBounds`.
+Preocupações: —
+Bloqueio: —
+
+## Task 13 — DONE_WITH_CONCERNS
+Commit: `6384fe0`
+Portões que EU rodei: `npm run test -- src/features/canvas` → 14/72; typecheck 0; format:check 0; build 0
+Linhas do inventário: 0 checadas de 54 Canvas (sem canvas ao vivo; LOD só em teste)
+Decisões que tomei sozinho: `keyColumns` une `compositePks.flat()` — `tableMeta` só lê `ColumnView.pk`, o teste Step 7 falhou até o union (era o segundo caminho).
+Preocupações: prompts de rename em PT literal no TableNode (i18n fica para shell); chips externos omitidos; overscan 5 vs `COLUMN_VIRTUAL_OVERSCAN` 3
+Bloqueio: —
+
+## Task 14 — DONE_WITH_CONCERNS
+Commit: `91a8034`
+Portões que EU rodei: canvas 14/72; typecheck 0; format:check 0; build 0; grep hex em `components/` vazio
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: CSS das classes `edge--*` em `edgeClasses.css` (Canvas ainda não existe). Animação xyflow `.animated` desligada em FK via CSS, sem reescrever `useCanvasEdges`.
+Preocupações: `useCanvasEdges` ainda seta `animated` em FK; o CSS é que corta.
+Bloqueio: —
+
+## Task 15 — DONE_WITH_CONCERNS
+Commit: `709aaa3`
+Portões que EU rodei: canvas 14/72; typecheck 0; format:check 0; build 0; hex vazio
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: `TABLE_COLORS` de `@/features/canvas/tableColors`; fallback de grupo `--layer-raw`.
+Preocupações: `layerColorOf` não chamado (cor vem de `data.color`); pointer-events do wrapper de grupo fica para Task 16
+Bloqueio: —
+
+## Task 16 — DONE_WITH_CONCERNS
+Commit: `61a1074`
+Portões que EU rodei: canvas 15/74; typecheck 0; format:check 0
+Linhas do inventário: 0 checadas de 54 Canvas (mount ReactFlow travou no jsdom)
+Decisões que tomei sozinho: omiti SelectionBar; `--brand-green` → `--primary`; teste sample.dbml é parse+registry, não mount 1px.
+Preocupações: MiniMap some >200 tabelas (spec) em vez do modo lite do LDB; Canvas ainda não está no App.tsx
+Bloqueio: —
+
+## Task 17 — DONE_WITH_CONCERNS
+Commit: `4dd8c7d`
+Portões que EU rodei: lodSlice 3/3 + interaction store; typecheck 0; format:check 0; useCanvasEdges intacto
+Linhas do inventário: 0 checadas de 54 Canvas
+Decisões que tomei sozinho: `enableMapSet` já ligado — não dupliquei. `meta.strata.pinned` só no tipo; export dbt não alterado (evitei round-trip novo).
+Preocupações: pins não sobrevivem reload; Ctrl-click também pina
+Bloqueio: —
+
+## Task 18 — DONE_WITH_CONCERNS
+Commit: `89b1485`
+Portões que EU rodei: shell 9 testes; typecheck 0; format:check 0; App.tsx 5 linhas
+Linhas do inventário: 0
+Decisões que tomei sozinho: slot canvas vazio (Canvas exige props de documento). Tema dark/light sem next-themes (matchMedia quebra jsdom).
+Preocupações: navbar/statusbar auto=0px até 19–22
+Bloqueio: —
+
+## Task 19 — DONE_WITH_CONCERNS
+Commit: `a9db23e`
+Portões que EU rodei: suíte 85/608; typecheck 0; format:check 0; pickTooltipSide ausente de src/
+Linhas do inventário: 0 checadas de 18 (Shortcut+Export) — UI existe, atalhos globais são Task 25
+Decisões que tomei sozinho: **DROP pickTooltipSide** — Radix Tooltip já faz collision detection; não portei Tooltip.tsx nem tooltip.test.ts.
+Preocupações: chrome não composto no AppShell (agentes proibidos de editar App.tsx)
+Bloqueio: —
+
+## Task 20 — DONE_WITH_CONCERNS
+Commit: `532a8ce`
+Portões que EU rodei: SchemaTree testa 500 linhas + selectTable; computeVirtualWindow reusado
+Linhas do inventário: 0 de 0
+Decisões que tomei sozinho: prova de 500 é teste jsdom (não 60fps). Camada desconhecida → `--layer-raw`.
+Preocupações: não montado no slot tree
+Bloqueio: —
+
+## Task 21 — DONE_WITH_CONCERNS
+Commit: `852c9fb`
+Portões que EU rodei: Inspector.test verde
+Linhas do inventário: 0 checadas de 13 (Panel:ColumnPanel+TableInfoPopover) — inspector mostra TableMeta, não é o ColumnPanel mutável
+Decisões que tomei sozinho: omiti `TableMeta.has` (flag do ⓘ). tableMeta via prop.
+Preocupações: ColumnPanel (mutação) é Task 23
+Bloqueio: —
+
+## Task 22 — DONE_WITH_CONCERNS
+Commit: `4d4ccc1`
+Portões que EU rodei: Outline.virtualize + syncEditorCanvas verdes; --syn-* no highlight
+Linhas do inventário: 0 checadas de 28 (Editor+DbmlDiff) — drawer não montado
+Decisões que tomei sozinho: CodeMirror via @uiw/react-codemirror 4.x + @codemirror/* 6.x
+Preocupações: applyRenames reescrito no drawer; App.tsx não monta SourceDrawer
+Bloqueio: —
+
+
+## Task 23 — DONE_WITH_CONCERNS
+Commit: `9621084`
+Portões que EU rodei: panels+records+domains+projects 18/120; typecheck 0; format:check 0
+Linhas do inventário: exercitadas em jsdom 93–126, 159–162; **não** marcadas no markdown (sem App ao vivo)
+Decisões que tomei sozinho: "+ camada" usa TABLE_COLORS em vez de prompt hex; parsePagesCollapsed só reexportado.
+Preocupações: TableInfoPopover não ligado ao ⓘ do TableNode
+Bloqueio: —
+
+## Task 24a — DONE_WITH_CONCERNS
+Commit: `045f822`
+Portões que EU rodei: mesmos
+Linhas do inventário: 127–131, 157–158, 163–174 exercitadas em teste; não marcadas
+Decisões que tomei sozinho: parseRecordsOpen relocado; loadRecordsOpen ficou no componente
+Preocupações: useCollapsePersist não portado; painéis não montados
+Bloqueio: —
+
+## Task 24b — DONE_WITH_CONCERNS
+Commit: `955bab2`
+Portões que EU rodei: mesmos; token em useRef não state
+Linhas do inventário: 132–156, 177–183 exercitadas em teste; não marcadas
+Decisões que tomei sozinho: credencial nunca em useState
+Preocupações: delete some em vez de disabled com 1 projeto (comportamento LDB); tokenUrl ainda diz LocalDrawDB
+Bloqueio: —
+
+## Task 25 — DONE_WITH_CONCERNS
+Commit: `e3815d8`
+Portões que EU rodei: `npx vitest run src/features/command-palette` → 45/45; `npm run test` → 107/771; `npm run typecheck` → 0; `npm run format:check` → 0; `npm run build` → 0 (46 módulos — App ainda não importa a paleta)
+Linhas do inventário: 38 checadas de 38 atribuídas (1–38)
+Decisões que tomei sozinho: navbar Export continua chip dbt stub — Task 25 Files não lista Navbar.tsx; ligar EXPORTERS no menu fica para o cutover 26. Save/import/autolayout são callbacks. Delete é opt-in (`removeSelectedRef`) para não duplicar o canvas. ⌘Y no listener e no overlay, não em `shortcutsFromCommands`.
+Preocupações: paleta e overlay não compostos no App. `EXPORTERS` é `{ id, labelKey, extension?, dialect? }`, não Structura `ExporterContribution`. `CANVAS_GESTURES` ficou em PT (porte verbatim).
+Bloqueio: —
+
+## Task 26 — DONE_WITH_CONCERNS
+Commit: `42c90d4`
+Portões que EU rodei: `npm run test` → 113/793; `npm run typecheck` → 0; `npm run format:check` → 0; `npm run build` → 2573 módulos, JS 12 163 kB (antes ~46 / ~198 kB — `@xyflow/react` no grafo)
+Linhas do inventário: 258 ☑ + 2 dropped / 260; 0 ☐
+Decisões que tomei sozinho: AppGate como no LDB (`main` → DomainPicker | App). Estado do documento em `documentSlice`. Menu Export = `EXPORTERS` (lista `<ul>`, não Radix — jsdom). Fallback de cor `hsl(var(--card))`. Canvas mockado só em AppShell/Workspace tests. Não passei `removeSelectedRef` à paleta.
+Preocupações: zoom da StatusBar só display; density não ligada ao LOD; Share/avatar no-op; bundle ~12 MB sem code-split; linhas Canvas de drag/hover ticked como “wired; no live RF in jsdom”
+Bloqueio: —
+
+## Task 27 — DONE_WITH_CONCERNS
+Commit: `ddaf596`
+Portões que EU rodei: `npx vitest run --project app server/__tests__/goldenExport.test.ts` → 9/9 após pin de `Date` no harness; `npm run test` → 123/842 (com a 28 no tree); typecheck 0; format:check 0
+Linhas do inventário: n/a (revalidação)
+Decisões que tomei sozinho: o único byte que falhou em `llm-context` foi `Gerado em 2026-09-10` vs `2026-09-11` (`new Date()` em `llmContext.ts`). Prova de que não é regressão de schema. Pinei `Date` no teste para o dia da captura (Task 2); **não** regenerarei a fixture nem alterei o exporter. `localdrawdb`+oracle skipado (sem golden). Itera `EXPORTERS`.
+Preocupações: o teste só é 9/9 com o relógio congelado em 2026-09-10; fora disso o carimbo muda.
+Bloqueio: —
+
+## Task 28 — DONE_WITH_CONCERNS
+Commit: `03586a1`
+Portões que EU rodei: `npm run build:win` → `dist-win/LocalDrawDB-win.zip` 104.5 MB / 109 550 632 bytes; `npx vitest run --project build-win` → 36/36; `examplesLoad` 4/4; typecheck 0; format:check 0; suíte 123/842
+Linhas do inventário: n/a
+Decisões que tomei sozinho: só acrescentei o alias `build:win` no `package.json` (pipeline já existia em `scripts/build-win/`). Instalei archiver/esbuild/extract-zip/postject nas versões do LDB para o `build.mjs` existente rodar. Não renomeei `LocalDrawDB.exe`. `.exe` **não** foi lançado no Darwin. Vitest ganhou projeto `build-win` em node porque jsdom quebra esbuild.
+Preocupações: host Node v24.5.0 vs pin 22.11.0 — risco SEA (`STATUS_ACCESS_VIOLATION`) documentado no README. Zip ainda se chama LocalDrawDB.
+Bloqueio: —
+
+## Task 29 — VERDE
+Commit: `182cca3`
+Portões que EU rodei: contagem no markdown — 202 ☑, 56 ☐, 2 dropped (219, 244). Soma 260.
+Linhas do inventário: 202 checadas de 260 (honestas)
+Decisões que tomei sozinho: 1–34 e 36–38 ficam ☑ — o jsdom da paleta clicou, filtrou e disparou atalhos, não foi inspeção estrutural. 35 volta a ☐ (Workspace não passa `removeSelectedRef`). 247 volta a ☐ (só `shouldPanToTable`). 39–92 inteiras ☐.
+Preocupações: o número piorou de propósito (258→202). Painéis que disparam `onFocusTable` mockado continuam ☑ no controle do painel; o pan em si é linha Canvas.
+Bloqueio: —
+
+---
+
+## Onda M (Tasks 29–34)
+
+Corretiva do Plano 2. Sem Cypress, sem canvas ao vivo, sem build Windows.
+
+### Contagem verdadeira do inventário (Task 29)
+
+**202 ☑ · 56 ☐ · 2 dropped** (219 PNG, 244 resizer). Soma 260.
+
+O 258/260 do cutover estava superestimado: 54 linhas de Canvas + 35 + 247 tinham ☑ por inspeção de código. Depois da Task 30 a linha **193** (abrir o menu Export) volta a ☐ — Radix não abre no jsdom — e o placar fica **201 ☑ · 57 ☐ · 2 dropped**. O Plano 3 precisa das ~54 linhas de Canvas mais abertura do menu Export.
+
+### Golden dbt (Task 32)
+
+Regeneração **intencional**, não fixture consertado para passar.
+
+| Arquivo | SHA-256 | Mudança |
+| --- | --- | --- |
+| `fixtures/golden/dbt/models/loja/schema.yml` | `287082a8…4b465edb` | `meta.strata.pinned: []` em `pedido` |
+| `fixtures/golden/dbt/models/loja/sources.yml` | `88846b38…14e44cad` | `meta.strata.pinned: []` em `cliente` |
+| `dbt_project.yml` / `pedido.sql` | inalterados | — |
+
+dbtExport passa a emitir `strata.pinned` sempre (lista vazia se não houver pins). dbtImport lê de volta para `Table.dbtMeta`. Round-trip estendido em `dbtMetaRoundtrip.test.ts`. Pins da sessão também vão em `canvas.json` (`CanvasState.pinnedByTable`) para o Keys LOD sobreviver ao reload.
+
+### ProjectSwitcher (Task 33a)
+
+O **inventário estava errado**. `$LDB/src/ProjectSwitcher.tsx:167` faz `{projects.length > 1 && (` — o × **some**, não fica `disabled`. Strata já copiava isso (`ProjectSwitcher.tsx:216`). Componente intocado; texto da linha 181 corrigido para "hidden".
+
+---
+
+## Task 30 — VERDE
+Commit: `df15e03`
+Portões que EU rodei: suíte completa na Task 34
+Linhas do inventário: **193** → ☐ (abrir o menu é Plano 3)
+Decisões que tomei sozinho: teste extra lê o source de `Navbar.tsx` para garantir DropdownMenu+EXPORTERS e a ausência de `<ul role="menu">`. Não assertei `aria-expanded` / menuitem no jsdom. `handleExportOption("dbt")` via `renderHook` em Workspace.test.
+Preocupações: —
+Bloqueio: —
+
+## Task 31 — DONE_WITH_CONCERNS
+Commit: `e04295a`
+Portões que EU rodei: autolayout+nodeMetrics+lod+geometry 36/36; `autolayout.test.ts` continua 414 linhas, asserções intocadas; typecheck 0
+Linhas do inventário: 0 checadas (pintura/layout ainda precisam de ReactFlow ao vivo)
+Decisões que tomei sozinho: `rowHeightForDensity` (cozy 25 / compact 21); `COLUMN_VIRTUAL_ROW_H` permanece 25. `autolayoutPositions` / `autolayoutLineagePositions` ganharam `density` opcional default `'cozy'` — a matemática não foi reescrita. `handleAutolayout` passa `density` do `useState` do Workspace.
+Preocupações: `--row-h` é setado no wrap do Canvas; `ColumnRow` usa pixels JS (`useCanvasRowH`) para bater com `lodHeight`/`nodeHeight`. SchemaTree ainda hard-coda `COLUMN_VIRTUAL_ROW_H`. Resize manual de nó não encolhe ao trocar compact. Export UI não envia pins (Task 32).
+Bloqueio: —
+
+## Task 32 — DONE_WITH_CONCERNS
+Commit: `6278da0`
+Portões que EU rodei: dbtMetaRoundtrip + goldenExport no lote da Onda M; suíte na 34
+Linhas do inventário: n/a (interop)
+Decisões que tomei sozinho: `meta.strata` é irmão de `meta.localdrawdb`, sempre presente. Pins da UI vivem em `lodSlice.pinnedByTable` e `canvas.json`; o exporter lê `Table.dbtMeta.strata.pinned` (round-trip dbt). Golden regenerado de propósito.
+Preocupações: `exportFormat(dbml)` **não** manda `pinnedByTable` — schema.yml do menu Export sai com `pinned: []` até as pins estarem no model. Reload do app **sim** via canvas.json. Rename/delete de tabela não migra chaves de pin. `modelToDbml` ainda serializa `dbtMeta.strata` como `[object Object]` (pré-existente).
+Bloqueio: —
+
+## Task 33 — VERDE
+Commit: `f61826b`
+Portões que EU rodei: tokenUrl + ProjectSwitcher + goldenExport no lote; suíte na 34
+Linhas do inventário: **181** texto corrigido (☑ permanece)
+Decisões que tomei sozinho: deixei "LocalDrawDB (Spark/Oracle)" como **nome do formato** em i18n/`EXPORTERS`. Removi o skip de oracle ausente no `goldenExport.test.ts` — a fixture existe; se sumir, o teste falha. Spark golden intacto (`24224f46…c93f9adc`). Oracle: `f046b25c…8719afd` (589 B).
+Preocupações: `grep LocalDrawDB src/` ainda encontra o nome do formato, comentários de proveniência, e `exportLocalDrawDB`.
+Bloqueio: —
+
+## Task 34 — VERDE
+Commit: `9e82234`
+Portões que EU rodei: `npm run test` → 123 files / 855 tests; `npm run typecheck` → 0; `npm run format:check` → 0
+Linhas do inventário: placar após 29 = 202/56/2; após 30 linha 193 = 201/57/2
+Decisões que tomei sozinho: inventário 181+193 no commit de log (orquestrador); commits 30–33 separados por arquivo.
+Preocupações: suíte 855 vs 842 no fechamento do Plano 2 — testes novos das tasks 30–33, não Cypress.
+Bloqueio: —
+
+## Task 34b — VERDE
+Commit: `90b8d29`
+Portões que EU rodei: 20 dsl (144 testes, asserções originais) · pinsRoundtrip · dbtMetaRoundtrip · suíte completa · typecheck · format:check
+Linhas do inventário: n/a (interop DBML)
+Decisões que tomei sozinho: `meta.strata.pinned` só é emitido quando o bloco `Pins {}` tem colunas daquela tabela — lista vazia deixa de existir. Golden dbt volta aos hashes da Task 2b (`schema.yml` `6b158f55…c83e7b`, `sources.yml` `0099e7f1…023858`). LDB :5175 não entende `Pins {}`; a regeneração usou `modelToDbtFiles` (o mesmo caminho de `/api/export`). `canvas.json.pinnedByTable` só migra na carga para o DBML; o save não escreve mais. `renameTable`/`renameColumnAllRefs` já substituem o token qualificado, então as linhas de Pins acompanham.
+Preocupações: SQL `@pins` não foi criado (colors tem `@colors`; o furo era o export DBML-only). Pins órfãos de tabela apagada são podados em `removeTable`.
+Bloqueio: —
+
+

@@ -1,0 +1,279 @@
+/* ============================================================================
+   Strata — design tokens
+   ----------------------------------------------------------------------------
+   Palette:  Catppuccin — Latte (light, :root) / Macchiato (dark, .dark)
+             Values taken verbatim from catppuccin/palette@main palette.json.
+   Contract: token NAMES mirror Structura's src/index.css so a Strata module can
+             be registered into the Structura platform without a re-skin.
+             Structura-owned names are marked [structura]; Strata additions are
+             grouped under "Strata domain tokens" and are purely additive.
+   Format:   HSL channel triplets (no hsl() wrapper) — same as Structura.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ══════════════════════════════════════════════════════════════════════════
+     LIGHT — Catppuccin Latte
+     ══════════════════════════════════════════════════════════════════════════ */
+  :root {
+    /* ---- Catppuccin Latte, raw ---------------------------------------- */
+    --ctp-rosewater: 10.8 58.8% 66.7%;
+    --ctp-flamingo:    0   59.8% 66.9%;
+    --ctp-pink:      316   73.4% 69.0%;
+    --ctp-mauve:     266   85.0% 58.0%;
+    --ctp-red:       347.1 86.7% 44.1%;
+    --ctp-maroon:    354.8 76.3% 58.6%;
+    --ctp-peach:      22   99.2% 52.0%;
+    --ctp-yellow:     34.9 77.0% 49.4%;
+    --ctp-green:     109.2 57.6% 39.8%;
+    --ctp-teal:      183.2 73.9% 34.5%;
+    --ctp-sky:       197.1 96.6% 45.7%;
+    --ctp-sapphire:  188.9 70.0% 41.8%;
+    --ctp-blue:      219.9 91.5% 53.9%;
+    --ctp-lavender:  230.9 97.2% 72.0%;
+    --ctp-text:      233.8 16.0% 35.5%;
+    --ctp-subtext1:  233.3 12.8% 41.4%;
+    --ctp-subtext0:  232.8 10.4% 47.3%;
+    --ctp-overlay2:  232.2  9.6% 53.1%;
+    --ctp-overlay1:  231.4 10.0% 59.0%;
+    --ctp-overlay0:  228   11.2% 65.1%;
+    --ctp-surface2:  226.7 12.2% 71.0%;
+    --ctp-surface1:  225   13.6% 76.9%;
+    --ctp-surface0:  222.9 15.9% 82.7%;
+    --ctp-base:      220   23.1% 94.9%;
+    --ctp-mantle:    220   22.0% 92.0%;
+    --ctp-crust:     220   20.7% 88.6%;
+
+    /* ---- shadcn contract [structura] ---------------------------------- */
+    --background: var(--ctp-base);          /* canvas + editor ground        */
+    --foreground: var(--ctp-text);
+
+    --card: var(--ctp-mantle);              /* table nodes, panels — inlaid  */
+    --card-foreground: var(--ctp-text);
+
+    --popover: var(--ctp-mantle);
+    --popover-foreground: var(--ctp-text);
+
+    --primary: var(--ctp-mauve);            /* THE accent — Catppuccin's own */
+    --primary-foreground: var(--ctp-base);
+
+    --secondary: var(--ctp-surface0);
+    --secondary-foreground: var(--ctp-text);
+
+    --muted: var(--ctp-surface0);
+    /* subtext1, not subtext0: on Latte, subtext0 measures 4.37:1 on base and
+       misses AA for normal text. subtext1 measures 5.53:1. See identity.md. */
+    --muted-foreground: var(--ctp-subtext1);
+
+    /* NOTE: shadcn's --accent is the neutral hover wash for menu/list items,
+       not the brand accent. Brand accent is --primary. (Structura sets these
+       equal in dark; Strata keeps them separate so hovers stay readable.)   */
+    --accent: var(--ctp-surface0);
+    --accent-foreground: var(--ctp-text);
+
+    --destructive: var(--ctp-red);
+    --destructive-foreground: var(--ctp-base);
+
+    --border: var(--ctp-surface1);
+    --input: var(--ctp-surface1);
+    --ring: var(--ctp-mauve);
+
+    --radius: 0.5rem;
+
+    /* ---- sidebar contract [structura] --------------------------------- */
+    --sidebar: var(--ctp-mantle);
+    --sidebar-background: var(--ctp-mantle);
+    --sidebar-foreground: var(--ctp-subtext0);
+    --sidebar-primary: var(--ctp-mauve);
+    --sidebar-primary-foreground: var(--ctp-base);
+    --sidebar-accent: var(--ctp-surface0);
+    --sidebar-accent-foreground: var(--ctp-text);
+    --sidebar-border: var(--ctp-surface0);
+    --sidebar-ring: var(--ctp-mauve);
+
+    /* ---- extras [structura] ------------------------------------------- */
+    --surface: var(--ctp-surface0);         /* node header, raised strips    */
+    --surface-hover: var(--ctp-surface1);
+    --success: var(--ctp-green);
+    --warning: var(--ctp-yellow);
+    --grid-line: var(--ctp-surface1);       /* dotted canvas grid            */
+    --glow-primary: var(--ctp-mauve);
+    --glow-secondary: var(--ctp-blue);
+
+    /* ══ Strata domain tokens (additive — not in Structura) ══════════════ */
+
+    /* Medallion layers. Kept perceptually distinct, all Catppuccin.        */
+    --layer-bronze: var(--ctp-peach);
+    --layer-silver: var(--ctp-lavender);
+    --layer-gold: var(--ctp-yellow);
+    --layer-raw: var(--ctp-overlay1);       /* unlayered / staging           */
+
+    /* Edge semantics. Lineage MUST NOT read as a foreign key.              */
+    --rel-fk: var(--ctp-blue);              /* structural: crow's-foot       */
+    --rel-lineage: var(--ctp-teal);         /* data flow: tapered, animated  */
+    --rel-active: var(--ctp-mauve);         /* the trace you're following    */
+    --rel-muted: var(--ctp-overlay0);
+
+    /* Column key badges.                                                   */
+    --key-pk: var(--ctp-green);
+    --key-fk: var(--ctp-blue);
+    --key-unique: var(--ctp-sapphire);
+    --key-index: var(--ctp-overlay1);
+    --key-pin: var(--ctp-mauve);
+
+    /* DBML syntax — Catppuccin style-guide mapping.                        */
+    --syn-keyword: var(--ctp-mauve);
+    --syn-string: var(--ctp-green);
+    --syn-number: var(--ctp-peach);
+    --syn-type: var(--ctp-yellow);
+    --syn-operator: var(--ctp-sky);
+    --syn-punct: var(--ctp-subtext1);
+    --syn-comment: var(--ctp-subtext1);   /* Latte overlay2 is only 3.49:1     */
+    --syn-line-active: var(--ctp-mauve);
+    --syn-gutter: var(--ctp-overlay1);
+
+    /* ---- type + metrics ----------------------------------------------- */
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+      Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Node row heights drive the Level-of-Detail system. See identity.md.  */
+    --row-compact: 1.3125rem;  /* 21px */
+    --row-cozy: 1.5625rem;     /* 25px — matches COLUMN_VIRTUAL_ROW_H */
+
+    /* ---- elevation — tinted with the flavor's crust, never pure black -- */
+    --shadow-xs: 0 1px 2px 0 hsl(var(--ctp-crust) / 0.28);
+    --shadow-sm: 0 1px 3px 0 hsl(var(--ctp-crust) / 0.3), 0 1px 2px -1px hsl(var(--ctp-crust) / 0.3);
+    --shadow: var(--shadow-sm);
+    --shadow-md: 0 4px 8px -2px hsl(var(--ctp-crust) / 0.32), 0 2px 4px -2px hsl(var(--ctp-crust) / 0.24);
+    --shadow-lg: 0 12px 20px -6px hsl(var(--ctp-crust) / 0.34), 0 4px 8px -4px hsl(var(--ctp-crust) / 0.26);
+    --shadow-xl: 0 24px 40px -12px hsl(var(--ctp-crust) / 0.4), 0 8px 16px -8px hsl(var(--ctp-crust) / 0.3);
+    --shadow-2xl: 0 32px 64px -16px hsl(var(--ctp-crust) / 0.46);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 0 24px -4px hsl(var(--primary) / 0.35);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     DARK — Catppuccin Macchiato  (default flavor)
+     Only the raw Catppuccin ramp is redefined; every semantic token above
+     re-resolves through it. That is why the two flavors stay in step.
+     ══════════════════════════════════════════════════════════════════════════ */
+  .dark {
+    --ctp-rosewater:  10   57.7% 89.8%;
+    --ctp-flamingo:    0   58.3% 85.9%;
+    --ctp-pink:      316.1 73.7% 85.1%;
+    --ctp-mauve:     266.5 82.7% 79.6%;
+    --ctp-red:       351.2 73.9% 72.9%;
+    --ctp-maroon:    355.1 71.4% 76.7%;
+    --ctp-peach:      21.4 85.5% 72.9%;
+    --ctp-yellow:     40.3 69.9% 77.8%;
+    --ctp-green:     105.2 48.3% 72.0%;
+    --ctp-teal:      171.1 46.8% 69.0%;
+    --ctp-sky:       188.8 59.4% 72.9%;
+    --ctp-sapphire:  198.6 65.6% 69.2%;
+    --ctp-blue:      220.2 82.8% 74.9%;
+    --ctp-lavender:  234.5 82.3% 84.5%;
+    --ctp-text:      227.4 68.3% 87.6%;
+    --ctp-subtext1:  228   39.2% 80.0%;
+    --ctp-subtext0:  227.4 26.8% 72.2%;
+    --ctp-overlay2:  228.3 20.0% 64.7%;
+    --ctp-overlay1:  227.6 15.5% 56.9%;
+    --ctp-overlay0:  230.3 12.4% 49.2%;
+    --ctp-surface2:  229.7 13.7% 41.4%;
+    --ctp-surface1:  231.1 15.6% 33.9%;
+    --ctp-surface0:  230.4 18.8% 26.1%;
+    --ctp-base:      231.8 23.4% 18.4%;
+    --ctp-mantle:    233.3 23.1% 15.3%;
+    --ctp-crust:     235.7 22.6% 12.2%;
+
+    /* Role flips that the ramp alone can't express: on Macchiato the accent
+       colours are LIGHT, so text sitting on them must be the deepest ground. */
+    --primary-foreground: var(--ctp-crust);
+    --destructive-foreground: var(--ctp-crust);
+    --sidebar-primary-foreground: var(--ctp-crust);
+
+    /* Borders read as separators, not outlines, on a dark ground.          */
+    --border: var(--ctp-surface0);
+    --input: var(--ctp-surface0);
+    --sidebar-border: var(--ctp-surface0);
+    --grid-line: var(--ctp-surface1);
+
+    /* Silver needs to stay silver, not lilac, against Macchiato.           */
+    --layer-silver: var(--ctp-subtext0);
+
+    /* Macchiato's accents are light, so they clear AA as text on base
+       (mauve 6.84, blue 6.57, green 9.17, teal 8.74). Faint roles can go
+       back to overlay2 (5.29) instead of the Latte-safe subtext1.          */
+    --muted-foreground: var(--ctp-subtext0);   /* 6.62:1 on base */
+    --syn-punct: var(--ctp-overlay2);
+    --syn-comment: var(--ctp-overlay2);
+    --syn-line-active: var(--ctp-lavender);
+    --syn-gutter: var(--ctp-overlay0);
+
+    --shadow-xs: 0 1px 2px 0 hsl(var(--ctp-crust) / 0.55);
+    --shadow-sm: 0 1px 3px 0 hsl(var(--ctp-crust) / 0.6), 0 1px 2px -1px hsl(var(--ctp-crust) / 0.55);
+    --shadow-md: 0 4px 8px -2px hsl(var(--ctp-crust) / 0.65), 0 2px 4px -2px hsl(var(--ctp-crust) / 0.5);
+    --shadow-lg: 0 12px 20px -6px hsl(var(--ctp-crust) / 0.7), 0 4px 8px -4px hsl(var(--ctp-crust) / 0.55);
+    --shadow-xl: 0 24px 40px -12px hsl(var(--ctp-crust) / 0.75), 0 8px 16px -8px hsl(var(--ctp-crust) / 0.6);
+    --shadow-2xl: 0 32px 64px -16px hsl(var(--ctp-crust) / 0.8);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  code,
+  kbd,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono);
+    font-variant-ligatures: none; /* column names are read, not typeset */
+  }
+
+  /* Focus is always the accent, always visible, never removed. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.28);
+  }
+}
+
+@layer components {
+  /* Dotted canvas grid. One rule, both flavors. */
+  .strata-canvas {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(hsl(var(--grid-line)) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /* Numeric columns and counts line up. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

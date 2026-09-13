@@ -1,0 +1,26 @@
+{
+  "activeId": "b290a0e65d1e433a",
+  "projects": [
+    {
+      "id": "b290a0e65d1e433a",
+      "name": "smoke",
+      "slug": "smoke",
+      "createdAt": "2026-09-11T13:31:09.050Z",
+      "updatedAt": "2026-09-11T13:31:09.050Z"
+    },
+    {
+      "id": "ab3c62d9ffe04935",
+      "name": "wide",
+      "slug": "wide",
+      "createdAt": "2026-09-11T13:31:09.062Z",
+      "updatedAt": "2026-09-11T13:31:09.062Z"
+    },
+    {
+      "id": "3b5ac1d083ee471f",
+      "name": "large",
+      "slug": "large",
+      "createdAt": "2026-09-11T13:31:09.070Z",
+      "updatedAt": "2026-09-11T13:31:09.070Z"
+    }
+  ]
+}

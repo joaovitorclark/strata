@@ -1,0 +1,146 @@
+/* Token-based edge language. Class names are a contract with edgeFocus.ts /
+   useCanvasEdges.ts — do not rename. Colours: hsl(var(--rel-*)) only. */
+
+@keyframes lineage-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* ── defaults (path classes applied by the edge components) ─────────────── */
+
+.react-flow__edge .react-flow__edge-path.edge-path--fk {
+  stroke: hsl(var(--rel-fk));
+  fill: none;
+}
+
+.react-flow__edge .react-flow__edge-path.edge-path--lineage,
+.react-flow__edge.edge--lineage .react-flow__edge-path {
+  stroke: hsl(var(--rel-lineage));
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 8 4;
+  animation: lineage-flow 1.1s linear infinite;
+}
+
+.react-flow__edge .react-flow__edge-path.edge-path--field-lineage,
+.react-flow__edge.edge--field-lineage .react-flow__edge-path {
+  stroke: hsl(var(--rel-lineage));
+  fill: none;
+  stroke-dasharray: 6 6;
+  animation: lineage-flow 1.1s linear infinite;
+}
+
+/* ── edgeFocus / useCanvasEdges class names (verbatim) ──────────────────── */
+
+.react-flow__edge.edge--highlight .react-flow__edge-path {
+  stroke: hsl(var(--rel-active));
+  filter: drop-shadow(0 0 3px hsl(var(--rel-active)));
+}
+
+.react-flow__edge.edge--highlight.edge--lineage .react-flow__edge-path {
+  stroke: hsl(var(--rel-active));
+  filter: drop-shadow(0 0 3px hsl(var(--rel-active)));
+  stroke-linecap: round;
+  stroke-dasharray: 8 4;
+  animation: lineage-flow 1.1s linear infinite;
+}
+
+.react-flow__edge.edge--highlight.edge--field-lineage .react-flow__edge-path {
+  stroke: hsl(var(--rel-active));
+  filter: drop-shadow(0 0 3px hsl(var(--rel-active)));
+  stroke-dasharray: 6 6;
+  animation: lineage-flow 1.1s linear infinite;
+}
+
+.react-flow__edge.edge--muted:not(.selected) {
+  opacity: 0.35;
+}
+
+.react-flow__edge.edge--muted:not(.selected) .react-flow__edge-path {
+  stroke: hsl(var(--rel-muted));
+}
+
+.react-flow__edge.edge--dimmed:not(.selected) {
+  opacity: 0.2;
+}
+
+.react-flow__edge.edge--field-lineage.edge--field-lineage-soft .react-flow__edge-path {
+  opacity: 0.32;
+}
+
+.react-flow__edge.edge--external .react-flow__edge-path {
+  stroke: hsl(var(--rel-muted));
+  stroke-dasharray: 5 4;
+}
+
+.react-flow__edge.edge--external.edge--highlight .react-flow__edge-path {
+  stroke: hsl(var(--rel-active));
+}
+
+/* xyflow sets .animated on highlighted relation + lineage edges. FK must never
+   move; lineage uses lineage-flow, not xyflow's dashdraw. */
+.react-flow__edge.animated:not(.edge--lineage):not(.edge--field-lineage) .react-flow__edge-path {
+  animation: none;
+  stroke-dasharray: none;
+}
+
+.react-flow__edge.selected:not(.edge--dimmed) {
+  opacity: 1;
+}
+
+/* ── labels / delete (token restyle of LDB chrome) ──────────────────────── */
+
+.edge-external-label,
+.lineage-label {
+  position: absolute;
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: hsl(var(--card));
+  color: hsl(var(--rel-lineage));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+.edge-external-label--detail {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: hsl(var(--muted-foreground));
+}
+
+.lineage-label--active {
+  border-color: hsl(var(--rel-active));
+  color: hsl(var(--rel-active));
+  font-weight: 600;
+}
+
+.edge-delete {
+  position: absolute;
+  pointer-events: all;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--destructive));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.edge-delete:hover {
+  background: hsl(var(--surface-hover));
+}
+
+.lineage-label .edge-delete {
+  position: static;
+}

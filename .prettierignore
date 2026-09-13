@@ -1,0 +1,37 @@
+# ── Ignorado permanentemente ────────────────────────────────
+# Artefatos de comparação byte-a-byte. Formatar destrói o portão de paridade.
+fixtures/
+# Gerado pelo shadcn: regenerar pela CLI, nunca editar nem reformatar à mão.
+src/components/ui/
+node_modules/
+dist/
+.superpowers/
+cypress/fixtures/data/
+cypress/reports/
+cypress/screenshots/
+cypress/videos/
+
+# ── Ignorado ATÉ o fim do Stage 6 ───────────────────────────
+# Porte verbatim do LocalDrawDB. A regra do verbatim permite Prettier, mas um
+# reformat de 225 arquivos enterraria toda mudança real em ruído pelo resto da
+# migração. Um commit mecânico de prettier --write depois da paridade
+# verificada, e aí estas linhas saem daqui.
+server/
+scripts/
+examples/
+src/features/schema/model/
+src/features/schema/__tests__/
+src/infrastructure/api/client.ts
+src/infrastructure/api/types.ts
+src/features/canvas/utils/
+src/features/canvas/hooks/
+src/features/canvas/store/
+src/features/canvas/actions.ts
+src/features/canvas/__tests__/
+# Cópia de design-system/globals.css (proveniência + valores). Não reformatar.
+src/index.css
+
+# ── Prosa escrita à mão; Prettier reflui tabelas e quebra a intenção ──
+docs/
+design-system/
+AGENTS.md

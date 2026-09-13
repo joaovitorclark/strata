@@ -1,0 +1,25 @@
+version: 2
+sources:
+  - name: loja
+    schema: loja
+    tables:
+      - name: cliente
+        description: Dimensão de clientes
+        meta:
+          localdrawdb:
+            schema: loja
+            layer: bronze
+            layerColor: '#b08d57'
+            group: vendas
+            pk:
+              - id
+        columns:
+          - name: id
+            data_type: bigint
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+          - name: email
+            data_type: string

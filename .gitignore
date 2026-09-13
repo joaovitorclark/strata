@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-win/
+.cache/
+.DS_Store
+*.local
+data/
+.e2e-data/
+.e2e-data-*/
+cypress/reports/
+cypress/screenshots/
+cypress/videos/
+# `data/` matches ANY directory named data, including cypress/fixtures/data/.
+# Negations must come after that rule so the committed fixtures are tracked.
+!cypress/fixtures/data/
+!cypress/fixtures/data/**

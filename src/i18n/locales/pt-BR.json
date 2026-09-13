@@ -1,0 +1,248 @@
+{
+  "app": { "name": "Strata" },
+  "theme": { "dark": "Escuro", "light": "Claro" },
+  "common": { "cancel": "Cancelar", "save": "Salvar", "close": "Fechar" },
+  "shell": {
+    "breadcrumb": "Projeto",
+    "search": "Buscar",
+    "themeToggle": "Alternar tema",
+    "export": "Exportar",
+    "exportFormatDbt": "dbt",
+    "share": "Compartilhar",
+    "avatar": "Conta",
+    "loading": "Carregando…",
+    "backToDomains": "← Domínios",
+    "help": "Atalhos e gestos",
+    "addTable": "+ Tabela",
+    "addTablePrompt": "Nome da nova tabela (schema.tabela):",
+    "addMetadata": "+ Metadados",
+    "importInput": "Importar (input/)",
+    "organizeDbml": "Organizar DBML",
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "autosave": "Auto-salvar",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "saveError": "Erro",
+    "diff": "Diff",
+    "rail": {
+      "tables": "Tabelas",
+      "layers": "Camadas",
+      "lineage": "Linhagem",
+      "code": "Código",
+      "search": "Buscar",
+      "settings": "Configurações"
+    },
+    "problems": "Problemas",
+    "problemsLabel": "Problemas {{count}}",
+    "dbml": "DBML",
+    "zoomOut": "Reduzir zoom",
+    "zoomIn": "Aumentar zoom",
+    "fitView": "Ajustar à tela",
+    "density": "Densidade",
+    "densityCompact": "Compacto",
+    "densityCozy": "Confortável",
+    "schemaTree": {
+      "title": "Esquema",
+      "ungrouped": "public"
+    },
+    "inspector": {
+      "title": "Propriedades",
+      "empty": "Selecione uma tabela",
+      "close": "Fechar inspetor",
+      "table": "Tabela",
+      "layer": "Camada",
+      "noLayer": "Sem camada",
+      "columns": "Colunas",
+      "primaryKey": "Chave primária",
+      "foreignKeys": "Chaves estrangeiras",
+      "materialization": "Materialização",
+      "tags": "Tags",
+      "colour": "Cor",
+      "noColour": "Sem cor",
+      "sources": "Sources (linhagem)",
+      "sample": "Exemplo de dados",
+      "referencedBy": "referenciada por",
+      "comments": "Comentários",
+      "resourceType": "Tipo",
+      "column": "Coluna"
+    }
+  },
+  "canvas": {
+    "edges": {
+      "removeRelation": "Remover relação",
+      "removeLineage": "Remover linhagem",
+      "derivedFrom": "derivado de",
+      "externalLinks": "{{count}} ligações → {{label}}"
+    }
+  },
+  "source": {
+    "outline": "Outline",
+    "outlineFilter": "Filtrar blocos…",
+    "outlineResize": "Redimensionar painel de outline",
+    "format": "Formatar",
+    "copy": "Copiar",
+    "placeholder": "Defina suas tabelas em DBML…\n\nTable schema.tabela {\n  id bigint [pk]\n  nome string\n}",
+    "errorGoTo": "Ir para linha do erro",
+    "diff": "Diff",
+    "diffTitle": "Diff DBML",
+    "rename": {
+      "title": "Confirmar renomeação",
+      "hint": "Atualiza {{count}} referência(s) no total.",
+      "refs": "{{count}} referência(s)",
+      "apply": "Aplicar",
+      "keepSeparate": "Manter separado"
+    }
+  },
+  "panels": {
+    "records": {
+      "toggle": "Dados (amostra) · {{count}} tabela(s)",
+      "tableNote": "Nota da tabela",
+      "tableNotePlaceholder": "Descrição ou contexto da tabela…",
+      "columnNote": "Nota · {{column}}",
+      "columnNotePlaceholder": "Descrição da coluna…",
+      "l1Title": "Origem L1",
+      "l2Title": "Origem L2 (campo)",
+      "constraints": "Constraints",
+      "via": "via {{col}}",
+      "goTo": "Ir para {{table}}",
+      "rows": "{{count}} linhas"
+    },
+    "statusLog": {
+      "tooltip": "Histórico de status (últimos 100)",
+      "empty": "Sem registros nesta sessão"
+    },
+    "pageImport": {
+      "title": "Diagrama grande ({{count}} tabelas)",
+      "body": "O modelo completo fica no editor. Marque os assuntos (TableGroups) que deseja abrir no canvas — nada vem selecionado por padrão para evitar travar a interface.",
+      "legend": "Assuntos no canvas",
+      "allTables": "Todas as tabelas (pode ficar lento)",
+      "openCanvas": "Abrir canvas",
+      "later": "Depois"
+    },
+    "columnMappings": {
+      "title": "Mapeamentos (L2)",
+      "empty": "Nenhum mapeamento para este campo",
+      "edit": "Editar mapeamento",
+      "new": "Novo mapeamento",
+      "remove": "Remover mapeamento",
+      "sourceTable": "Tabela origem",
+      "sourceColumn": "Coluna origem",
+      "choose": "— escolher —",
+      "dash": "—",
+      "etlNote": "Nota ETL",
+      "etlPlaceholder": "regra de negócio",
+      "ref": "Ref (sql/py)",
+      "refPlaceholder": "jobs/transform.sql",
+      "add": "+ mapeamento"
+    }
+  },
+  "domains": {
+    "git": {
+      "operations": "Operações git",
+      "current": "{{name}} (atual)",
+      "newBranch": "nova-branch",
+      "createBranch": "Criar branch",
+      "commitMessage": "mensagem do commit",
+      "commit": "commit",
+      "commitRequired": "Mensagem de commit é obrigatória.",
+      "pull": "pull",
+      "push": "push",
+      "openPr": "Abrir PR",
+      "credentials": "Credenciais",
+      "switched": "Na branch {{name}}.",
+      "committed": "Commit criado.",
+      "pulled": "Atualizado.",
+      "pushed": "Enviado.",
+      "noPrUrl": "Sem link automático para este host — faça push e abra o PR manualmente.",
+      "fallbackHost": "seu provedor git"
+    },
+    "picker": {
+      "choose": "Escolha um domínio",
+      "back": "← Domínios",
+      "newLocal": "+ Novo domínio local",
+      "cloneRepo": "+ Clonar repositório",
+      "domainName": "Nome do domínio",
+      "repoUrl": "URL do repositório (https ou ssh)",
+      "create": "Criar",
+      "removeTitle": "Remover deste computador",
+      "removeAria": "Remover {{name}}",
+      "removeConfirm": "Apagar \"{{name}}\" deste computador? O repositório no GitHub não será alterado.",
+      "attachRepo": "Anexar repositório",
+      "attachTitle": "Versionar este domínio com git",
+      "remoteOptional": "URL do remote (opcional — https ou ssh)",
+      "confirm": "Confirmar",
+      "newProject": "Nome do novo projeto",
+      "newProjectButton": "+ Novo projeto"
+    },
+    "credentials": {
+      "title": "Configurar acesso a {{host}}",
+      "intro": "Para publicar/atualizar por HTTPS, {{host}} pede um <bold>token de acesso pessoal</bold> no lugar de senha. Gere um token e cole abaixo.",
+      "openTokenPage": "Abrir página de criar token em {{host}}",
+      "unknownHost": "Gere um token de acesso pessoal com permissão de repositório no seu provedor ({{host}}).",
+      "username": "Usuário",
+      "token": "Token"
+    }
+  },
+  "projects": {
+    "switch": "Trocar projeto",
+    "pinnedTitle": "Instância fixada neste projeto (porta dedicada)",
+    "rename": "Renomear",
+    "renameProject": "Renomear projeto",
+    "duplicate": "Duplicar",
+    "delete": "Excluir",
+    "unsaved": "Não salvo",
+    "renamePrompt": "Novo nome do projeto:",
+    "createPrompt": "Nome do novo projeto:",
+    "duplicatePrompt": "Nome do projeto duplicado:",
+    "duplicateDefault": "{{name}} (cópia)",
+    "deleteConfirm": "Excluir o projeto \"{{name}}\"? Esta ação não pode ser desfeita."
+  },
+  "palette": {
+    "ariaLabel": "Command palette",
+    "placeholder": "Buscar tabela, coluna ou ação…",
+    "empty": "Nenhum resultado",
+    "kind": {
+      "table": "Tabela",
+      "column": "Coluna",
+      "action": "Ação"
+    }
+  },
+  "command": {
+    "save": "Salvar",
+    "organizeDbml": "Organizar DBML",
+    "organizeCanvas": "Organizar canvas",
+    "importInput": "Importar (input/)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "enableAutosave": "Ligar Auto-save",
+    "disableAutosave": "Desligar Auto-save",
+    "toggleLineageMode": "Alternar modo linhagem",
+    "toggleLineageModeActive": "Alternar modo linhagem",
+    "openLayersPanel": "Abrir painel Camadas",
+    "closeLayersPanel": "Fechar painel Camadas",
+    "openRecordsPanel": "Abrir painel Dados",
+    "closeRecordsPanel": "Fechar painel Dados",
+    "openProblemsPanel": "Abrir painel Problemas",
+    "closeProblemsPanel": "Fechar painel Problemas"
+  },
+  "export": {
+    "dbt": "Exportar dbt",
+    "sparkDdl": "Exportar Spark DDL",
+    "oracleDdl": "Exportar Oracle DDL",
+    "postgresDdl": "Exportar PostgreSQL DDL",
+    "erwin": "Exportar erwin (ANSI)",
+    "mermaid": "Exportar Mermaid",
+    "xlsx": "Exportar Dicionário de dados (XLSX)",
+    "llmContext": "Exportar Contexto para LLM (Markdown+JSON)",
+    "localdrawdbSpark": "Exportar LocalDrawDB (Spark)",
+    "localdrawdbOracle": "Exportar LocalDrawDB (Oracle)"
+  },
+  "help": {
+    "title": "Atalhos e gestos",
+    "shortcuts": "Atalhos",
+    "gestures": "Gestos do canvas",
+    "close": "Fechar"
+  }
+}

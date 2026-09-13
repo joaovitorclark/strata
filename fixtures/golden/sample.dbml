@@ -1,0 +1,28 @@
+TableGroup vendas {
+  loja.cliente
+  loja.pedido
+}
+
+LayerGroup bronze [color: #b08d57] {
+  loja.cliente
+}
+
+Table loja.cliente {
+  id bigint [pk]
+  nome string
+  email string
+  Note: 'Dimensão de clientes'
+}
+
+Table loja.pedido {
+  id bigint [pk]
+  cliente_id bigint
+  total decimal(18,2)
+  criado_em timestamp
+}
+
+Ref: loja.pedido.cliente_id > loja.cliente.id
+
+Lineage {
+  loja.pedido < loja.cliente
+}
