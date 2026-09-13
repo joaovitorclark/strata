@@ -1,8 +1,9 @@
 // Arestas do canvas: rebuild estrutural separado do highlight (Fase 3 perf).
-import { useEffect, useLayoutEffect, useRef } from "react";
-import type { Edge } from "@xyflow/react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useStore, type Edge } from "@xyflow/react";
 import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
-import type { LodState } from "@/features/canvas/utils/lod";
+import { resolveLod, type LodState } from "@/features/canvas/utils/lod";
+import { useSchemaStore } from "@/features/schema/store";
 import {
   EXTERNAL_SOURCE_HANDLE,
   EXTERNAL_TARGET_HANDLE,
@@ -28,14 +29,50 @@ export const AGGREGATED_LINEAGE_PREFIX = "fla:";
 export const AGGREGATED_SOURCE_HANDLE = "agg-s";
 export const AGGREGATED_TARGET_HANDLE = "agg-t";
 
+let flowZoom = 1;
+const flowZoomListeners = new Set<() => void>();
+
+function subscribeFlowZoom(onStoreChange: () => void) {
+  flowZoomListeners.add(onStoreChange);
+  return () => {
+    flowZoomListeners.delete(onStoreChange);
+  };
+}
+
+function publishFlowZoom(next: number) {
+  if (flowZoom === next) return;
+  flowZoom = next;
+  for (const listener of flowZoomListeners) listener();
+}
+
+/**
+ * Reads xyflow `transform[2]`. Must run under `<ReactFlow>` (column rows / edges).
+ * `useCanvasEdges` lives in the Canvas parent and consumes the bridged value.
+ */
+export function useFlowZoom(): number {
+  const zoom = useStore((s) => s.transform[2]);
+  useLayoutEffect(() => {
+    publishFlowZoom(zoom);
+  }, [zoom]);
+  return zoom;
+}
+
+function useBridgedFlowZoom(): number {
+  return useSyncExternalStore(subscribeFlowZoom, () => flowZoom, () => 1);
+}
+
 export type EdgeBuildInput = {
   parsed: ParseResult;
   aggregatedCrossLinks: AggregatedCrossLink[];
   lineageFields: ParsedFieldLineage[];
-  lodByTable: Record<string, LodState>;
+  /** Ignored when present — LOD is resolved inside the hook from viewport + store. */
+  lodByTable?: Record<string, LodState>;
+  /** Optional unused: S02 merge may still pass table-level links. */
+  lineage?: ReadonlyArray<{ source: string; target: string }>;
   positions: Record<string, { x: number; y: number }>;
   relationsVisible: boolean;
-  lineageVisible: boolean;
+  lineageVisible?: boolean;
+  showLineageEdges?: boolean;
   lineageMode: boolean;
   focusTables: string[];
   focusedFieldMapping: FocusFieldMapping;
@@ -201,7 +238,8 @@ function buildStructuralEdges(
   onRemoveRef: EdgeBuildInput["onRemoveRef"],
   onRemoveFieldLineage: EdgeBuildInput["onRemoveFieldLineage"],
 ): Edge[] {
-  const { parsed, aggregatedCrossLinks, lineageFields, lodByTable, relationsVisible } = input;
+  const { parsed, aggregatedCrossLinks, lineageFields, relationsVisible } = input;
+  const lodByTable = input.lodByTable ?? {};
 
   const relEdges: Edge[] = relationsVisible
     ? [
@@ -272,7 +310,7 @@ function buildStructuralEdges(
     : [];
 
   const lineageEdges = buildLineageCanvasEdges(lineageFields, lodByTable, {
-    lineageVisible: input.lineageVisible,
+    lineageVisible: input.lineageVisible ?? input.showLineageEdges ?? false,
     lineageMode: input.lineageMode,
     focusTables: input.focusTables,
     focusedFieldMapping: input.focusedFieldMapping,
@@ -385,12 +423,37 @@ export function useCanvasEdges(
   setEdges: (updater: (prev: Edge[]) => Edge[]) => void,
   input: EdgeBuildInput,
 ): void {
+  const zoom = useBridgedFlowZoom();
+  const nodeLod = useSchemaStore((s) => s.nodeLod);
+  const selectedTableIds = useSchemaStore((s) => s.selectedTableIds);
+  const lineageVisible = input.lineageVisible ?? input.showLineageEdges ?? false;
+
+  const lodByTable = useMemo(() => {
+    const out: Record<string, LodState> = {};
+    const ids = new Set<string>();
+    for (const t of input.parsed.tables) ids.add(t.id);
+    for (const m of input.lineageFields) {
+      ids.add(m.sourceTable);
+      ids.add(m.targetTable);
+    }
+    const selected = new Set(selectedTableIds);
+    for (const id of ids) {
+      out[id] = resolveLod(zoom, {
+        pinned: nodeLod[id],
+        selected: selected.has(id),
+      });
+    }
+    return out;
+  }, [input.parsed.tables, input.lineageFields, zoom, nodeLod, selectedTableIds]);
+
   const inputRef = useRef(input);
+  const lodRef = useRef(lodByTable);
   useLayoutEffect(() => {
     inputRef.current = input;
+    lodRef.current = lodByTable;
   });
 
-  const fieldFocusKey = input.lineageVisible
+  const fieldFocusKey = lineageVisible
     ? [
         input.focusTables.join("\u0000"),
         input.focusedFieldMapping?.sourceTable ?? "",
@@ -402,9 +465,9 @@ export function useCanvasEdges(
       ].join("\u0002")
     : "";
 
-  const lodKey = Object.keys(input.lodByTable)
+  const lodKey = Object.keys(lodByTable)
     .sort()
-    .map((id) => `${id}:${input.lodByTable[id] ?? ""}`)
+    .map((id) => `${id}:${lodByTable[id] ?? ""}`)
     .join("\u0000");
 
   const structureKey = [
@@ -414,7 +477,7 @@ export function useCanvasEdges(
     input.lineageFields,
     lodKey,
     input.relationsVisible,
-    input.lineageVisible,
+    lineageVisible,
     input.lineageMode,
     input.positions,
     fieldFocusKey,
@@ -425,11 +488,15 @@ export function useCanvasEdges(
     setEdges((prev) => {
       const built = mergeEdgeState(
         prev,
-        buildStructuralEdges(cur, cur.onRemoveRef, cur.onRemoveFieldLineage),
+        buildStructuralEdges(
+          { ...cur, lodByTable: lodRef.current, lineageVisible },
+          cur.onRemoveRef,
+          cur.onRemoveFieldLineage,
+        ),
       );
       return built;
     });
-  }, [structureKey, setEdges]);
+  }, [structureKey, setEdges, lineageVisible]);
 
   const highlightKey = [
     input.focusTables.join("\u0000"),

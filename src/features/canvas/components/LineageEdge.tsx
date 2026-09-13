@@ -7,6 +7,8 @@ import {
 } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 
+import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { lineageMarkerUrl } from "./EdgeMarkers";
@@ -38,6 +40,7 @@ export function LineageEdge({
   data,
   selected,
 }: EdgeProps<LineageFlowEdge>) {
+  useFlowZoom();
   const { t } = useTranslation();
   const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,

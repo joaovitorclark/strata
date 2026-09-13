@@ -8,7 +8,6 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-  useStore,
   type Connection,
   type Edge,
   type IsValidConnection,
@@ -31,7 +30,6 @@ import {
   type ExternalGroupStub,
 } from "../utils/pageFilter";
 import { useCanvasEdges } from "../hooks/useCanvasEdges";
-import { resolveLod, type LodState } from "../utils/lod";
 import {
   useCanvasNodes,
   type NodeExtras,
@@ -40,7 +38,6 @@ import {
 } from "../hooks/useCanvasNodes";
 import { useSchemaStore as useInteraction } from "@/features/schema/store";
 import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
-import { tableLineageFrom } from "@/features/schema/model/lineage";
 import type { TableSize } from "@/infrastructure/api";
 import {
   diagramOverviewBounds,
@@ -269,14 +266,6 @@ function FocusFieldMappingHelper() {
   return null;
 }
 
-function ViewportZoomSync({ onZoom }: { onZoom: (z: number) => void }) {
-  const zoom = useStore((s) => s.transform[2]);
-  useEffect(() => {
-    onZoom(zoom);
-  }, [zoom, onZoom]);
-  return null;
-}
-
 export function Canvas(props: Props) {
   const {
     parsed,
@@ -323,28 +312,7 @@ export function Canvas(props: Props) {
   const lineageVisible = useInteraction((s) => s.lineageVisible);
   const relationsVisible = useInteraction((s) => s.relationsVisible);
   const selectedTable = useInteraction((s) => s.selectedTable);
-  const nodeLod = useInteraction((s) => s.nodeLod);
   const [connecting, setConnecting] = useState(false);
-  const [zoom, setZoom] = useState(1);
-
-  const derivedLineage = useMemo(
-    () =>
-      tableLineageFrom(lineageFields).flatMap((entry) =>
-        entry.sources.map((source) => ({ source, target: entry.target })),
-      ),
-    [lineageFields],
-  );
-
-  const lodByTable = useMemo(() => {
-    const out: Record<string, LodState> = {};
-    for (const t of parsed.tables) {
-      out[t.id] = resolveLod(zoom, {
-        pinned: nodeLod[t.id],
-        selected: selectedTableIds.includes(t.id),
-      });
-    }
-    return out;
-  }, [parsed.tables, zoom, nodeLod, selectedTableIds]);
 
   // Esc desseleciona em pilha: 1º só a coluna (tabela continua selecionada),
   // 2º também a tabela. O editor de nome de coluna trata o próprio Escape.
@@ -406,10 +374,6 @@ export function Canvas(props: Props) {
         }
       }
       if (lineageVisible) {
-        for (const l of derivedLineage) {
-          if (l.source === ft) set.add(l.target);
-          if (l.target === ft) set.add(l.source);
-        }
         for (const m of lineageFields) {
           if (m.targetTable === ft || m.sourceTable === ft) {
             set.add(m.targetTable);
@@ -422,15 +386,7 @@ export function Canvas(props: Props) {
       }
     }
     return set;
-  }, [
-    focusTables,
-    parsed.refs,
-    derivedLineage,
-    lineageFields,
-    lineageMode,
-    lineageVisible,
-    aggregatedCrossLinks,
-  ]);
+  }, [focusTables, parsed.refs, lineageFields, lineageMode, lineageVisible, aggregatedCrossLinks]);
 
   // Visibilidade por camada + colapso → hidden/dim.
   const opts = useMemo<NodeOpts>(() => {
@@ -481,7 +437,6 @@ export function Canvas(props: Props) {
     parsed,
     aggregatedCrossLinks,
     lineageFields,
-    lodByTable,
     positions,
     relationsVisible,
     lineageVisible,
@@ -747,7 +702,6 @@ export function Canvas(props: Props) {
               onDone={onFocusTableDone}
             />
             <FocusFieldMappingHelper />
-            <ViewportZoomSync onZoom={setZoom} />
             <Controls />
             <MiniMap
               className={miniMapLite ? "minimap--lite" : undefined}

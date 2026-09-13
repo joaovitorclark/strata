@@ -1,5 +1,6 @@
 import { BaseEdge, getSmoothStepPath, type Edge, type EdgeProps } from "@xyflow/react";
 
+import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
 import { useColumnEdgeCoords } from "@/features/canvas/hooks/useColumnEdgeCoords";
 
 import { lineageMarkerUrl } from "./EdgeMarkers";
@@ -37,6 +38,7 @@ export function FieldLineageEdge({
   selected,
   data,
 }: EdgeProps<FieldLineageFlowEdge>) {
+  useFlowZoom();
   const coords = useColumnEdgeCoords(
     source,
     target,

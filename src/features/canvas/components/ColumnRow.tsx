@@ -1,10 +1,11 @@
 import { memo, useCallback, useRef, type PointerEvent } from "react";
-import { Handle, Position, useNodeId, useStore } from "@xyflow/react";
+import { Handle, Position, useNodeId } from "@xyflow/react";
 import { Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TableMeta } from "@/features/canvas/actions";
 import type { ColumnView } from "@/features/schema/model/parse";
 import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
+import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
 import { resolveLod } from "@/features/canvas/utils/lod";
 import { useSchemaStore } from "@/features/schema/store";
 
@@ -51,7 +52,7 @@ function ColumnRowImpl({
   const nodeId = useNodeId() ?? "";
   const lodPin = useSchemaStore((s) => (nodeId ? s.nodeLod[nodeId] : undefined));
   const selected = useSchemaStore((s) => s.selectedTableIds.includes(nodeId));
-  const zoom = useStore((s) => s.transform[2]);
+  const zoom = useFlowZoom();
   const lod = resolveLod(zoom, { pinned: lodPin, selected });
   const showFieldHandles = lineageMode && lod === "full";
 
