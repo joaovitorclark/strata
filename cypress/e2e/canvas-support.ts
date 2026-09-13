@@ -18,8 +18,9 @@ export function waitForCanvas(): void {
   cy.get(".react-flow__viewport")
     .should("have.attr", "style")
     .and("match", /scale\(|matrix\(/);
-  // InitialFitHelper starts from identity translate(0,0) scale(1); wait until
-  // it has applied so zoom helpers do not race the first fit.
+}
+
+function waitForInitialFit(): void {
   cy.get(".react-flow__viewport").should(($v) => {
     const style = $v.attr("style") ?? "";
     const z = viewportScaleOf(style);
@@ -139,6 +140,7 @@ export function zoomUntil(
   direction: "in" | "out",
   remaining = 16,
 ): void {
+  if (remaining === 16) waitForInitialFit();
   cy.get(".react-flow__viewport").then(($vp) => {
     const z = viewportScaleOf($vp.attr("style"));
     if (pred(z)) return;

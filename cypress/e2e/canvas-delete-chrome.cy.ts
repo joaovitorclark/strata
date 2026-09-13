@@ -7,6 +7,10 @@ import {
   waitForCanvas,
 } from "./canvas-support";
 
+Cypress.on("uncaught:exception", (err) => {
+  if (/ResizeObserver loop/.test(err.message)) return false;
+});
+
 /**
  * React Flow `useKeyPress(deleteKeyCode)` listens on `document`.
  * CommandPalette Delete (selected Ref only) listens on `window`.

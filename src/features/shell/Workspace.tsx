@@ -27,7 +27,6 @@ import { useWorkspace, type RailItemId, type WorkspaceProps } from "@/features/s
 import { SourceDrawer } from "@/features/source/SourceDrawer";
 import { DbmlDiff } from "@/features/source/DbmlDiff";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 
 export type { WorkspaceProps };
 
@@ -189,7 +188,10 @@ export function Workspace(props: WorkspaceProps) {
         handleDbmlChange(next);
       }}
       onRenameColumn={(table, oldName, newName) => actions.onRenameColumn(table, oldName, newName)}
-      onGoToColumn={goToColumn}
+      onGoToColumn={(table, column) => {
+        setDrawerTab("dbml");
+        goToColumn(table, column);
+      }}
       mappings={activeModel.lineageFields ?? []}
       onAddMapping={handleAddFieldLineage}
       onUpdateMapping={handleUpdateFieldLineage}
@@ -201,7 +203,15 @@ export function Workspace(props: WorkspaceProps) {
   );
 
   return (
-    <CanvasActionsCtx.Provider value={actions}>
+    <CanvasActionsCtx.Provider
+      value={{
+        ...actions,
+        onGoToColumn: (table, column) => {
+          setDrawerTab("dbml");
+          actions.onGoToColumn?.(table, column);
+        },
+      }}
+    >
       <div data-canvas-actions="ready" className="contents">
         <AppShell
           navbar={
@@ -329,7 +339,10 @@ export function Workspace(props: WorkspaceProps) {
                 focusTableId={focusTableId}
                 focusNonce={focusNonce}
                 onFocusTableDone={clearFocusTable}
-                onTableClick={focusTableInEditor}
+                onTableClick={(id) => {
+                  setDrawerTab("dbml");
+                  focusTableInEditor(id);
+                }}
                 fitViewTrigger={fitViewTrigger}
                 externalStubs={canvasStubs}
                 crossRefs={canvasView.crossRefs}
@@ -393,7 +406,10 @@ export function Workspace(props: WorkspaceProps) {
                   errorLine={parsed.errorLine}
                   onFocusTable={focusTableWithPan}
                   onCursorLine={handleEditorCursorLine}
-                  onGoToError={() => setSourceDrawerOpen(true)}
+                  onGoToError={() => {
+                    setDrawerTab("dbml");
+                    setSourceDrawerOpen(true);
+                  }}
                   onRenameModalOpenChange={setRenameModalOpen}
                 />
               }
@@ -439,7 +455,10 @@ export function Workspace(props: WorkspaceProps) {
                   variant="content"
                   issues={modelIssues}
                   onFocusTable={focusTableWithPan}
-                  onGoToLine={goToLine}
+                  onGoToLine={(line) => {
+                    setDrawerTab("dbml");
+                    goToLine(line);
+                  }}
                   open={problemsOpen}
                   onOpenChange={(open) => {
                     setProblemsOpen(open);
@@ -505,26 +524,14 @@ function WorkspaceDrawer({
             {t("shell.diff")}
           </TabsTrigger>
         </TabsList>
-        <TabsContent
-          value="dbml"
-          forceMount
-          className={cn("mt-0 min-h-0 flex-1 overflow-hidden", tab !== "dbml" && "hidden")}
-        >
-          {dbml}
+        <TabsContent value="dbml" className="mt-0 min-h-0 flex-1 overflow-hidden">
+          {tab === "dbml" ? dbml : null}
         </TabsContent>
-        <TabsContent
-          value="records"
-          forceMount
-          className={cn("mt-0 min-h-0 flex-1 overflow-auto", tab !== "records" && "hidden")}
-        >
-          {records}
+        <TabsContent value="records" className="mt-0 min-h-0 flex-1 overflow-auto">
+          {tab === "records" ? records : null}
         </TabsContent>
-        <TabsContent
-          value="diff"
-          forceMount
-          className={cn("mt-0 min-h-0 flex-1 overflow-auto", tab !== "diff" && "hidden")}
-        >
-          {diff}
+        <TabsContent value="diff" className="mt-0 min-h-0 flex-1 overflow-auto">
+          {tab === "diff" ? diff : null}
         </TabsContent>
       </Tabs>
     </div>
