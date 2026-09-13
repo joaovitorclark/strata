@@ -100,10 +100,9 @@ describe('bundleServer', () => {
       // um nível acima de app/server.bundle.mjs — é isso que faz o dist/ ser
       // achado em outDir/dist e não em outDir/app/dist.
       expect(body.root).toBe(outDir);
-      // dataDir é ROOT/data por construção (server/paths.ts), constante: /api/meta
-      // devolve DATA_DIR, que NÃO olha LOCALDRAWDB_DATA_DIR (só baseDataDir(),
-      // usado pelas rotas de dados, olha). Então o esperado aqui é outDir/data.
-      expect(body.dataDir).toBe(path.join(outDir, 'data'));
+      // /api/meta reporta baseDataDir() (STRATA_DATA_DIR / LOCALDRAWDB_DATA_DIR,
+      // senão ROOT/data). Este smoke sobe com LOCALDRAWDB_DATA_DIR=testdata.
+      expect(body.dataDir).toBe(testDataDir);
     } finally {
       child.kill();
     }
