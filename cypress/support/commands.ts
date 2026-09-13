@@ -18,6 +18,15 @@ declare global {
         toNode: string,
         toHandle: string,
       ): Chainable<void>;
+      /**
+       * Drag a relation-edge updater onto another column handle (never pointer*).
+       * `which` is the end being moved: RF `.react-flow__edgeupdater-source|target`.
+       */
+      reconnectHandle(
+        which: "source" | "target",
+        toNode: string,
+        toHandle: string,
+      ): Chainable<void>;
     }
   }
 }
@@ -105,11 +114,31 @@ Cypress.Commands.add("dbmlText", () => {
 });
 
 Cypress.Commands.add("resetFixture", (name: FixtureProject) => {
-  cy.seedProject(name);
-  cy.readFile(`cypress/fixtures/data/domains/local/projects/${name}/project.dbml`).then((dbml) => {
-    cy.request("PUT", "/api/project", { dbml, canvas: {} });
+  // Same activate as seedProject, then restore bytes, then a single visit.
+  // seedProject+reload loaded the SPA twice and left tests stuck on "Carregando…".
+  cy.request("GET", "/api/projects").then((res) => {
+    const body = res.body as {
+      projects: Array<{ id: string; slug: string }>;
+    };
+    const proj = body.projects.find((p) => p.slug === name);
+    if (!proj) {
+      throw new Error(
+        `fixture project "${name}" not found — run cypress/fixtures/seed.mjs once and commit the output`,
+      );
+    }
+    cy.request("POST", `/api/projects/${proj.id}/activate`);
   });
-  cy.reload();
+  cy.readFile(`cypress/fixtures/data/domains/local/projects/${name}/project.dbml`).then((dbml) => {
+    cy.readFile(`cypress/fixtures/data/domains/local/projects/${name}/canvas.json`).then(
+      (canvas) => {
+        cy.request("PUT", "/api/project", { dbml, canvas });
+        cy.request("GET", "/api/project").then((res) => {
+          expect(res.body?.dbml, "resetFixture wrote the committed DBML").to.eq(dbml);
+        });
+      },
+    );
+  });
+  cy.visit("/");
 });
 
 Cypress.Commands.add(
@@ -143,5 +172,39 @@ Cypress.Commands.add(
         cy.wrap($dst).trigger("mouseup", { clientX: dx, clientY: dy, force: true });
       });
     });
+  },
+);
+
+Cypress.Commands.add(
+  "reconnectHandle",
+  (which: "source" | "target", toNode: string, toHandle: string) => {
+    const dstSel = `[data-nodeid="${toNode}"][data-handleid="${toHandle}"]`;
+
+    // EdgeAnchor (xyflow EdgeUpdateAnchors): onMouseDown → onReconnectSourceMouseDown /
+    // onReconnectTargetMouseDown. XYHandle.onPointerDown then binds mousemove/mouseup
+    // on the document (never pointer*).
+    cy.get(".edge-path--fk")
+      .should("have.length", 1)
+      .closest("[data-testid^='rf__edge-']")
+      .find(`.react-flow__edgeupdater-${which}`)
+      .then(($upd) => {
+        const u = $upd[0].getBoundingClientRect();
+        const ux = u.left + u.width / 2;
+        const uy = u.top + u.height / 2;
+
+        cy.get(dstSel).then(($dst) => {
+          const d = $dst[0].getBoundingClientRect();
+          const dx = d.left + d.width / 2;
+          const dy = d.top + d.height / 2;
+
+          cy.wrap($upd).trigger("mousedown", { button: 0, clientX: ux, clientY: uy, force: true });
+
+          cy.document()
+            .trigger("mousemove", { clientX: (ux + dx) / 2, clientY: (uy + dy) / 2, force: true })
+            .trigger("mousemove", { clientX: dx, clientY: dy, force: true });
+
+          cy.wrap($dst).trigger("mouseup", { clientX: dx, clientY: dy, force: true });
+        });
+      });
   },
 );

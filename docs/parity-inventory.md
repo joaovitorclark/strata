@@ -56,23 +56,23 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
 | 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☐ canvas-selection.cy.ts / shell-shortcuts.cy.ts only clear table selection |
-| 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☐ no Plan 3 spec |
-| 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☐ no Plan 3 spec |
-| 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☐ no Plan 3 spec |
-| 50 | Canvas | `onRenameTable` renames a table and migrates canvas ids; duplicate ids are rejected | src/canvas/actions.ts:26 | ☐ no Plan 3 spec |
-| 51 | Canvas | `onRemoveTable` deletes a table and related refs from the DBML | src/canvas/actions.ts:27 | ☐ no Plan 3 spec |
-| 52 | Canvas | `onAddColumn` appends a `nova_coluna string` column to the table | src/canvas/actions.ts:28 | ☐ no Plan 3 spec |
-| 53 | Canvas | `colorOf` returns the table header colour for a table id | src/canvas/actions.ts:29 | ☐ no Plan 3 spec |
-| 54 | Canvas | `onSetColor` writes or clears a table header colour in the DBML | src/canvas/actions.ts:30 | ☐ no Plan 3 spec |
-| 55 | Canvas | `onSetGroupColor` writes or clears a TableGroup box colour | src/canvas/actions.ts:32 | ☐ no Plan 3 spec |
-| 56 | Canvas | `onResizeTable` stores rounded width/height for a table | src/canvas/actions.ts:34 | ☐ no Plan 3 spec |
+| 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ canvas-actions.cy.ts |
+| 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☑ canvas-actions.cy.ts |
+| 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☑ canvas-actions.cy.ts |
+| 50 | Canvas | `onRenameTable` renames a table and migrates canvas ids; duplicate ids are rejected | src/canvas/actions.ts:26 | ☑ canvas-actions.cy.ts |
+| 51 | Canvas | `onRemoveTable` deletes a table and related refs from the DBML | src/canvas/actions.ts:27 | ☑ canvas-actions.cy.ts |
+| 52 | Canvas | `onAddColumn` appends a `nova_coluna string` column to the table | src/canvas/actions.ts:28 | ☑ canvas-actions.cy.ts |
+| 53 | Canvas | `colorOf` returns the table header colour for a table id | src/canvas/actions.ts:29 | ☑ canvas-actions.cy.ts |
+| 54 | Canvas | `onSetColor` writes or clears a table header colour in the DBML | src/canvas/actions.ts:30 | ☑ canvas-actions.cy.ts |
+| 55 | Canvas | `onSetGroupColor` writes or clears a TableGroup box colour | src/canvas/actions.ts:32 | ☑ canvas-actions.cy.ts |
+| 56 | Canvas | `onResizeTable` stores rounded width/height for a table | src/canvas/actions.ts:34 | ☑ canvas-actions.cy.ts |
 | 57 | Canvas | `layerOf` returns the layer id of a table (explicit membership, else schema-name match) | src/canvas/actions.ts:36 | ☑ canvas-layer-edge.cy.ts |
-| 58 | Canvas | `layerColorOf` returns the colour of a layer | src/canvas/actions.ts:37 | ☐ no Plan 3 spec |
-| 59 | Canvas | `onSetLayer` assigns or clears a table's layer in the DBML | src/canvas/actions.ts:38 | ☐ no Plan 3 spec |
-| 60 | Canvas | `layers` exposes the current layer list to table nodes | src/canvas/actions.ts:39 | ☐ no Plan 3 spec |
-| 61 | Canvas | `onAddLayer` creates a LayerGroup with name and colour | src/canvas/actions.ts:40 | ☐ no Plan 3 spec |
-| 62 | Canvas | `onToggleGroup` collapses or expands a TableGroup | src/canvas/actions.ts:42 | ☐ no Plan 3 spec |
-| 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☐ no Plan 3 spec |
+| 58 | Canvas | `layerColorOf` returns the colour of a layer | src/canvas/actions.ts:37 | ☑ canvas-actions.cy.ts |
+| 59 | Canvas | `onSetLayer` assigns or clears a table's layer in the DBML | src/canvas/actions.ts:38 | ☑ canvas-actions.cy.ts |
+| 60 | Canvas | `layers` exposes the current layer list to table nodes | src/canvas/actions.ts:39 | ☑ canvas-actions.cy.ts |
+| 61 | Canvas | `onAddLayer` creates a LayerGroup with name and colour | src/canvas/actions.ts:40 | ☑ canvas-actions.cy.ts |
+| 62 | Canvas | `onToggleGroup` collapses or expands a TableGroup | src/canvas/actions.ts:42 | ☑ canvas-actions.cy.ts |
+| 63 | Canvas | `tableMeta` resolves sources, sample rows, PKs/FKs, dbt badges, and notes for the info popover | src/canvas/actions.ts:44 | ☑ canvas-actions.cy.ts |
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
 | 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | ☐ no Plan 3 spec |
 | 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☐ no Plan 3 spec |
