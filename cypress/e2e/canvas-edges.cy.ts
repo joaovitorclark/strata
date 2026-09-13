@@ -1,15 +1,17 @@
 import {
   animationNameOf,
+  collapseLayersPanel,
   fireWindowKey,
   restoreSmoke,
   snapshotSmoke,
   waitForCanvas,
+  zoomUntil,
   type SmokeSnapshot,
 } from "./canvas-support";
 
 describe("canvas edges", () => {
   beforeEach(() => {
-    cy.seedProject("smoke");
+    cy.resetFixture("smoke");
     waitForCanvas();
   });
 
@@ -38,6 +40,8 @@ describe("canvas edges", () => {
     });
     cy.get(".layers-panel").should("not.have.class", "is-collapsed");
     cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
+    collapseLayersPanel();
+    zoomUntil((z) => z < 0.55, "out");
     cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {
       expect($path.length, "aggregated lineage path").to.be.at.least(1);

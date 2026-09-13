@@ -7,7 +7,9 @@ import {
   waitForCanvas,
   zoomUntil,
 } from "./canvas-support";
-import { LOD_FULL_ABOVE } from "../../src/features/canvas/utils/lod";
+
+/** Mirror `lod.ts` — Cypress webpack cannot resolve that file's `@/` imports. */
+const LOD_FULL_ABOVE = 1.1;
 
 /**
  * React Flow `useKeyPress(deleteKeyCode)` listens on `document`.
@@ -167,23 +169,35 @@ describe("canvas deletion and node chrome", () => {
       expect(before).to.include("vendas.resumo.id < vendas.pedido.id");
     });
 
-    cy.get(".edge-path--field-lineage").first().click({ force: true });
-    cy.get(".edge-path--field-lineage")
-      .first()
-      .closest("[data-testid^='rf__edge-']")
-      .should("have.class", "selected");
+    cy.get('[data-testid="rf__edge-fl:vendas.pedido.id->vendas.resumo.id"]')
+      .should("exist")
+      .click({ force: true });
+    cy.get('[data-testid="rf__edge-fl:vendas.pedido.id->vendas.resumo.id"]').should(
+      "have.class",
+      "selected",
+    );
 
-    fireDeleteKey("Delete");
+    // One document Delete. fireDeleteKey also hits window and would remove the
+    // other mapping on the same pair (RF then palette). Peek on hover hides the
+    // sibling edge from the DOM; the DBML still holds both until this key.
+    cy.document().then((doc) => {
+      const win = doc.defaultView!;
+      doc.dispatchEvent(
+        new win.KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Delete",
+        }),
+      );
+    });
     saveViaPaletteShortcut();
 
     cy.dbmlText().should((after) => {
-      const beforeCount = 2;
-      const afterCount = (after.match(/^\s*vendas\.resumo\.\w+ < vendas\.pedido\.\w+/gm) ?? [])
-        .length;
-      expect(afterCount, "one field mapping gone").to.eq(beforeCount - 1);
-      expect((after.match(/^\s*Ref:/gm) ?? []).length, "FK Ref untouched").to.eq(1);
       expect(after).to.include("Table vendas.resumo {");
       expect(after).to.include("Table vendas.pedido {");
+      expect((after.match(/^\s*Ref:/gm) ?? []).length, "FK Ref untouched").to.eq(1);
+      expect(after, "id mapping removed").to.not.include("vendas.resumo.id < vendas.pedido.id");
+      expect(after, "sibling mapping kept").to.include("vendas.resumo.total < vendas.pedido.total");
     });
   });
 

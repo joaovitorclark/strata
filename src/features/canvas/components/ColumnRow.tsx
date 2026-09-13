@@ -100,6 +100,7 @@ function ColumnRowImpl({
           type="target"
           position={Position.Left}
           id={`fl:t:${c.name}`}
+          style={{ left: -18 }}
           className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-lineage"
         />
       ) : null}
@@ -166,6 +167,7 @@ function ColumnRowImpl({
           type="source"
           position={Position.Right}
           id={`fl:s:${c.name}`}
+          style={{ right: -18 }}
           className="col-handle nodrag nopan !h-2 !w-2 !min-h-0 !min-w-0 !border-0 !bg-rel-lineage"
         />
       ) : null}

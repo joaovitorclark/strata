@@ -421,7 +421,7 @@ export function removeFieldLineageEntry(
   const prefix = `${targetTable}.${targetColumn} < ${sourceTable}.${sourceColumn}`;
   const updated = block.text
     .split('\n')
-    .filter((l) => !l.trim().startsWith(prefix) && !l.includes(prefix))
+    .filter((l) => !l.trim().startsWith(prefix))
     .join('\n');
   if (!/\S/.test(updated.replace(/LineageFields\s*\{/i, '').replace('}', ''))) {
     return src.replace(block.text, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';

@@ -1,6 +1,8 @@
 import { memo, useEffect, useState } from "react";
 import {
+  Handle,
   NodeResizeControl,
+  Position,
   useEdges,
   useNodeId,
   useStore,
@@ -12,6 +14,10 @@ import { MoreHorizontal } from "lucide-react";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
+import {
+  AGGREGATED_SOURCE_HANDLE,
+  AGGREGATED_TARGET_HANDLE,
+} from "@/features/canvas/hooks/useCanvasEdges";
 import { resolveLod } from "@/features/canvas/utils/lod";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
 import { useSchemaStore } from "@/features/schema/store";
@@ -73,10 +79,20 @@ function participatingColumns(tableId: string, edge: PeekEdge): string[] | undef
     if (mapping.targetTable === tableId) cols.add(mapping.targetColumn);
   }
   if (edge.source === tableId && edge.sourceHandle) {
-    cols.add(edge.sourceHandle.replace(/^(?:fl:)?[st]:/, ""));
+    if (
+      edge.sourceHandle !== AGGREGATED_SOURCE_HANDLE &&
+      edge.sourceHandle !== AGGREGATED_TARGET_HANDLE
+    ) {
+      cols.add(edge.sourceHandle.replace(/^(?:fl:)?[st]:/, ""));
+    }
   }
   if (edge.target === tableId && edge.targetHandle) {
-    cols.add(edge.targetHandle.replace(/^(?:fl:)?[st]:/, ""));
+    if (
+      edge.targetHandle !== AGGREGATED_SOURCE_HANDLE &&
+      edge.targetHandle !== AGGREGATED_TARGET_HANDLE
+    ) {
+      cols.add(edge.targetHandle.replace(/^(?:fl:)?[st]:/, ""));
+    }
   }
   return [...cols].filter(Boolean);
 }
@@ -92,17 +108,16 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const lineageMode = useSchemaStore((s) => s.lineageMode);
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
-
-  useEffect(() => {
-    if (!nodeId) return;
-    updateNodeInternals(nodeId);
-  }, [nodeId, updateNodeInternals, lineageMode]);
   const edges = useEdges();
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
   const state = useStore((s) => resolveLod(s.transform[2], { pinned: lodPin, selected }));
+  useEffect(() => {
+    if (!nodeId) return;
+    updateNodeInternals(nodeId);
+  }, [nodeId, updateNodeInternals, lineageMode, state]);
   const peeked = peekedEdgeId ? edges.find((e) => e.id === peekedEdgeId) : undefined;
   const peekCols = peeked ? participatingColumns(data.id, peeked) : undefined;
   const dimPeek = peekedEdgeId != null && peekCols === undefined;
@@ -122,6 +137,20 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
       className={cn("relative table-node-shell", lineageMode && "table-node-shell--lineage")}
       style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}
     >
+      <Handle
+        type="target"
+        position={Position.Left}
+        id={AGGREGATED_TARGET_HANDLE}
+        isConnectable={false}
+        className="pointer-events-none !h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={AGGREGATED_SOURCE_HANDLE}
+        isConnectable={false}
+        className="pointer-events-none !h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
+      />
       <NodeResizeControl
         position="bottom-right"
         minWidth={200}

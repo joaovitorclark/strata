@@ -24,7 +24,9 @@ describe("S01 edge builder", () => {
       { "bronze.a": "full", "silver.b": "full" },
       visible,
     );
-    expect(edges.filter((e) => e.type === "fieldLineage")).toHaveLength(3);
+    const field = edges.filter((e) => e.type === "fieldLineage");
+    expect(field).toHaveLength(3);
+    expect(field.every((e) => e.sourceHandle?.startsWith("fl:s:"))).toBe(true);
     expect(edges.filter((e) => e.type === "lineage")).toHaveLength(0);
   });
 
@@ -39,6 +41,8 @@ describe("S01 edge builder", () => {
     expect(agg).toHaveLength(1);
     expect((agg[0].data as { count: number }).count).toBe(3);
     expect(agg[0].id).toMatch(/^fla:/);
+    expect(agg[0].sourceHandle).toBe("agg-s");
+    expect(agg[0].targetHandle).toBe("agg-t");
     expect(agg[0].data).not.toHaveProperty("onRemove");
   });
 

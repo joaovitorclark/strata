@@ -23,6 +23,20 @@ LineageFields {
     });
   });
 
+  it('remove one mapping keeps sibling lines', () => {
+    const src = `Table bronze.a { x int y int }
+Table silver.b { x int y int }
+
+LineageFields {
+  silver.b.x < bronze.a.x
+  silver.b.y < bronze.a.y
+}
+`;
+    const out = removeFieldLineageEntry(src, 'bronze.a', 'x', 'silver.b', 'x');
+    expect(out).not.toContain('silver.b.x < bronze.a.x');
+    expect(out).toContain('silver.b.y < bronze.a.y');
+  });
+
   it('add e remove mapeamento', () => {
     const base = `Table bronze.a { id bigint [pk] x string }\nTable silver.b { id bigint [pk] y string }\n`;
     const withMap = addFieldLineageEntry(base, 'bronze.a', 'x', 'silver.b', 'y', { note: 'n' });

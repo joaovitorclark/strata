@@ -6,7 +6,10 @@ import {
   waitForCanvas,
   zoomUntil,
 } from "./canvas-support";
-import { LOD_FULL_ABOVE, LOD_SIGIL_BELOW } from "../../src/features/canvas/utils/lod";
+
+/** Mirror `lod.ts` — Cypress webpack cannot resolve that file's `@/` imports. */
+const LOD_SIGIL_BELOW = 0.55;
+const LOD_FULL_ABOVE = 1.1;
 
 const NEW_MAP = "vendas.pedido.id < vendas.item.sku";
 

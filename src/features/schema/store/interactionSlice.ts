@@ -164,7 +164,8 @@ export const createInteractionSlice: StateCreator<
   selectFieldLineageMapping: (m) =>
     set((state) => {
       state.selectedTable = m.targetTable;
-      state.selectedTableIds = [m.targetTable];
+      // Leave selectedTableIds alone so React Flow does not mark the table
+      // selected — Delete would then drop the table with the mapping.
       state.selectedColumn = { table: m.targetTable, column: m.targetColumn };
       state.selectedGroup = null;
       state.focusedFieldMapping = m;

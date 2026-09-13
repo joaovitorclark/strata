@@ -59,6 +59,7 @@ Ref: vendas.pedido.cliente_id > vendas.cliente.id
 LineageFields {
   vendas.resumo.id < vendas.pedido.id
   vendas.resumo.total < vendas.pedido.total
+  vendas.pedido.cliente_id < vendas.cliente.id
 }
 
 LayerGroup bronze {

@@ -24,6 +24,9 @@ type FocusFieldMapping = {
 type SelectedColumn = { table: string; column: string } | null;
 
 export const AGGREGATED_LINEAGE_PREFIX = "fla:";
+/** Table-level anchors for aggregated edges (all LODs). */
+export const AGGREGATED_SOURCE_HANDLE = "agg-s";
+export const AGGREGATED_TARGET_HANDLE = "agg-t";
 
 export type EdgeBuildInput = {
   parsed: ParseResult;
@@ -129,12 +132,20 @@ export function buildLineageCanvasEdges(
           continue;
         }
         const id = fieldEdgeId(m);
+        // `fl:` handles exist only in lineage mode (G18). At full LOD the FK
+        // `s:`/`t:` handles are always mounted, so field edges can still attach.
+        const sourceHandle = opts.lineageMode
+          ? `fl:s:${m.sourceColumn}`
+          : `s:${m.sourceColumn}`;
+        const targetHandle = opts.lineageMode
+          ? `fl:t:${m.targetColumn}`
+          : `t:${m.targetColumn}`;
         out.push({
           id,
           source: m.sourceTable,
           target: m.targetTable,
-          sourceHandle: `fl:s:${m.sourceColumn}`,
-          targetHandle: `fl:t:${m.targetColumn}`,
+          sourceHandle,
+          targetHandle,
           type: "fieldLineage",
           selected: id === focusedEdgeId,
           interactionWidth: 24,
@@ -166,6 +177,8 @@ export function buildLineageCanvasEdges(
       id: `${AGGREGATED_LINEAGE_PREFIX}${first.sourceTable}->${first.targetTable}`,
       source: first.sourceTable,
       target: first.targetTable,
+      sourceHandle: AGGREGATED_SOURCE_HANDLE,
+      targetHandle: AGGREGATED_TARGET_HANDLE,
       type: "lineage",
       interactionWidth: 24,
       reconnectable: false,
@@ -389,12 +402,17 @@ export function useCanvasEdges(
       ].join("\u0002")
     : "";
 
+  const lodKey = Object.keys(input.lodByTable)
+    .sort()
+    .map((id) => `${id}:${input.lodByTable[id] ?? ""}`)
+    .join("\u0000");
+
   const structureKey = [
     input.parsed.refs,
     input.aggregatedCrossLinks,
     input.parsed.tables,
     input.lineageFields,
-    input.lodByTable,
+    lodKey,
     input.relationsVisible,
     input.lineageVisible,
     input.lineageMode,
