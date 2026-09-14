@@ -326,7 +326,16 @@ export function pinnedByTableFromList(pins: string[]): Record<string, string[]> 
   return out;
 }
 
-const CUSTOM_TYPES = new Set(['records', 'layerGroup', 'lineageFields', 'dbt', 'rolenames', 'colors', 'pins']);
+const CUSTOM_TYPES = new Set([
+  'records',
+  'layerGroup',
+  'lineageFields',
+  'dbt',
+  'rolenames',
+  'colors',
+  'pins',
+  'views',
+]);
 /** Legacy `Lineage {}` is stripped from @dbml/core and dropped on save — never parsed. */
 const DROPPED_TYPES = new Set(['lineage']);
 const STRIP_TYPES = new Set([...CUSTOM_TYPES, ...DROPPED_TYPES]);

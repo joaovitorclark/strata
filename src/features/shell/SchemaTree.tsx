@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { useSchemaStore } from "@/features/schema/store";
+import { parseDbml } from "@/features/schema/model/parse";
+import { parseViewsBlock, resolveViewTables, TUDO_VIEW_ID } from "@/features/schema/model/views";
 import { cn } from "@/lib/utils";
 
 const VIEW_H_FALLBACK = COLUMN_VIRTUAL_VIEW_ROWS * COLUMN_VIRTUAL_ROW_H;
@@ -105,17 +107,37 @@ export function SchemaTree({ tables, layerOf, onFocusTable, onOpenInspector }: S
   const toggleTableHidden = useSchemaStore((s) => s.toggleTableHidden);
   const setHiddenTables = useSchemaStore((s) => s.setHiddenTables);
   const showAllTables = useSchemaStore((s) => s.showAllTables);
+  const addTableToActiveView = useSchemaStore((s) => s.addTableToActiveView);
+  const activeViewId = useSchemaStore((s) => s.activeViewId);
+  const dbml = useSchemaStore((s) => s.dbml);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(VIEW_H_FALLBACK);
   const [filter, setFilter] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const query = filter.trim();
+  const inViewSet = useMemo(() => {
+    if (activeViewId === TUDO_VIEW_ID) return null;
+    const ids = parseDbml(dbml).tables.map((tbl) => tbl.id);
+    const view = parseViewsBlock(dbml).find((v) => v.id === activeViewId);
+    return new Set(view ? resolveViewTables(view, ids) : ids);
+  }, [activeViewId, dbml]);
+
+  const mainTables = useMemo(() => {
+    if (!inViewSet) return tables;
+    return tables.filter((table) => inViewSet.has(table.id));
+  }, [tables, inViewSet]);
+
+  const outsideTables = useMemo(() => {
+    if (!inViewSet) return [];
+    return tables.filter((table) => !inViewSet.has(table.id));
+  }, [tables, inViewSet]);
+
   const filteredTables = useMemo(() => {
-    if (!query) return tables;
+    if (!query) return mainTables;
     const q = query.toLowerCase();
-    return tables.filter((table) => table.name.toLowerCase().includes(q));
-  }, [tables, query]);
+    return mainTables.filter((table) => table.name.toLowerCase().includes(q));
+  }, [mainTables, query]);
 
   const rows = useMemo(
     () => flattenTables(filteredTables, t("shell.schemaTree.ungrouped")),
@@ -123,9 +145,9 @@ export function SchemaTree({ tables, layerOf, onFocusTable, onOpenInspector }: S
   );
 
   const hiddenCount = useMemo(() => {
-    const known = new Set(tables.map((table) => table.id));
+    const known = new Set(mainTables.map((table) => table.id));
     return hiddenTableIds.filter((id) => known.has(id)).length;
-  }, [tables, hiddenTableIds]);
+  }, [mainTables, hiddenTableIds]);
 
   const hiddenSet = useMemo(() => new Set(hiddenTableIds), [hiddenTableIds]);
 
@@ -192,13 +214,13 @@ export function SchemaTree({ tables, layerOf, onFocusTable, onOpenInspector }: S
             <DropdownMenuItem onSelect={() => showAllTables()}>
               {t("shell.schemaTree.showAll")}
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setHiddenTables(tables.map((table) => table.id))}>
+            <DropdownMenuItem onSelect={() => setHiddenTables(mainTables.map((table) => table.id))}>
               {t("shell.schemaTree.hideAll")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() =>
                 setHiddenTables(
-                  tables
+                  mainTables
                     .filter((table) => !selectedTableIds.includes(table.id))
                     .map((table) => table.id),
                 )
@@ -239,12 +261,48 @@ export function SchemaTree({ tables, layerOf, onFocusTable, onOpenInspector }: S
             )}
           </div>
         </div>
+        {outsideTables.length > 0 ? (
+          <details data-testid="schema-tree-outside" className="border-t border-border">
+            <summary className="cursor-pointer px-2 py-1 font-sans text-xs text-muted-foreground">
+              {t("shell.schemaTree.outsideView", { count: outsideTables.length })}
+            </summary>
+            <div>
+              {outsideTables.map((table) => (
+                <div
+                  key={table.id}
+                  className="relative flex items-center"
+                  style={{ height: COLUMN_VIRTUAL_ROW_H }}
+                >
+                  <span className="min-w-0 flex-1 truncate pl-3 pr-8 font-mono text-xs text-muted-foreground">
+                    {table.name}
+                  </span>
+                  <button
+                    type="button"
+                    data-testid={`schema-tree-add-to-view-${table.id}`}
+                    aria-label={t("shell.schemaTree.addToView", { name: table.name })}
+                    className={cn(
+                      FOCUS,
+                      "absolute right-1 top-1/2 z-10 inline-flex size-5 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+                    )}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addTableToActiveView(table.id);
+                    }}
+                  >
+                    <Eye className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
       </div>
       <div
         data-testid="schema-tree-footer"
         className="shrink-0 px-2 py-1 text-2xs text-muted-foreground"
       >
-        {t("shell.schemaTree.footer", { total: tables.length, hidden: hiddenCount })}
+        {t("shell.schemaTree.footer", { total: mainTables.length, hidden: hiddenCount })}
       </div>
     </nav>
   );

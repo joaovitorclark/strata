@@ -79,4 +79,13 @@ describe("urlState", () => {
     expect(paramsOf({ hidden: fifty }).get("hidden")).toBe(fifty.join(","));
     expect(paramsOf({ hidden: [] }).has("hidden")).toBe(false);
   });
+
+  it("view round-trips and is omitted for Tudo", () => {
+    expect(paramsOf({ view: "view_1", project: "p1" }).get("view")).toBe("view_1");
+    expect(parseUrlState(roundTrip({ view: "bronze_ingestao" }).search).view).toBe(
+      "bronze_ingestao",
+    );
+    expect(paramsOf({ view: "tudo" }).has("view")).toBe(false);
+    expect(parseUrlState("?view=tudo").view).toBeUndefined();
+  });
 });

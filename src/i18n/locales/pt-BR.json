@@ -61,7 +61,9 @@
       "hideUnselected": "Ocultar não selecionadas",
       "footer": "{{total}} tabelas · {{hidden}} ocultas",
       "hideTable": "Ocultar {{name}}",
-      "showTable": "Mostrar {{name}}"
+      "showTable": "Mostrar {{name}}",
+      "outsideView": "Fora desta view ({{count}})",
+      "addToView": "Adicionar {{name}} à view"
     },
     "inspector": {
       "title": "Propriedades",
@@ -144,7 +146,16 @@
       "focusExit": "Sair do foco",
       "focusTrace": "{{column}} · {{columns}} campos em {{tables}} tabelas",
       "focusCycle": "ciclo",
-      "traceField": "Rastrear linhagem do campo"
+      "traceField": "Rastrear linhagem do campo",
+      "views": "Views",
+      "viewAll": "Tudo",
+      "viewNewFromSelection": "Nova view a partir da seleção",
+      "viewNewByLayer": "Nova view por camada",
+      "viewRename": "Renomear",
+      "viewDuplicate": "Duplicar",
+      "viewDelete": "Excluir",
+      "viewRenamePrompt": "Nome da view:",
+      "viewDeleteConfirm": "Excluir a view \"{{name}}\"?"
     },
     "detail": {
       "name": "Nome",

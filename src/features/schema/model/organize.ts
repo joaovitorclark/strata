@@ -12,6 +12,7 @@ const ORDER: BlockType[] = [
   'ref',
   'lineageFields',
   'pins',
+  'views',
   'dbt',
   'records',
 ];
