@@ -151,7 +151,9 @@ export const createViewSlice: StateCreator<ViewSlice, [["zustand/immer", never]]
       view.tables = [...view.tables, id];
       const pos = s.positions[id] ?? s.tudoPositions[id];
       if (pos) view.positions = { ...view.positions, [id]: { x: pos.x, y: pos.y } };
-      s.setDbml(replaceViewsBlock(s.dbml, pruneMissingTablesFromViews(views, tableIds)));
+      // Never prune against a document that failed to parse (it reports zero tables).
+      const safe = parseDbml(s.dbml).error ? views : pruneMissingTablesFromViews(views, tableIds);
+      s.setDbml(replaceViewsBlock(s.dbml, safe));
     }
     set((state) => {
       const i = state.hiddenTableIds.indexOf(id);
