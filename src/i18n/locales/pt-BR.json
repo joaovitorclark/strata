@@ -47,7 +47,15 @@
     "densityCozy": "Confortável",
     "schemaTree": {
       "title": "Esquema",
-      "ungrouped": "public"
+      "ungrouped": "public",
+      "filter": "Filtrar tabelas",
+      "menu": "Ações da árvore",
+      "showAll": "Mostrar todas",
+      "hideAll": "Ocultar todas",
+      "hideUnselected": "Ocultar não selecionadas",
+      "footer": "{{total}} tabelas · {{hidden}} ocultas",
+      "hideTable": "Ocultar {{name}}",
+      "showTable": "Mostrar {{name}}"
     },
     "inspector": {
       "title": "Propriedades",

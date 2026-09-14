@@ -1,8 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { cloneElement, isValidElement } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useShellLayout } from "@/features/shell/AppShell";
+import type { SchemaTreeProps } from "@/features/shell/SchemaTree";
 import { cn } from "@/lib/utils";
 
 export type LeftPanelTab = "tables" | "layers";
@@ -12,11 +14,20 @@ export type LeftPanelProps = {
   onTab: (tab: LeftPanelTab) => void;
   tables: ReactNode;
   layers: ReactNode;
+  onFocusTable?: (id: string) => void;
 };
 
-export function LeftPanel({ tab, onTab, tables, layers }: LeftPanelProps) {
+export function LeftPanel({ tab, onTab, tables, layers, onFocusTable }: LeftPanelProps) {
   const { t } = useTranslation();
-  const { setTreeCollapsed } = useShellLayout();
+  const { setTreeCollapsed, setInspectorCollapsed } = useShellLayout();
+
+  const mountedTables = isValidElement(tables)
+    ? cloneElement(tables as ReactElement<SchemaTreeProps>, {
+        onFocusTable: (tables.props as SchemaTreeProps).onFocusTable ?? onFocusTable,
+        onOpenInspector:
+          (tables.props as SchemaTreeProps).onOpenInspector ?? (() => setInspectorCollapsed(false)),
+      })
+    : tables;
 
   return (
     <Tabs
@@ -46,7 +57,7 @@ export function LeftPanel({ tab, onTab, tables, layers }: LeftPanelProps) {
         forceMount
         className={cn("mt-0 min-h-0 flex-1 overflow-hidden", tab !== "tables" && "hidden")}
       >
-        {tables}
+        {mountedTables}
       </TabsContent>
       <TabsContent
         value="layers"
