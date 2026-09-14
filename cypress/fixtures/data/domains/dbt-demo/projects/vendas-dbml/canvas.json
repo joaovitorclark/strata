@@ -1,0 +1,12 @@
+{
+  "positions": {
+    "raw.cliente": { "x": 40, "y": 40 },
+    "raw.pedido": { "x": 360, "y": 40 },
+    "silver.stg_cliente": { "x": 40, "y": 280 },
+    "silver.stg_pedido": { "x": 360, "y": 280 },
+    "silver.stg_pedido_item": { "x": 680, "y": 280 },
+    "gold.dim_cliente": { "x": 888, "y": 321 },
+    "gold.fato_pedido": { "x": 360, "y": 520 },
+    "reporting.daily_views": { "x": 680, "y": 520 }
+  }
+}

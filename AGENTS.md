@@ -28,6 +28,9 @@ rebuilt here with a new visual identity, a canvas-first layout, and an architect
 [**Structura**](https://github.com/clarkjoao/Structura)'s contracts so it can later be registered
 into that platform rather than rewritten for it.
 
+Dois formatos convivem: um domínio pode ter projetos DBML (`projects/<slug>/`) e projetos dbt no
+layout da 0001 (marca `.strata/<projeto>/project.yml`); D1 abre dbt somente leitura.
+
 ## Running it
 
 ```bash

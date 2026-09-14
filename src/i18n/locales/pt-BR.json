@@ -21,6 +21,7 @@
     "backToDomains": "← Domínios",
     "help": "Atalhos e gestos",
     "addTable": "+ Tabela",
+    "dbtReadOnly": "Edição de projetos dbt chega na próxima versão",
     "empty": {
       "title": "Comece seu modelo",
       "paste": "Colar SQL / DBML / schema.rb",

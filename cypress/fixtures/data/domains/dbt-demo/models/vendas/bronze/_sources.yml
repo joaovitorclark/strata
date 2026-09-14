@@ -1,0 +1,82 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: cliente
+        description: Clientes crus do ERP
+        config:
+          tags:
+            - strata:vendas
+          meta:
+            strata:
+              table_id: raw.cliente
+              layer: bronze
+              schema: raw
+              pk:
+                - id
+        columns:
+          - name: id
+            data_type: bigint
+            data_tests:
+              - unique
+              - not_null
+          - name: email
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: pedido
+        description: Pedidos crus
+        config:
+          tags:
+            - strata:vendas
+          meta:
+            strata:
+              table_id: raw.pedido
+              layer: bronze
+              schema: raw
+              pk:
+                - id
+        columns:
+          - name: id
+            data_type: bigint
+            data_tests:
+              - unique
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw', 'cliente')
+                    field: id
+          - name: total
+            data_type: decimal(18,2)
+          - name: descrição
+            data_type: string
+            description: Texto livre do pedido
+          - name: criado_em
+            data_type: timestamp
+            config:
+              meta:
+                strata:
+                  default: now()

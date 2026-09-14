@@ -21,6 +21,7 @@
     "backToDomains": "← Domains",
     "help": "Shortcuts and gestures",
     "addTable": "+ Table",
+    "dbtReadOnly": "Editing dbt projects arrives in the next version",
     "empty": {
       "title": "Start your model",
       "paste": "Paste SQL / DBML / schema.rb",

@@ -1,0 +1,60 @@
+version: 2
+models:
+  - name: stg_cliente
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.stg_cliente
+          layer: silver
+          schema: silver
+          group: dimensoes
+          pk:
+            - id
+      materialized: view
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - email
+        warn_unsupported: false
+    columns:
+      - name: id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: raw.cliente.id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: email
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: raw.cliente.email
+              not_null: true
+              unique: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: raw.cliente.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

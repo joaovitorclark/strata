@@ -1,0 +1,138 @@
+Enum order_status {
+  aberto
+  pago
+  cancelado
+}
+
+TableGroup dimensoes {
+  gold.dim_cliente
+  silver.stg_cliente
+}
+
+LayerGroup bronze {
+  raw.cliente
+  raw.pedido
+}
+
+LayerGroup silver {
+  silver.stg_cliente
+  silver.stg_pedido
+  silver.stg_pedido_item
+}
+
+LayerGroup gold {
+  gold.fato_pedido
+  gold.dim_cliente
+  reporting.daily_views
+}
+
+Table raw.cliente {
+  id bigint [pk]
+  email string [unique, not null]
+  nome string [not null]
+  Note: 'Clientes crus do ERP'
+}
+
+Table raw.pedido {
+  id bigint [pk]
+  cliente_id bigint [not null]
+  total decimal(18,2)
+  "descrição" string [note: 'Texto livre do pedido']
+  criado_em timestamp [default: `now()`]
+  Note: 'Pedidos crus'
+}
+
+Table silver.stg_cliente {
+  id bigint [pk]
+  email string [unique, not null]
+  nome string [not null]
+}
+
+Table silver.stg_pedido {
+  id bigint [pk]
+  cliente_id bigint [not null]
+  total decimal(18,2)
+  "descrição" string
+}
+
+Table silver.stg_pedido_item {
+  pedido_id bigint [not null]
+  seq int [not null]
+  sku string [not null]
+  indexes {
+    (pedido_id, seq) [pk]
+  }
+}
+
+Table gold.fato_pedido {
+  id bigint [pk]
+  cliente_id bigint [not null]
+  total decimal(18,2)
+}
+
+Table gold.dim_cliente {
+  id bigint [pk]
+  email string [unique, not null]
+  nome string [not null]
+  status order_status
+  indexes {
+    (email, nome) [name: 'idx_cliente_contato']
+  }
+}
+
+Table reporting.daily_views {
+  id bigint [pk]
+  pedido_id bigint [not null]
+  views int [not null]
+}
+
+Ref: raw.pedido.cliente_id > raw.cliente.id
+Ref: silver.stg_pedido.cliente_id > silver.stg_cliente.id
+Ref: silver.stg_pedido_item.pedido_id > silver.stg_pedido.id
+Ref: gold.fato_pedido.cliente_id > gold.dim_cliente.id
+Ref: reporting.daily_views.pedido_id > gold.fato_pedido.id
+
+LineageFields {
+  silver.stg_cliente.id < raw.cliente.id
+  silver.stg_cliente.email < raw.cliente.email
+  silver.stg_cliente.nome < raw.cliente.nome
+  silver.stg_pedido.id < raw.pedido.id
+  silver.stg_pedido.cliente_id < raw.pedido.cliente_id
+  silver.stg_pedido.total < raw.pedido.total
+  silver.stg_pedido.descrição < raw.pedido.descrição
+  gold.fato_pedido.id < silver.stg_pedido.id
+  gold.fato_pedido.cliente_id < silver.stg_pedido.cliente_id
+  gold.fato_pedido.total < silver.stg_pedido.total
+  gold.dim_cliente.id < silver.stg_cliente.id
+  gold.dim_cliente.email < silver.stg_cliente.email
+  gold.dim_cliente.nome < silver.stg_cliente.nome
+}
+
+Records gold.dim_cliente(id, nome, cidade) {
+  1, 'José, o Bravo', São Paulo
+  2, Maria, Curitiba
+}
+
+Rolenames {
+  silver.stg_pedido.cliente_id < silver.stg_cliente.id
+}
+
+Colors {
+  gold.dim_cliente: #b08d57
+  gold.fato_pedido: #d4af37
+}
+
+Pins {
+  gold.dim_cliente.email
+  gold.fato_pedido.id
+}
+
+Views {
+  comercial {
+    tables: gold.fato_pedido, gold.dim_cliente
+    positions: gold.fato_pedido 120 80, gold.dim_cliente 480 80
+  }
+  operacional {
+    tables: silver.stg_pedido, silver.stg_cliente
+  }
+}

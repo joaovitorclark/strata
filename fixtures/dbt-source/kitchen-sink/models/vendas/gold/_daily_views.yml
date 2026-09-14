@@ -1,0 +1,52 @@
+version: 2
+models:
+  - name: daily_views
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          table_id: reporting.daily_views
+          layer: gold
+          schema: reporting
+          pk:
+            - id
+      materialized: table
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - id
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - pedido_id
+        to: ref('fato_pedido')
+        to_columns:
+          - id
+        warn_unsupported: false
+    columns:
+      - name: id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: views
+        data_type: int
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

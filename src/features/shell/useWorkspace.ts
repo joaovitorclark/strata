@@ -84,6 +84,10 @@ import {
   SAMPLE_DBML,
   useStable,
 } from "@/features/shell/workspaceModel";
+import { fromDbtProject, toDisplayDbml, toParseResult } from "@/features/dbt-source";
+import { pinnedByTableFromList } from "@/features/schema/model/dbmlClean";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 
 function loadStoredFlag(key: string, fallback: boolean): boolean {
   try {
@@ -145,6 +149,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   const [committedDbml, setCommittedDbml] = useState("");
   const [savedDbml, setSavedDbml] = useState("");
   const [density, setDensity] = useState<"compact" | "cozy">("cozy");
+  const [dbtParsed, setDbtParsed] = useState<ParseResult | null>(null);
 
   const loadedRef = useRef(false);
   const prevDbmlRef = useRef("");
@@ -160,10 +165,54 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const selectColumn = useSchemaStore((s) => s.selectColumn);
 
+  const guardReadOnly = useCallback((): boolean => {
+    if (!useSchemaStore.getState().readOnly) return false;
+    toast.message(i18n.t("shell.dbtReadOnly"));
+    return true;
+  }, []);
+
   const applyHydrated = useCallback(
     (p: api.Project, projectId: string, statusOverride?: string) => {
-      const loaded = hydrateFromProject(p, projectId);
       const store = useSchemaStore.getState();
+      if (p.format === "dbt") {
+        const slug = store.projects.find((proj) => proj.id === projectId)?.slug;
+        if (!slug) {
+          pushStatus("Projeto dbt sem slug — não foi possível hidratar");
+          return;
+        }
+        const model = fromDbtProject(p.files, slug);
+        const parsed0 = toParseResult(model);
+        const dbml0 = toDisplayDbml(model);
+        const pos0 = model.canvas?.positions ?? {};
+        const groupPages = pagesFromTableGroups(parsed0);
+        const pages0 = groupPages.length ? [allTablesPage(), ...groupPages] : [allTablesPage()];
+        setDbtParsed(parsed0);
+        startTransition(() => {
+          store.hydrateDocument({
+            dbml: dbml0,
+            positions: pos0,
+            sizes: api.normalizeSizes(model.canvas?.sizes),
+            colors: model.colors,
+            collapsedGroups: model.canvas?.collapsedGroups ?? [],
+            canvasPages: pages0,
+            activePageIds: [ALL_PAGE_ID],
+            currentProjectId: projectId || store.currentProjectId,
+            pinnedByTable: pinnedByTableFromList(model.pins),
+            readOnly: true,
+          });
+          store.setAutoSave(false);
+        });
+        prevDbmlRef.current = dbml0;
+        setCommittedDbml(dbml0);
+        setSavedDbml(dbml0);
+        baselineRef.current = { dbml: dbml0, positions: pos0, colors: model.colors };
+        pushStatus(loadStatusMessage(parsed0.tables.length, [ALL_PAGE_ID], statusOverride));
+        store.setSaveState("saved");
+        store.setHydratedProjectId(projectId);
+        return;
+      }
+      setDbtParsed(null);
+      const loaded = hydrateFromProject({ dbml: p.dbml, canvas: p.canvas }, projectId);
       startTransition(() => {
         store.hydrateDocument({
           dbml: loaded.dbml,
@@ -175,6 +224,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
           activePageIds: loaded.active0,
           currentProjectId: loaded.projectId || store.currentProjectId,
           pinnedByTable: loaded.pinnedByTable,
+          readOnly: false,
         });
       });
       prevDbmlRef.current = loaded.dbml;
@@ -280,6 +330,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   useEffect(() => {
     if (!loadedRef.current) return;
+    if (useSchemaStore.getState().readOnly) return;
     useSchemaStore.getState().setSaveState((s) => {
       if (s === "saving" || s === "saved") return s;
       return "dirty";
@@ -287,6 +338,10 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   }, [dbml, positions, sizes, colors, collapsedGroups, canvasPages, activePageIds]);
 
   const handleSave = useCallback((explicitDbml?: string) => {
+    if (useSchemaStore.getState().readOnly) {
+      toast.message(i18n.t("shell.dbtReadOnly"));
+      return;
+    }
     const s = useSchemaStore.getState();
     s.setSaveState("saving");
     const dbmlToSave = explicitDbml !== undefined ? explicitDbml : s.dbml;
@@ -323,10 +378,13 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     return () => clearTimeout(id);
   }, [saveState]);
 
-  const parsed = useMemo(() => parseDbml(dbml), [dbml]);
+  const parsed = useMemo(() => dbtParsed ?? parseDbml(dbml), [dbml, dbtParsed]);
   const dbmlBlocks = useMemo(() => splitDbmlBlocks(dbml), [dbml]);
   const dbmlDeferred = useDeferredValue(dbml);
-  const parsedDeferred = useMemo(() => parseDbml(dbmlDeferred), [dbmlDeferred]);
+  const parsedDeferred = useMemo(
+    () => dbtParsed ?? parseDbml(dbmlDeferred),
+    [dbmlDeferred, dbtParsed],
+  );
   const canvasParsePending = dbml !== dbmlDeferred;
 
   const [canvasModel, setCanvasModel] = useState<ParseResult>(EMPTY_PARSE);
@@ -422,14 +480,18 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     setCommittedDbml(next);
   }, []);
 
-  const mutateDbml = useCallback((fn: (d: string) => string) => {
-    useSchemaStore.getState().setDbml((d) => {
-      const next = fn(d);
-      prevDbmlRef.current = next;
-      setCommittedDbml(next);
-      return next;
-    });
-  }, []);
+  const mutateDbml = useCallback(
+    (fn: (d: string) => string) => {
+      if (guardReadOnly()) return;
+      useSchemaStore.getState().setDbml((d) => {
+        const next = fn(d);
+        prevDbmlRef.current = next;
+        setCommittedDbml(next);
+        return next;
+      });
+    },
+    [guardReadOnly],
+  );
 
   const modelIssues = useMemo(() => {
     const issues = validateModel(activeModel, dbml, dbmlBlocks);
@@ -499,9 +561,13 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     }
   }, []);
 
-  const handleDbmlChange = useCallback((next: string) => {
-    useSchemaStore.getState().setDbml(next);
-  }, []);
+  const handleDbmlChange = useCallback(
+    (next: string) => {
+      if (guardReadOnly()) return;
+      useSchemaStore.getState().setDbml(next);
+    },
+    [guardReadOnly],
+  );
 
   const goToLine = useCallback((line: number) => {
     setSourceDrawerOpen(true);
@@ -707,6 +773,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     () => ({
       onSelectColumn: (table, column) => selectColumn({ table, column }),
       onRenameColumn: (table, oldName, newName) => {
+        if (guardReadOnly()) return;
         const trimmed = newName.trim();
         const existing =
           modelRef.current.tables
@@ -731,6 +798,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       },
       onGoToColumn: goToColumn,
       onRenameTable: (tableId, newName) => {
+        if (guardReadOnly()) return;
         const trimmed = newName.trim();
         const dup = findDuplicateTableId(
           trimmed,
@@ -749,13 +817,19 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
         migrateTableId(tableId, trimmed);
       },
       onRemoveTable: handleRemoveTable,
-      onAddColumn: (table) =>
-        useSchemaStore.getState().setDbml((d) => addColumn(d, table, "nova_coluna", "string")),
+      onAddColumn: (table) => {
+        if (guardReadOnly()) return;
+        useSchemaStore.getState().setDbml((d) => addColumn(d, table, "nova_coluna", "string"));
+      },
       colorOf: (id) => colorsRef.current[id],
-      onSetColor: (id, color) =>
-        useSchemaStore.getState().setDbml((d) => setTableColor(d, id, color)),
-      onSetGroupColor: (group, color) =>
-        useSchemaStore.getState().setDbml((d) => setGroupColor(d, group, color)),
+      onSetColor: (id, color) => {
+        if (guardReadOnly()) return;
+        useSchemaStore.getState().setDbml((d) => setTableColor(d, id, color));
+      },
+      onSetGroupColor: (group, color) => {
+        if (guardReadOnly()) return;
+        useSchemaStore.getState().setDbml((d) => setGroupColor(d, group, color));
+      },
       onResizeTable: (id, width, height) =>
         useSchemaStore.getState().setSizes((prev) => ({
           ...prev,
@@ -773,15 +847,19 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
         return schema && arr.some((l) => l.id === schema) ? schema : undefined;
       },
       layerColorOf: (layerId) => layerColorOf(layersArrRef.current, layerId),
-      onSetLayer: (id, layerId) =>
+      onSetLayer: (id, layerId) => {
+        if (guardReadOnly()) return;
         useSchemaStore
           .getState()
           .setDbml((d) =>
             setTableLayer(d, id, layerId, layerColorOf(layersArrRef.current, layerId ?? undefined)),
-          ),
+          );
+      },
       layers: layersArr,
-      onAddLayer: (name, color) =>
-        useSchemaStore.getState().setDbml((d) => addLayerGroup(d, name, color)),
+      onAddLayer: (name, color) => {
+        if (guardReadOnly()) return;
+        useSchemaStore.getState().setDbml((d) => addLayerGroup(d, name, color));
+      },
       onToggleGroup: (name) =>
         useSchemaStore
           .getState()
@@ -791,7 +869,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       tableMeta: (id) => tableMetaOf(id, modelRef, lineageRef),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers read refs; layers is the one render-time field
-    [layersArr],
+    [layersArr, guardReadOnly],
   );
 
   const handleAddFieldLineage = useCallback(
@@ -861,6 +939,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const handleCreateRef = useCallback(
     (fromTbl: string, fromCol: string, toTbl: string, toCol: string) => {
+      if (guardReadOnly()) return;
       if (!fromCol || !toCol) return;
       const fromTable = activeModel.tables.find((t) => t.id === fromTbl);
       const toTable = activeModel.tables.find((t) => t.id === toTbl);
@@ -874,7 +953,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
         pushStatus(`Relação criada: ${fromTbl}.${fromCol} → ${toTbl}.${toCol}`);
       }
     },
-    [activeModel.tables, mutateDbml, pushStatus],
+    [activeModel.tables, mutateDbml, pushStatus, guardReadOnly],
   );
   const handleRemoveRef = useCallback(
     (fromTbl: string, fromCol: string, toTbl: string, toCol: string) => {
@@ -918,6 +997,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   );
 
   const handleImport = useCallback(() => {
+    if (guardReadOnly()) return;
     void run("Importando", async () => {
       const s = useSchemaStore.getState();
       const importCall = s.currentProjectId
@@ -957,7 +1037,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
         ? `Importado: ${imported.join(", ")}${l2Note}${warnNote}${scaleNote}`
         : "Nenhum .sql em data/input/";
     });
-  }, [activeModel, run]);
+  }, [activeModel, run, guardReadOnly]);
 
   const switchProject = useCallback(
     async (id: string) => {
@@ -1097,13 +1177,16 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   );
 
   const handleOrganize = useCallback(() => {
+    if (guardReadOnly()) return;
     useSchemaStore.getState().setDbml((d) => organize(d));
     pushStatus("Organizado: tabelas → refs → records");
-  }, [pushStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pushStatus is a stable []-deps callback
+  }, [guardReadOnly]);
 
   const bumpFitView = useCallback(() => setFitViewTrigger((n) => n + 1), []);
 
   const handleAddTable = useCallback(() => {
+    if (guardReadOnly()) return;
     const name = window.prompt("Nome da nova tabela (schema.tabela):", "novo_schema.nova_tabela");
     if (!name?.trim()) return;
     const tableId = name.trim();
@@ -1123,16 +1206,17 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     focusTableWithPan(tableId);
     pushStatus(`Tabela criada: ${tableId}`);
     useSchemaStore.getState().setSaveState("dirty");
-  }, [activeModel.tables, mutateDbml, focusTableWithPan, pushStatus]);
+  }, [activeModel.tables, mutateDbml, focusTableWithPan, pushStatus, guardReadOnly]);
 
   const handleAddMetadata = useCallback(() => {
+    if (guardReadOnly()) return;
     useSchemaStore
       .getState()
       .setDbml(
         (d) =>
           d + `\n// metadados padrão (cole dentro de uma Table):\n/*\n${METADATA_SNIPPET}\n*/\n`,
       );
-  }, []);
+  }, [guardReadOnly]);
 
   const saveFromPalette = useCallback(() => {
     const committed = editorRef.current?.commit?.();

@@ -1,0 +1,19 @@
+{
+  "activeId": "c0ffee00dbt0vend",
+  "projects": [
+    {
+      "id": "c0ffee00dbt0vend",
+      "name": "vendas",
+      "slug": "vendas",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    },
+    {
+      "id": "dbdb0000vendasml",
+      "name": "vendas-dbml",
+      "slug": "vendas-dbml",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    }
+  ]
+}
