@@ -185,7 +185,12 @@ describe("Inspector", () => {
     expect(detail.textContent).toContain("cliente_id");
     expect(detail.textContent).toContain("bigint");
     expect(screen.getByTestId("inspector-comes-from").textContent).toContain("loja.cliente.id");
-    expect(screen.queryByText("Rastrear")).toBeNull();
+    fireEvent.click(screen.getByText("Rastrear"));
+    expect(useSchemaStore.getState().focus).toEqual({
+      kind: "field",
+      table: "loja.pedido",
+      column: "cliente_id",
+    });
   });
 
   it("shows batch actions for multiple selected tables", () => {
