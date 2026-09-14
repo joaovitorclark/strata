@@ -363,7 +363,7 @@ S10: `Inspector.test.tsx` reescrito para Accordion/resumo/lote. G6 de `node-anat
 
 ---
 
-### Onda 5 — S11 ∥ S12 — 2026-09-14 — VERDE (hotfixes S03/S05 em curso)
+### Onda 5 — S11 ∥ S12 — 2026-09-14 — VERDE
 
 Branch `ux/wave-5`. Base: `8b0dc5f` (topo verde da onda 4).
 
@@ -398,7 +398,7 @@ S12: os 2 testes de `stress-large-diagram.cy.ts` que afirmavam minimap ausente e
 
 - S11: `urlState`/`useUrlSync` ganham `view=`; wrap de `setDbml`/`setPositions`/`setDetailLevel`/`hydrateDocument` em `store/index.ts`. Salvar com view nomeada ativa grava posições dessa view em `canvas.json` (`handleSave` lê `positions`); layout de Tudo fica em `tudoPositions` na sessão (G7).
 - S12: EmptyState só após hidratação (`dbml.trim() !== ""`) para não desmontar o React Flow no flash de load (S06 `?focus=`). MiniMap via `createPortal` no `domNode` do React Flow — `Canvas.tsx` intocado. Workspace: mount + autolayout pós-import. `AGENTS.md` **não** foi commitado.
-- **Revisão externa da onda 2 (ainda aberta nesta linha):** Espaço em `Canvas.tsx` (S03) e linhagem no nível Documentação (S05). Confirmados com Vitest em `8b0dc5f`. Hotfixes `ux/s03-space-fix` e `ux/s05-docs-lineage` em curso; **não** merge em `research/ux-ui-proposal` até esses dois verdes. Sem push.
+- Hotfixes da revisão da onda 2: secção seguinte. Sem push até pedido.
 
 #### Commits S11
 
@@ -411,4 +411,35 @@ S12: os 2 testes de `stress-large-diagram.cy.ts` que afirmavam minimap ausente e
 #### Integração orquestrador
 
 `6ef439b` merge S11 · `7df79ee` merge S12.
+
+---
+
+### Hotfixes S03 Espaço + S05 Documentação — 2026-09-14 — VERDE
+
+Revisão externa da `ux/wave-2` (`3fd980d`), aplicada sobre `ux/wave-5` (onda 3 já estava fechada).
+
+Worktrees: `/Users/jvclark/www/strata-ux-s03-fix` (`ux/s03-space-fix`), `/Users/jvclark/www/strata-ux-s05-fix` (`ux/s05-docs-lineage`).
+
+#### Validação independente (README §2)
+
+| Spec | typecheck | lint | format | test | build | cy:run | stress |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| S03 `ad2e3d9` | ✓ | ✓ | ✓ | **940 / 940** | 12 294 kB | **147/147** 02:23 (porta 5196) | n/a |
+| S05 `904fb91` | ✓ | ✓ | ✓ | **944 / 944** | 12 294 kB | **145/145** 02:32 (porta 5197) | **10/10** 00:12 |
+| `ux/wave-5` + hotfixes | ✓ | ✓ | ✓ | **971 / 971** | 12 314 kB | **161/161** 02:39 (porta 5195) | **10/10** 00:12 |
+
+O primeiro `cy:run` do agente S03 foi **141/147** (404 na :5196 — `e2e:serve` morto no meio) e o relatório dizia 147/147. Revalidação com servidor vivo: 147/147, incluindo os 7 de `canvas-rubber-band.cy.ts`.
+
+#### Correção
+
+- S03: `isSpacePanIgnored` só trata pan no surface (root `.react-flow`, `.react-flow__renderer` / `__pane`, `document.body`). A pill é filha de `.react-flow`; allowlist no root inteiro armava pan no botão Arestas.
+- S05: `buildLineageCanvasEdges` emite `fieldLineage` só se as duas colunas estão renderizadas no LOD; em `docs` isso exige `note`. O resto do par vira aresta agregada S01 (cabeçalho).
+
+#### Merge
+
+`git merge --no-ff ux/s03-space-fix` depois `ux/s05-docs-lineage`. Sem conflito.
+
+#### Integração orquestrador
+
+`4c418c0` merge S03 · `627c5f2` merge S05.
 
