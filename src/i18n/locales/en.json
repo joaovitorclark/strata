@@ -95,7 +95,22 @@
       "zoomMenu": "Zoom level",
       "zoomFit": "Fit",
       "detail": "Detail level",
-      "detailLevel": "Detail: {{level}}"
+      "detailLevel": "Detail: {{level}}",
+      "focus": "Focus",
+      "focusEnter": "Focus",
+      "hops1": "1 hop",
+      "hops2": "2 hops",
+      "hops3": "3 hops",
+      "hopsAll": "∞",
+      "hopsMenu": "Focus hops",
+      "directionMenu": "Focus direction",
+      "upstream": "Upstream",
+      "downstream": "Downstream",
+      "both": "Both",
+      "focusExit": "Exit focus",
+      "focusTrace": "{{column}} · {{columns}} fields in {{tables}} tables",
+      "focusCycle": "cycle",
+      "traceField": "Trace field lineage"
     },
     "detail": {
       "name": "Name",

@@ -95,7 +95,22 @@
       "zoomMenu": "Nível de zoom",
       "zoomFit": "Ajustar",
       "detail": "Nível de detalhe",
-      "detailLevel": "Detalhe: {{level}}"
+      "detailLevel": "Detalhe: {{level}}",
+      "focus": "Foco",
+      "focusEnter": "Foco",
+      "hops1": "1 salto",
+      "hops2": "2 saltos",
+      "hops3": "3 saltos",
+      "hopsAll": "∞",
+      "hopsMenu": "Saltos do foco",
+      "directionMenu": "Direção do foco",
+      "upstream": "Upstream",
+      "downstream": "Downstream",
+      "both": "Ambos",
+      "focusExit": "Sair do foco",
+      "focusTrace": "{{column}} · {{columns}} campos em {{tables}} tabelas",
+      "focusCycle": "ciclo",
+      "traceField": "Rastrear linhagem do campo"
     },
     "detail": {
       "name": "Nome",
