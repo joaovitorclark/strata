@@ -127,4 +127,32 @@ describe("SchemaTree", () => {
     fireEvent.keyDown(row, { key: " " });
     expect(useSchemaStore.getState().hiddenTableIds).toEqual(["loja.pedido"]);
   });
+
+  it("in a named view lists only view tables and a collapsed outside section", () => {
+    useSchemaStore.getState().setDbml(`Table loja.pedido {
+  id int
+}
+Table loja.cliente {
+  id int
+}
+Views {
+  view_1 {
+    tables: loja.pedido
+  }
+}
+`);
+    useSchemaStore.getState().setActiveView("view_1");
+    render(
+      <SchemaTree
+        tables={[
+          table({ id: "loja.pedido", name: "pedido", schema: "loja" }),
+          table({ id: "loja.cliente", name: "cliente", schema: "loja" }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "loja.pedido" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "loja.cliente" })).toBeNull();
+    expect(screen.getByTestId("schema-tree-outside").textContent).toMatch(/Fora desta view \(1\)/);
+  });
 });

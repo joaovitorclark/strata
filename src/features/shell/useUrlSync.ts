@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { parseDbml } from "@/features/schema/model/parse";
+import { TUDO_VIEW_ID } from "@/features/schema/model/views";
 import { useSchemaStore } from "@/features/schema/store";
 import { parseUrlState, serializeUrlState, type UrlState } from "@/features/shell/urlState";
 
@@ -138,10 +139,14 @@ function writeUrlFromStore(): void {
     const extras = parseUrlState(window.location.search).extra;
     const state: UrlState = {
       project: store.currentProjectId || undefined,
+      view: store.activeViewId !== TUDO_VIEW_ID ? store.activeViewId : undefined,
       detail: store.detailLevel,
       focus: store.selectedTable || undefined,
       col: store.selectedColumn?.column,
-      hidden: store.hiddenTableIds,
+      hidden:
+        store.activeViewId === TUDO_VIEW_ID
+          ? store.hiddenTableIds
+          : (store.hiddenByView[store.activeViewId] ?? []),
       z: vp?.zoom,
       x: vp?.x,
       y: vp?.y,
@@ -195,6 +200,7 @@ async function applyIncoming(options: UrlSyncOptions): Promise<void> {
   }
 
   const after = useSchemaStore.getState();
+  if (incoming.view) after.setActiveView(incoming.view);
   if (incoming.detail) after.setDetailLevel(incoming.detail);
   if (incoming.hidden) after.setHiddenTables(incoming.hidden);
 
@@ -221,6 +227,7 @@ export function useUrlSync({ focusTableWithPan, switchProject }: UrlSyncOptions)
   const selectedTable = useSchemaStore((s) => s.selectedTable);
   const selectedColumn = useSchemaStore((s) => s.selectedColumn);
   const hiddenTableIds = useSchemaStore((s) => s.hiddenTableIds);
+  const activeViewId = useSchemaStore((s) => s.activeViewId);
   const [live, setLive] = useState(false);
   const appliedRef = useRef(false);
   const applyingRef = useRef(false);
@@ -243,7 +250,15 @@ export function useUrlSync({ focusTableWithPan, switchProject }: UrlSyncOptions)
   useEffect(() => {
     if (!live) return;
     scheduleDebounced("store", writeUrlFromStore);
-  }, [live, currentProjectId, detailLevel, selectedTable, selectedColumn, hiddenTableIds]);
+  }, [
+    live,
+    currentProjectId,
+    detailLevel,
+    selectedTable,
+    selectedColumn,
+    hiddenTableIds,
+    activeViewId,
+  ]);
 
   useEffect(() => {
     if (!live || typeof document === "undefined") return;

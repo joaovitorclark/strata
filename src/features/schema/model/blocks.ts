@@ -14,6 +14,7 @@ export type BlockType =
   | 'rolenames'
   | 'colors'
   | 'pins'
+  | 'views'
   | 'dbt'
   | 'comment'
   | 'blank';
@@ -61,6 +62,7 @@ function detectType(trimmed: string): BlockType {
   if (/^Rolenames\b/i.test(trimmed)) return 'rolenames';
   if (/^Colors\b/i.test(trimmed)) return 'colors';
   if (/^Pins\b/i.test(trimmed)) return 'pins';
+  if (/^Views\b/i.test(trimmed)) return 'views';
   if (/^Dbt\b/i.test(trimmed)) return 'dbt';
   return 'comment';
 }

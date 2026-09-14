@@ -2,12 +2,13 @@ import { isDetailLevel, type DetailLevel } from "@/features/canvas/utils/lod";
 
 export const HIDDEN_URL_LIMIT = 50;
 
-const KNOWN_KEYS = ["project", "detail", "focus", "col", "hidden", "z", "x", "y"] as const;
+const KNOWN_KEYS = ["project", "view", "detail", "focus", "col", "hidden", "z", "x", "y"] as const;
 
 const KNOWN = new Set<string>(KNOWN_KEYS);
 
 export type UrlState = {
   project?: string;
+  view?: string;
   detail?: DetailLevel;
   focus?: string;
   col?: string;
@@ -61,6 +62,8 @@ export function parseUrlState(search: string): Partial<UrlState> {
   const state: Partial<UrlState> = {};
   const project = params.get("project");
   if (project) state.project = project;
+  const view = params.get("view") || undefined;
+  if (view && view !== "tudo") state.view = view;
   if (isDetailLevel(detailRaw)) state.detail = detailRaw;
   if (focus) state.focus = focus;
   if (col) state.col = col;
@@ -89,6 +92,7 @@ export function serializeUrlState(state: UrlState, base: string): string {
 
   const ordered = new URLSearchParams();
   if (state.project) ordered.set("project", state.project);
+  if (state.view && state.view !== "tudo") ordered.set("view", state.view);
   if (state.detail) ordered.set("detail", state.detail);
   if (state.focus) ordered.set("focus", state.focus);
   if (state.focus && state.col) ordered.set("col", state.col);

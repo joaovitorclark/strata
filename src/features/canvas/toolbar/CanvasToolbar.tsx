@@ -22,6 +22,7 @@ export function CanvasToolbar({ onAutolayout }: CanvasToolbarProps) {
         "-translate-x-1/2 items-center gap-1 rounded-full border border-border bg-card/95 px-1.5 shadow-md",
       )}
     >
+      <ViewTabs />
       <ZoomControls />
       {onAutolayout ? (
         <>
@@ -33,7 +34,6 @@ export function CanvasToolbar({ onAutolayout }: CanvasToolbarProps) {
       <EdgeVisibility />
       <DetailLevelSelect />
       <FocusControls />
-      <ViewTabs />
       <MiniMapToggle />
     </div>
   );
