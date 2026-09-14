@@ -55,6 +55,7 @@ bash scripts/dbt/validate.sh   # venv com dbt-core + dbt-duckdb + sqlglot (últi
 | [D4](04-transform.md) | IR de transformação e geração de SQL | D2 | `src/features/dbt-source/transform.ts`, `src/features/dbt-source/yamlEdit.transform.ts` (novo), `src/features/shell/inspector/TransformSection.tsx` (novo), `server/routes/exportRoutes.ts` |
 | [D5](05-managed.md) | Marcação de gerenciados, lockfile e drift | D2 | `src/features/dbt-source/managed.ts`, `src/features/dbt-source/yamlEdit.managed.ts` (novo), `server/dbtSource/lock.ts`, `scripts/strata-verify.mjs`, `.github/workflows/ci.yml` |
 | [D6](06-migrate-and-retire-dbml.md) | Migrar projetos DBML e aposentar o DBML | D3, D4, D5 | tudo que ainda depende de DBML — lista na própria spec |
+| [D7](07-transform-canvas.md) | Tela de transformação (antes/depois) — protótipo aprovado | D4, D5, D6 | `src/features/transform/**` (novo), `src/features/shell/Workspace.tsx` (só o mount) |
 
 Caminhos relativos à raiz do repositório.
 
@@ -66,6 +67,7 @@ Onda B ─ D2
 Onda C ─ D3 ║ D4 ║ D5        (arquivos donos disjuntos; D4 e D5 NÃO editam yamlEdit.ts —
                               cada uma cria o seu yamlEdit.<fase>.ts reusando os helpers exportados)
 Onda D ─ D6
+Onda E ─ D7
 ```
 
 **Edições compartilhadas permitidas** (qualquer fase): i18n, registro de slice em

@@ -75,5 +75,5 @@ Expressões são **texto SQL** guardado como está; o Strata não as reescreve. 
     colunas no inspector.
 
 ## 5. Fora de escopo
-Canvas antes/depois (fase de UX com protótipo), inferência de linhagem de SQL manual (S13),
+Canvas antes/depois (D7, protótipo aprovado), inferência de linhagem de SQL manual (S13),
 `dbt compile` de models manuais.
