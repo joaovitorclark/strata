@@ -33,6 +33,26 @@ function columnNameSpan(tableId: string, name: string) {
   return cy.get(nodeSel(tableId)).contains(".col-row span", new RegExp(`^${name}$`));
 }
 
+/** Dispatch keydown on an element so `event.target` is that node, not `window`. */
+function fireKeyOn(selector: string, init: KeyboardEventInit): void {
+  cy.get(selector).then(($el) => {
+    const el = $el[0];
+    const win = el.ownerDocument.defaultView;
+    if (!win) throw new Error("no view");
+    el.dispatchEvent(
+      new win.KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        ...init,
+      }),
+    );
+  });
+}
+
+function fireSpaceOn(selector: string): void {
+  fireKeyOn(selector, { key: " ", code: "Space" });
+}
+
 function paneMouseDrag(dx: number, dy: number): void {
   cy.get(".react-flow__pane").then(($pane) => {
     const el = $pane[0];
@@ -88,14 +108,58 @@ describe("S03 rubber-band, space pan, Escape stack", () => {
     cy.get(".react-flow__viewport")
       .invoke("attr", "style")
       .then((before) => {
-        fireWindowKey({ key: " ", code: "Space" });
+        fireSpaceOn(".react-flow__pane");
         cy.get(".canvas-wrap").should("have.class", "canvas-wrap--space-pan");
+        cy.get(".react-flow__pane").should("have.css", "cursor", "grab");
         paneMouseDrag(140, 90);
         cy.get(".react-flow__viewport").should(($vp) => {
           expect($vp.attr("style"), "viewport translated").to.not.eq(before);
         });
         cy.get(".react-flow__node-table.selected").should("have.length", 0);
       });
+  });
+
+  it("Space on the pane arms space-pan without a window-target synthetic key", () => {
+    fireSpaceOn(".react-flow__pane");
+    cy.get(".canvas-wrap").should("have.class", "canvas-wrap--space-pan");
+    cy.get(".react-flow__pane").should("have.css", "cursor", "grab");
+  });
+
+  it("Space on the Arestas trigger opens the menu and does not arm space-pan", () => {
+    cy.get('[data-testid="edge-visibility"]').should("have.attr", "aria-label", "Arestas").focus();
+    fireSpaceOn('[data-testid="edge-visibility"]');
+    cy.get('[data-testid="edge-visibility"]').should("have.attr", "aria-expanded", "true");
+    cy.get('[role="menuitemcheckbox"]').contains("Relações").should("be.visible");
+    cy.get(".canvas-wrap").should("not.have.class", "canvas-wrap--space-pan");
+  });
+
+  it("Space on the Relações checkbox toggles FK visibility", () => {
+    cy.get(".edge-path--fk").should("have.length.at.least", 1);
+    cy.get('[data-testid="edge-visibility"]').click();
+    cy.contains('[role="menuitemcheckbox"]', "Relações").should("be.visible");
+    cy.contains('[role="menuitemcheckbox"]', "Relações").then(($item) => {
+      const checked =
+        $item.attr("data-state") === "checked" || $item.attr("aria-checked") === "true";
+      expect(checked, "Relações starts checked").to.eq(true);
+      const el = $item[0];
+      const win = el.ownerDocument.defaultView;
+      if (!win) throw new Error("no view");
+      el.dispatchEvent(
+        new win.KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: " ",
+          code: "Space",
+        }),
+      );
+    });
+    cy.contains('[role="menuitemcheckbox"]', "Relações").should(($item) => {
+      const unchecked =
+        $item.attr("data-state") === "unchecked" || $item.attr("aria-checked") === "false";
+      expect(unchecked, "Relações unchecked after Space").to.eq(true);
+    });
+    cy.get(".edge-path--fk").should("not.exist");
+    cy.get(".canvas-wrap").should("not.have.class", "canvas-wrap--space-pan");
   });
 
   it("G6: Esc clears column first, then table", () => {

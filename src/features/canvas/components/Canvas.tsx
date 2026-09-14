@@ -58,14 +58,27 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const isMacOs = () =>
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.userAgent);
 
-/** G8 / Space-to-pan: ignore typing surfaces and the source drawer. */
+/**
+ * G8 / Space-to-pan: only arm pan when focus is on the canvas surface or
+ * `document.body`. The React Flow root (`.react-flow`) and the diagram
+ * (`.react-flow__renderer` / `.react-flow__pane`) count; overlay chrome
+ * rendered as RF children (toolbar, etc.) does not. Typing surfaces and
+ * the source drawer keep native Space.
+ */
 export function isSpacePanIgnored(event: { target: EventTarget | null }): boolean {
   const target = event.target;
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+  if (!(target instanceof Element)) return true;
+  if (target instanceof HTMLElement) {
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+      return true;
+    }
+  }
+  if (target.closest(".cm-editor") || target.closest('[data-testid="source-drawer"]')) {
     return true;
   }
-  return Boolean(target.closest(".cm-editor") || target.closest('[data-testid="source-drawer"]'));
+  if (target === document.body) return false;
+  if (target.classList.contains("react-flow")) return false;
+  return !target.closest(".react-flow__renderer, .react-flow__pane");
 }
 
 function panOnDragForCanvas(spaceHeld: boolean): boolean | number[] {
