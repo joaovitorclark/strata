@@ -180,3 +180,83 @@ Conflitos resolvidos (não-donos / overlap conhecido):
 
 `b54bcae` `747cb03` `639399f` `57de8e3` `405cb6b` `11ba63c` `3089ece` `3b9fdb1`
 
+---
+
+### Onda 2 — S03 ∥ S04 ∥ S05 — 2026-09-14 — VERDE
+
+Branch `ux/wave-2` (`dc014c8`). Base: `51f9b8d` (topo verde da onda 1).
+
+Worktrees: `/Users/jvclark/www/strata-ux-s03` (`ux/s03`), `/Users/jvclark/www/strata-ux-s04` (`ux/s04`), `/Users/jvclark/www/strata-ux-s05` (`ux/s05`), `/Users/jvclark/www/strata-ux-wave-2`.
+
+#### Validação independente (README §2)
+
+| Spec | typecheck | lint | format | test | build | cy:run | stress |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| S03 `62c971a` | ✓ | ✓ | ✓ | **130 / 909** | 12 175 kB | **101/101** 01:21 (porta 5179) | n/a |
+| S04 `d04684e` | ✓ | ✓ | ✓ | **131 / 910** | ✓ | **99/99** (porta 5181) | n/a |
+| S05 `8ce10ad` | ✓ | ✓ | ✓ | **129 / 907** | 12 180 kB | **99/99** 01:20 (porta 5182) | **9/9** 00:09 |
+| `ux/wave-2` integrado | ✓ | ✓ | ✓ | **132 / 912** | 12 186 kB | **111/111** 01:30 (porta 5183) | **9/9** 00:09 |
+
+`files.test.ts` falhou 1× no worktree fresco (`inputDir` null); rerun 912/912. Pré-existente / ordem de workers (igual onda 1).
+
+Smoke wall-clock 90s vs onda 1 72s **com 111 testes vs 94**. Por teste: ~0,81s vs ~0,77s (+5%). Abaixo do limiar de 10% por teste.
+
+S03 cy:run independente inicial: 100/101. `row 76` falhava de forma consistente — o teste clicava `+` duas vezes a partir de `scale(1)` (antes do `InitialFitHelper`) e o fit da pill (~1,66) **aproximava** o zoom. Fit de produto ok. Correção: `waitForInitialFit()` + menu 200% antes do fit (`62c971a`).
+
+#### Gates
+
+- S03 **G1–G8** (8/8). Cypress G1–G6 em `canvas-zoom.cy.ts` / `canvas-rubber-band.cy.ts`; Vitest G7–G8.
+- S04 **G1–G8** (8/8). Cypress G1–G5 em `tree-navigation.cy.ts`.
+- S05 **G1–G10** (10/10). Vitest G1–G4 em `lod.test.ts`; Cypress G5–G9 em `canvas-detail-level.cy.ts`; G10 em `stress-wide-table.cy.ts`.
+
+#### Testes removidos / reescritos
+
+S03: `CommandPalette` Esc só com palette aberta; zoom saiu da status bar; row 76 espera fit inicial + 200%.
+
+S04: árvore deixa de ser só outline; testes de affordance morta da árvore reescritos.
+
+S05 (autorizado — zoom ≠ conteúdo): `lod.test.ts` `resolveLod(zoom → level)`; `canvas-lod.cy.ts`; S01 G19/G20 e zoomToFull/zoomToSigil; aresta agregada no nível Nome; stress-node-height pelo seletor de detalhe.
+
+#### Merge
+
+`git merge --no-ff ux/s03` depois `ux/s04` depois `ux/s05`. Auto-merge: `Workspace.tsx` (S03 tira zoom da StatusBar; S04 `onFocusTable`).
+
+Conflitos resolvidos (compartilhados):
+
+- `gestures.ts`: atalhos de zoom S03 **e** 1–4 de detalhe S05 (`⇧1` vs `1`).
+- i18n `canvas.toolbar`: chaves de zoom S03 + detalhe S05.
+
+Integração (orquestrador, não produto das specs):
+
+- `Canvas.tsx` consome `visibleTableIdSet` / `filterEdgesByVisibleIds` (S04) sem editar `useCanvasEdges` (S05). Ends não-tabela (stubs) permanecem no conjunto permitido.
+- Prettier em `canvas-select-sync.cy.ts` pós-merge S03.
+
+#### Desvios / pendências
+
+- **TableInfoPopover desmontado (S02) — S07 remonta** no tooltip do cabeçalho do nó.
+- MiniMap ausente até **S12**.
+- FocusControls / ViewTabs ainda stubs (ondas 4–5).
+- S05: `ColumnRow.tsx`, `autolayout.ts`, `useWorkspace.ts` fora dos donos (barras simplificadas, layout pelo nível, persistência). Aceite cirúrgico.
+- S03: `CommandPalette.tsx` + `Workspace.tsx` fora dos donos (Esc empilhado; props de zoom).
+- Sem push.
+
+#### Commits S03
+
+`9d8789b` `04e24e6` `62c971a`
+
+#### Commits S04
+
+`d04684e`
+
+#### Commits S05
+
+`8ce10ad`
+
+#### Commits S01
+
+`8cfd7e9` `08a0334` `77b9574` `22edc55` `d3e2b89`
+
+#### Commits S02
+
+`b54bcae` `747cb03` `639399f` `57de8e3` `405cb6b` `11ba63c` `3089ece` `3b9fdb1`
+
