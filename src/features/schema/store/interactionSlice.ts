@@ -1,6 +1,27 @@
 import type { StateCreator } from "zustand";
 import type { LodSlice } from "@/features/canvas/store/lodSlice";
+import { isDetailLevel, type DetailLevel } from "@/features/canvas/utils/lod";
 import type { DocumentSlice } from "./documentSlice";
+
+export const DETAIL_LEVEL_STORAGE_KEY = "strata.detailLevel";
+
+function readStoredDetailLevel(): DetailLevel {
+  try {
+    const raw = localStorage.getItem(DETAIL_LEVEL_STORAGE_KEY);
+    if (isDetailLevel(raw)) return raw;
+  } catch {
+    /* private mode / SSR */
+  }
+  return "keys";
+}
+
+function writeStoredDetailLevel(level: DetailLevel): void {
+  try {
+    localStorage.setItem(DETAIL_LEVEL_STORAGE_KEY, level);
+  } catch {
+    /* private mode */
+  }
+}
 
 export type SelectedColumn = { table: string; column: string } | null;
 
@@ -58,6 +79,9 @@ export type InteractionSlice = {
   selectFieldLineageMapping: (m: FieldMappingFocus) => void;
   mappingPanelOpen: boolean;
   toggleMappingPanel: () => void;
+
+  detailLevel: DetailLevel;
+  setDetailLevel: (level: DetailLevel) => void;
 };
 
 export const createInteractionSlice: StateCreator<
@@ -178,4 +202,12 @@ export const createInteractionSlice: StateCreator<
     set((state) => {
       state.mappingPanelOpen = !state.mappingPanelOpen;
     }),
+
+  detailLevel: readStoredDetailLevel(),
+  setDetailLevel: (level) => {
+    writeStoredDetailLevel(level);
+    set((state) => {
+      state.detailLevel = level;
+    });
+  },
 });

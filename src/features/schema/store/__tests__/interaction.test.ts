@@ -67,4 +67,12 @@ describe("schema interaction store", () => {
     expect(twice.has("bronze")).toBe(false);
     expect(twice).not.toBe(once);
   });
+
+  it("defaults detailLevel to keys and persists setDetailLevel", () => {
+    localStorage.removeItem("strata.detailLevel");
+    expect(useSchemaStore.getState().detailLevel).toBe("keys");
+    useSchemaStore.getState().setDetailLevel("columns");
+    expect(useSchemaStore.getState().detailLevel).toBe("columns");
+    expect(localStorage.getItem("strata.detailLevel")).toBe("columns");
+  });
 });

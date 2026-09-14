@@ -87,7 +87,17 @@
       "lineage": "Lineage",
       "zoomPercent": "{{percent}}%",
       "zoomMenu": "Zoom level",
-      "zoomFit": "Fit"
+      "zoomFit": "Fit",
+      "detail": "Detail level",
+      "detailLevel": "Detail: {{level}}"
+    },
+    "detail": {
+      "name": "Name",
+      "keys": "Keys",
+      "columns": "Columns",
+      "docs": "Documentation",
+      "pinLevel": "Pin level",
+      "followGlobal": "Follow global"
     },
     "edges": {
       "removeRelation": "Remove relation",

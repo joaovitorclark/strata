@@ -2,10 +2,10 @@ import {
   animationNameOf,
   fireWindowKey,
   restoreSmoke,
+  selectCanvasDetailLevel,
   setEdgeVisibility,
   snapshotSmoke,
   waitForCanvas,
-  zoomUntil,
   type SmokeSnapshot,
 } from "./canvas-support";
 
@@ -34,7 +34,8 @@ describe("canvas edges", () => {
 
   it("aggregated lineage edge paints when Linhagem is checked", () => {
     setEdgeVisibility("Linhagem", true);
-    zoomUntil((z) => z < 0.55, "out");
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+    selectCanvasDetailLevel("Nome");
     cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {
       expect($path.length, "aggregated lineage path").to.be.at.least(1);

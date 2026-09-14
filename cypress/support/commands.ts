@@ -1,3 +1,11 @@
+function visitApp(): void {
+  cy.visit("/", {
+    onBeforeLoad(win) {
+      win.localStorage.removeItem("strata.detailLevel");
+    },
+  });
+}
+
 export type FixtureProject = "smoke" | "wide" | "large";
 
 declare global {
@@ -102,7 +110,7 @@ Cypress.Commands.add("seedProject", (name: FixtureProject) => {
       );
     }
     cy.request("POST", `/api/projects/${proj.id}/activate`);
-    cy.visit("/");
+    visitApp();
   });
 });
 
@@ -138,7 +146,7 @@ Cypress.Commands.add("resetFixture", (name: FixtureProject) => {
       },
     );
   });
-  cy.visit("/");
+  visitApp();
 });
 
 Cypress.Commands.add(

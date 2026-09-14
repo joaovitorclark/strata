@@ -1,4 +1,4 @@
-import { saveViaPaletteShortcut, waitForCanvas } from "./canvas-support";
+import { fireWindowKey, saveViaPaletteShortcut, waitForCanvas } from "./canvas-support";
 
 const EXISTING_REF = "Ref: vendas.pedido.cliente_id > vendas.cliente.id";
 const NEW_REF = "Ref: vendas.item.sku > vendas.pedido.id";
@@ -12,6 +12,10 @@ describe("reconnectHandle helper", () => {
   beforeEach(() => {
     cy.resetFixture("smoke");
     waitForCanvas();
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+    fireWindowKey({ key: "3" });
+    cy.get('[data-testid="detail-level-select"]').should("contain", "Colunas");
+    cy.get('[data-handleid="s:sku"]').should("exist");
   });
 
   // Guard + row 69. Asserts DBML Ref *text*, not a rendered edge.
@@ -38,6 +42,10 @@ describe("canvas creation gestures", () => {
   beforeEach(() => {
     cy.resetFixture("smoke");
     waitForCanvas();
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+    fireWindowKey({ key: "3" });
+    cy.get('[data-testid="detail-level-select"]').should("contain", "Colunas");
+    cy.get('[data-handleid="s:sku"]').should("exist");
   });
 
   it("row 40: dragging a column handle onto another column adds exactly one Ref", () => {

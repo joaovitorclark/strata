@@ -4,7 +4,7 @@ import type { TableNodeData } from "@/features/canvas/actions";
 import { ColumnRow, type ColumnRowProps } from "@/features/canvas/components/ColumnRow";
 import { computeVirtualWindow } from "@/features/canvas/hooks/useVirtualWindow";
 import { useTableScrollStore } from "@/features/canvas/store/tableScrollStore";
-import { keyColumns, type LodState } from "@/features/canvas/utils/lod";
+import { keyColumns, DOCS_NOTE_BLOCK_H, type LodState } from "@/features/canvas/utils/lod";
 import { useCanvasRowH } from "@/features/canvas/hooks/useCanvasDensity";
 import {
   COLUMN_VIRTUALIZE_THRESHOLD,
@@ -29,6 +29,7 @@ export type TableColumnListProps = {
   pinned?: readonly string[];
   filter?: string;
   peekColumns?: readonly string[];
+  simplified?: boolean;
   selectedColumn: string | null;
   editing: string | null;
   draft: string;
@@ -47,6 +48,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     pinned = [],
     filter = "",
     peekColumns,
+    simplified = false,
     selectedColumn,
     editing,
     draft,
@@ -126,12 +128,13 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     onDraftChange,
     onCommitEdit,
     onCancelEdit,
+    simplified,
   };
 
   if (state === "sigil") return null;
 
   if (state === "keys") {
-    const shown = peekSet ? scoped : keyColumns(data, pinned);
+    const shown = peekSet ? scoped : keyColumns(data, pinned, data.linkedColumns ?? []);
     const hidden = peekSet ? 0 : data.columns.length - shown.length;
     return (
       <div className="flex flex-col overflow-hidden">
@@ -151,6 +154,38 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
             + {hidden} more columns
           </button>
         ) : null}
+      </div>
+    );
+  }
+
+  if (state === "docs") {
+    const tableNote = data.note || data.meta?.note;
+    const noted = peekSet
+      ? scoped.filter((c) => Boolean(c.note))
+      : data.columns.filter((c) => Boolean(c.note));
+    return (
+      <div className="flex flex-col overflow-hidden">
+        {tableNote ? (
+          <p
+            className="box-border overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
+            style={{ height: DOCS_NOTE_BLOCK_H }}
+          >
+            {tableNote}
+          </p>
+        ) : null}
+        {noted.map((c) => (
+          <div key={c.name} className="flex flex-col">
+            <ColumnRow {...rowProps} column={c} />
+            {c.note ? (
+              <p
+                className="box-border overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
+                style={{ height: DOCS_NOTE_BLOCK_H }}
+              >
+                {c.note}
+              </p>
+            ) : null}
+          </div>
+        ))}
       </div>
     );
   }

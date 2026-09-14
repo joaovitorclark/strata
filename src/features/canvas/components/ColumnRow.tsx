@@ -17,6 +17,7 @@ export type ColumnRowProps = {
   selectedColumn: string | null;
   editing: string | null;
   draft: string;
+  simplified?: boolean;
   onSelect: (column: string, altKey: boolean, metaKey: boolean) => void;
   onStartEdit: (column: string) => void;
   onDraftChange: (value: string) => void;
@@ -36,6 +37,7 @@ function ColumnRowImpl({
   selectedColumn,
   editing,
   draft,
+  simplified: simplifiedProp,
   onSelect,
   onStartEdit,
   onDraftChange,
@@ -52,9 +54,11 @@ function ColumnRowImpl({
   const nodeId = useNodeId() ?? "";
   const lodPin = useSchemaStore((s) => (nodeId ? s.nodeLod[nodeId] : undefined));
   const selected = useSchemaStore((s) => s.selectedTableIds.includes(nodeId));
+  const detailLevel = useSchemaStore((s) => s.detailLevel);
   const zoom = useFlowZoom();
-  const lod = resolveLod(zoom, { pinned: lodPin, selected });
-  const showFieldHandles = lineageMode && lod === "full";
+  const resolved = resolveLod(zoom, { level: detailLevel, pinned: lodPin, selected });
+  const simplified = simplifiedProp ?? resolved.simplified;
+  const showFieldHandles = lineageMode && resolved.state !== "sigil";
 
   const downPos = useRef<{ x: number; y: number } | null>(null);
   const isInteractiveChild = useCallback(
@@ -130,6 +134,8 @@ function ColumnRowImpl({
           }}
           onClick={(e) => e.stopPropagation()}
         />
+      ) : simplified ? (
+        <span aria-hidden className="h-1.5 w-12 shrink-0 rounded-sm bg-muted-foreground" />
       ) : (
         <span
           className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
@@ -141,18 +147,20 @@ function ColumnRowImpl({
           {c.name}
         </span>
       )}
-      <span className="shrink-0 font-mono text-2xs text-muted-foreground">{c.type}</span>
-      {isPk ? (
+      {simplified ? null : (
+        <span className="shrink-0 font-mono text-2xs text-muted-foreground">{c.type}</span>
+      )}
+      {simplified ? null : isPk ? (
         <span className="shrink-0 rounded-sm bg-muted px-1 font-mono text-2xs text-foreground">
           PK
         </span>
       ) : null}
-      {isFk ? (
+      {simplified ? null : isFk ? (
         <span className="shrink-0 rounded-sm bg-muted px-1 font-mono text-2xs text-foreground">
           FK
         </span>
       ) : null}
-      {isUnique ? (
+      {simplified ? null : isUnique ? (
         <span className="shrink-0 rounded-sm bg-muted px-1 font-mono text-2xs text-foreground">
           UQ
         </span>
@@ -183,6 +191,7 @@ export const ColumnRow = memo(ColumnRowImpl, (prev, next) => {
   if (prev.editing !== next.editing) return false;
   if (prev.draft !== next.draft) return false;
   if (prev.pinned !== next.pinned) return false;
+  if (prev.simplified !== next.simplified) return false;
   if (prev.meta !== next.meta) return false;
   if (prev.compositePks !== next.compositePks) return false;
   if (prev.editing === prev.column.name) return false;
