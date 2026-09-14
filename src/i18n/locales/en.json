@@ -111,6 +111,26 @@
       "derivedFrom": "derived from",
       "fieldCount": "{{count}} fields",
       "externalLinks": "{{count}} links → {{label}}"
+    },
+    "node": {
+      "tableAria": "Table {{name}}, {{count}} columns",
+      "columnAria": "{{name}}, {{type}}, {{flags}}",
+      "moreColumns": "+ {{count}} columns",
+      "relations": "↔ {{count}}",
+      "tableMenu": "Table menu",
+      "renameColumn": "Rename column",
+      "pinColumn": "Pin column",
+      "unpinColumn": "Unpin column",
+      "filterColumns": "Filter columns",
+      "addColumn": "+ column",
+      "renameTableTitle": "Double-click to rename the table",
+      "glyphPk": "Primary key",
+      "glyphFk": "Foreign key",
+      "glyphLineage": "Has lineage",
+      "glyphUnique": "Unique",
+      "glyphIndex": "Index",
+      "glyphNotNull": "Not null",
+      "glyphNullable": "Nullable"
     }
   },
   "source": {

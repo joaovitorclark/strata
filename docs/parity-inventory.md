@@ -51,7 +51,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☑ canvas-select-sync.cy.ts |
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
-| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | dropped — superseded by S02 (TableInfoPopover unmounted from canvas chrome; S07 remounts as node-header tooltip). canvas-select-sync.cy.ts records the unmount. |
+| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☑ S07 remounts TableInfoPopover as a 500ms tooltip on the table name (node-anatomy.cy.ts; canvas-select-sync.cy.ts). |
 | 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-rubber-band.cy.ts |
 | 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | dropped — superseded by field-only lineage (this spec) |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
@@ -168,7 +168,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 156 | Panel:CredentialsWizard | "Cancelar" dismisses the wizard | src/domains/CredentialsWizard.tsx:70 | ☑ |
 | 157 | Panel:StatusLog | Click the status/save-state button to open the last-100 session log | src/canvas/StatusLog.tsx:75 | ☑ |
 | 158 | Panel:StatusLog | Click outside the popover to close the log | src/canvas/StatusLog.tsx:53 | ☑ |
-| 159 | Panel:TableInfoPopover | View sources, sample rows (up to 5), PKs/FKs, dbt badges, and comments while hovering ⓘ | src/canvas/TableInfoPopover.tsx:6 | dropped — superseded by S02 (TableInfoPopover unmounted from canvas; component kept for S07 node-header tooltip). |
+| 159 | Panel:TableInfoPopover | View sources, sample rows (up to 5), PKs/FKs, dbt badges, and comments while hovering ⓘ | src/canvas/TableInfoPopover.tsx:6 | ☑ S07 remounts TableInfoPopover in the table-name tooltip (node-anatomy.cy.ts). |
 | 160 | Panel:SelectionBar | Remove one table from the multi-selection via the chip × | src/canvas/SelectionBar.tsx:41 | ☑ |
 | 161 | Panel:SelectionBar | "Apagar selecionadas" confirms then deletes all selected tables | src/canvas/SelectionBar.tsx:52 | ☑ |
 | 162 | Panel:SelectionBar | "Limpar" clears a multi-table selection | src/canvas/SelectionBar.tsx:63 | ☑ |

@@ -204,13 +204,16 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     cy.get(".column-panel__tbl").should("contain", SMOKE_NODES.pedido);
   });
 
-  it("row 42: hovering a table no longer mounts TableInfoPopover (S02; S07 remounts)", () => {
+  it("row 42: hovering the table name mounts TableInfoPopover (S07 remount)", () => {
     cy.get(".info-popover").should("not.exist");
     cy.get(nodeSel(SMOKE_NODES.pedido))
       .find('[title="Duplo-clique para renomear a tabela"]')
-      .trigger("mouseover", { force: true, eventConstructor: "MouseEvent" });
-    hoverNode(SMOKE_NODES.pedido);
-    cy.get(".info-popover").should("not.exist");
+      .trigger("pointermove", {
+        force: true,
+        eventConstructor: "PointerEvent",
+        pointerType: "mouse",
+      });
+    cy.get(".info-popover", { timeout: 4000 }).should("exist");
   });
 
   it("row 43: Cmd/Ctrl+click selects multiple tables", () => {
