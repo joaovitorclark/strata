@@ -30,6 +30,12 @@ describe("stress wide table", () => {
     });
   });
 
+  it("G10: 187-col hub in Colunas still virtualized (≤ 30 .col-row)", () => {
+    cy.get('[data-testid="rf__node-wide.hub"]').then(($hub) => {
+      expect($hub.find(".col-row").length, "virtualised .col-row").to.be.at.most(30);
+    });
+  });
+
   it("narrows the in-node filter with c18 (fixture has no _at columns)", () => {
     // Plan example `_at` does not match the committed wide fixture (id + c002…c187, all int).
     cy.get('[data-testid="rf__node-wide.hub"] input[aria-label="Filter columns"]')

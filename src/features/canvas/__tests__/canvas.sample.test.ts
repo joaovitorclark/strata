@@ -9,7 +9,7 @@ const sample = readFileSync(join(process.cwd(), "fixtures/golden/sample.dbml"), 
 describe("sample.dbml canvas shell", () => {
   const parsed = parseDbml(sample);
 
-  it("parses two tables, one Ref, and one Lineage", () => {
+  it("parses two tables, one Ref, and field lineage", () => {
     expect(parsed.tables.map((t) => t.id)).toEqual(["loja.cliente", "loja.pedido"]);
     expect(parsed.refs).toHaveLength(1);
     expect(parsed.refs[0]).toMatchObject({
@@ -18,15 +18,13 @@ describe("sample.dbml canvas shell", () => {
       target: "loja.cliente",
       toCol: "id",
     });
-    expect(parsed.lineage).toHaveLength(1);
-    expect(parsed.lineage[0]).toEqual({
-      target: "loja.pedido",
-      sources: ["loja.cliente"],
+    expect(parsed.lineageFields).toHaveLength(1);
+    expect(parsed.lineageFields[0]).toMatchObject({
+      sourceTable: "loja.cliente",
+      sourceColumn: "id",
+      targetTable: "loja.pedido",
+      targetColumn: "cliente_id",
     });
-    const lineageLinks = parsed.lineage.flatMap((entry) =>
-      entry.sources.map((source) => ({ source, target: entry.target })),
-    );
-    expect(lineageLinks).toHaveLength(1);
   });
 
   it("registers module-level nodeTypes and edgeTypes", () => {

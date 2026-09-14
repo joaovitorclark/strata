@@ -1,7 +1,7 @@
 // Import de arquivos .sql (Spark/Hive, Oracle, ANSI) -> modelo canônico.
 import { createRequire } from 'node:module';
 import { parseTypeName, qualifiedName } from './model.ts';
-import type { Column, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
+import type { Column, FieldLineageEntry, Model, Ref, Table } from './model.ts';
 
 const require = createRequire(import.meta.url);
 const { Parser } = require('node-sql-parser') as {
@@ -141,28 +141,26 @@ type TableMeta = {
   layer?: string;
   group?: string;
   note?: string;
-  origins: string[];
   fks: Array<{ fromCol: string; toTable: string; toCol: string }>;
 };
 
-/** Metadados `-- @layer`, `@group`, `@note`, `@origen`, `@fk` / `@ref` acima do CREATE. */
+/** Metadados `-- @layer`, `@group`, `@note`, `@fk` / `@ref` acima do CREATE. */
 function extractMetaComments(sql: string): Map<number, TableMeta> {
   const meta = new Map<number, TableMeta>();
   const lines = sql.split('\n');
-  let pending: TableMeta = { origins: [], fks: [] };
+  let pending: TableMeta = { fks: [] };
 
   const flush = (lineIdx: number) => {
-    if (!pending.layer && !pending.group && !pending.note && !pending.origins.length && !pending.fks.length) {
+    if (!pending.layer && !pending.group && !pending.note && !pending.fks.length) {
       return;
     }
     meta.set(lineIdx, {
       layer: pending.layer,
       group: pending.group,
       note: pending.note,
-      origins: [...pending.origins],
       fks: [...pending.fks],
     });
-    pending = { origins: [], fks: [] };
+    pending = { fks: [] };
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -171,13 +169,6 @@ function extractMetaComments(sql: string): Map<number, TableMeta> {
     if (fkMatch) {
       const parsed = parseFkComment(fkMatch[1]);
       if (parsed) pending.fks.push(parsed);
-      continue;
-    }
-    const origenMatch = /^--\s*@(?:origen|origem)\s*:\s*(.+)$/i.exec(trimmed);
-    if (origenMatch) {
-      for (const src of origenMatch[1].split(',').map((s) => s.trim()).filter(Boolean)) {
-        pending.origins.push(src);
-      }
       continue;
     }
     const metaMatch = /^--\s*@(\w+)\s*:\s*(.+)$/.exec(trimmed);
@@ -191,7 +182,7 @@ function extractMetaComments(sql: string): Map<number, TableMeta> {
     if (/create\s+(?:external\s+|temporary\s+)?table/i.test(trimmed)) {
       flush(i);
     } else if (trimmed && !trimmed.startsWith('--')) {
-      pending = { origins: [], fks: [] };
+      pending = { fks: [] };
     }
   }
   return meta;
@@ -703,25 +694,8 @@ function extractColumnComments(stmt: string): Map<string, string> {
   return out;
 }
 
-function lineageEntryKey(entry: LineageEntry): string {
-  return entry.target.toLowerCase();
-}
-
 function fieldLineageKey(entry: FieldLineageEntry): string {
   return `${entry.targetTable}.${entry.targetColumn}<-${entry.sourceTable}.${entry.sourceColumn}`.toLowerCase();
-}
-
-function mergeLineageEntries(base: LineageEntry[] | undefined, incoming: LineageEntry[] | undefined): LineageEntry[] {
-  const byTarget = new Map<string, { target: string; sources: Set<string> }>();
-  for (const entry of [...(base ?? []), ...(incoming ?? [])]) {
-    const key = lineageEntryKey(entry);
-    if (!byTarget.has(key)) byTarget.set(key, { target: entry.target, sources: new Set() });
-    for (const src of entry.sources) byTarget.get(key)!.sources.add(src);
-  }
-  return [...byTarget.values()].map(({ target, sources }) => ({
-    target,
-    sources: [...sources],
-  }));
 }
 
 function mergeFieldLineageEntries(
@@ -746,23 +720,6 @@ function mergeFieldLineageEntries(
   return [...map.values()];
 }
 
-function appendLineageEntry(lineage: LineageEntry[], target: string, sources: string[]): void {
-  if (!sources.length) return;
-  const key = target.toLowerCase();
-  const existing = lineage.find((e) => e.target.toLowerCase() === key);
-  if (existing) {
-    const seen = new Set(existing.sources.map((s) => s.toLowerCase()));
-    for (const src of sources) {
-      if (!seen.has(src.toLowerCase())) {
-        existing.sources.push(src);
-        seen.add(src.toLowerCase());
-      }
-    }
-  } else {
-    lineage.push({ target, sources: [...sources] });
-  }
-}
-
 function validateLineage(model: Model, warnings: string[]): void {
   const tableNames = new Set(model.tables.map((t) => qualifiedName(t).toLowerCase()));
   const columnsByTable = new Map<string, Set<string>>();
@@ -771,17 +728,6 @@ function validateLineage(model: Model, warnings: string[]): void {
       qualifiedName(t).toLowerCase(),
       new Set(t.columns.map((c) => c.name.toLowerCase())),
     );
-  }
-
-  for (const entry of model.lineage ?? []) {
-    if (!tableNames.has(entry.target.toLowerCase())) {
-      warnings.push(`@origen: tabela destino '${entry.target}' não encontrada`);
-    }
-    for (const src of entry.sources) {
-      if (!tableNames.has(src.toLowerCase())) {
-        warnings.push(`@origen: tabela origem '${src}' não encontrada (destino '${entry.target}')`);
-      }
-    }
   }
 
   for (const field of model.lineageFields ?? []) {
@@ -856,11 +802,10 @@ function applyOracleComments(tables: Table[], sql: string): void {
   }
 }
 
-/** Parse completo: tabelas + refs + metadados + linhagem L1/L2. */
+/** Parse completo: tabelas + refs + metadados + linhagem de campo. */
 export function sqlToModel(sql: string): Model {
   const tables: Table[] = [];
   const refs: Ref[] = [];
-  const lineage: LineageEntry[] = [];
   const lineageFields: FieldLineageEntry[] = [];
   const warnings: string[] = [];
   const refSeen = new Set<string>();
@@ -898,7 +843,6 @@ export function sqlToModel(sql: string): Model {
         t.note = meta.note;
         t.noteInRecordsOnly = true;
       }
-      if (meta.origins.length) appendLineageEntry(lineage, qualifiedName(t), meta.origins);
       for (const r of metaFksToRefs(meta.fks, t)) addRef(r);
       metaMap.delete(createLine);
     }
@@ -935,7 +879,6 @@ export function sqlToModel(sql: string): Model {
   const model: Model = {
     tables,
     refs,
-    lineage: lineage.length ? lineage : undefined,
     lineageFields: lineageFields.length ? lineageFields : undefined,
     colors: Object.keys(colors).length ? colors : undefined,
     layerColors: Object.keys(layerColors).length ? layerColors : undefined,
@@ -966,7 +909,6 @@ export function mergeModel(base: Model, incoming: Model): Model {
   }
 
   const warnings = [...(base.warnings ?? []), ...(incoming.warnings ?? [])];
-  const lineage = mergeLineageEntries(base.lineage, incoming.lineage);
   const lineageFields = mergeFieldLineageEntries(base.lineageFields, incoming.lineageFields);
   const colors = { ...(base.colors ?? {}), ...(incoming.colors ?? {}) };
   const layerColors = { ...(base.layerColors ?? {}), ...(incoming.layerColors ?? {}) };
@@ -974,7 +916,6 @@ export function mergeModel(base: Model, incoming: Model): Model {
   return {
     tables: [...byKey.values()],
     refs,
-    lineage: lineage.length ? lineage : undefined,
     lineageFields: lineageFields.length ? lineageFields : undefined,
     colors: Object.keys(colors).length ? colors : undefined,
     layerColors: Object.keys(layerColors).length ? layerColors : undefined,

@@ -1,8 +1,14 @@
 import dagre from 'dagre';
 import type { ParseResult, TableView } from '@/features/schema/model/parse';
+import { tableLineageFrom } from '@/features/schema/model/lineage';
 import { tableLayerMap } from '@/features/schema/model/layers';
 import type { Positions } from '../hooks/useCanvasNodes';
 import { nodeHeight, nodeWidth, type NodeMetricsOpts } from './nodeMetrics';
+import type { LodState } from './lod';
+
+function tableLineageOf(parsed: ParseResult) {
+  return tableLineageFrom(parsed.lineageFields ?? []);
+}
 
 const MARGIN = 20;
 const MARGIN_WIDE = 16;
@@ -66,8 +72,9 @@ function sortTablesForPack(
 function layoutMetrics(
   compact: boolean,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): NodeMetricsOpts {
-  return { compact, layout: true, density };
+  return { compact, layout: true, density, ...(state ? { state } : {}) };
 }
 
 function layerForTable(t: TableView, layerMap: Record<string, string>): string | undefined {
@@ -94,7 +101,7 @@ function buildDegreeMap(parsed: ParseResult, ids: Set<string>): Map<string, numb
     deg.set(b, (deg.get(b) ?? 0) + 1);
   };
   for (const r of parsed.refs) bump(r.source, r.target);
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) bump(src, entry.target);
@@ -124,7 +131,7 @@ function connectedComponents(ids: Set<string>, parsed: ParseResult): string[][] 
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) unite(r.source, r.target);
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) unite(src, entry.target);
@@ -152,7 +159,7 @@ function countInternalEdges(ids: Set<string>, parsed: ParseResult): number {
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) n++;
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) n++;
@@ -197,7 +204,7 @@ function layoutSubset(
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) g.setEdge(r.source, r.target);
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) g.setEdge(src, entry.target);
@@ -621,7 +628,7 @@ function layoutLineageGroupInternal(
   margin: number,
 ): Positions {
   const ids = new Set(tables.map((t) => t.id));
-  const internalLineage = parsed.lineage.filter(
+  const internalLineage = tableLineageOf(parsed).filter(
     (e) => ids.has(e.target) && e.sources.some((s) => ids.has(s)),
   );
   if (internalLineage.length > 0 && tables.length >= 2) {
@@ -641,8 +648,9 @@ function countAllOverlaps(positions: Positions, tables: TableView[], metrics: No
 export function autolayoutLineagePositions(
   parsed: ParseResult,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): Positions {
-  const metrics = layoutMetrics(false, density);
+  const metrics = layoutMetrics(false, density, state);
   const layerMap = tableLayerMap(parsed.layerGroups);
   const tables = parsed.tables;
   if (!tables.length) return {};
@@ -650,7 +658,7 @@ export function autolayoutLineagePositions(
   const tableById = new Map(tables.map((t) => [t.id, t] as const));
   const ids = new Set(tables.map((t) => t.id));
   const edges: { source: string; target: string }[] = [];
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     for (const src of entry.sources) {
       if (ids.has(src) && ids.has(entry.target)) edges.push({ source: src, target: entry.target });
     }
@@ -723,8 +731,9 @@ export function autolayoutPositions(
   parsed: ParseResult,
   compact = false,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): Positions {
-  const metrics = layoutMetrics(compact, density);
+  const metrics = layoutMetrics(compact, density, state);
   const layerMap = tableLayerMap(parsed.layerGroups);
 
   const byCluster = new Map<string, TableView[]>();

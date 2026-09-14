@@ -4,17 +4,30 @@ export type Gesture = { gesture: string; effect: string };
 
 export type ShortcutRow = { keys: string; label: string };
 
-export type ShortcutSpec = { mod?: boolean; shift?: boolean; key: string };
+export type ShortcutSpec = { mod?: boolean; shift?: boolean; alt?: boolean; key: string };
+
+export function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest("input, textarea, select, [contenteditable], .cm-editor"));
+}
 
 export const CANVAS_GESTURES: Gesture[] = [
   { gesture: "Hover em coluna ou ref", effect: "Destaca relações FK conectadas" },
   { gesture: "Arrastar coluna → coluna", effect: "Cria bloco Ref: no DBML" },
   { gesture: "Clicar em coluna", effect: "Abre o painel do campo" },
-  { gesture: "Clicar em ⓘ na tabela", effect: "Abre metadados da tabela" },
+  { gesture: "Hover no nome da tabela", effect: "Abre metadados da tabela (tooltip)" },
   { gesture: "Cmd/Ctrl + clique ou arrasto", effect: "Seleciona várias tabelas" },
-  { gesture: "Modo linhagem: portas nas bordas", effect: "Edita entradas de linhagem" },
+  { gesture: "Arrastar retângulo no canvas", effect: "Seleciona as tabelas cobertas" },
+  { gesture: "Espaço + arrasto", effect: "Pan do canvas (cursor grab)" },
+  {
+    gesture: "Modo linhagem: arrastar entre pontos das colunas",
+    effect: "Cria mapeamento de campo no DBML",
+  },
   { gesture: "Delete", effect: "Remove ref selecionada" },
-  { gesture: "Escape", effect: "Limpa seleção e fecha modais" },
+  { gesture: "Escape", effect: "1º limpa a coluna; 2º limpa a tabela e fecha modais" },
+  { gesture: "F", effect: "Ativa ou sai do modo foco de tabela" },
+  { gesture: "T", effect: "Rastreia a linhagem do campo selecionado" },
+  { gesture: "[ / ]", effect: "Diminui ou aumenta os saltos do foco" },
 ];
 
 export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
@@ -22,6 +35,17 @@ export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
   { label: "Remover ref selecionada", spec: { key: "Delete" } },
   { label: "Limpar seleção / fechar modais", spec: { key: "Escape" } },
   { label: "Atalhos e gestos", spec: { key: "?" } },
+  { label: "Aumentar zoom", spec: { mod: true, key: "+" } },
+  { label: "Reduzir zoom", spec: { mod: true, key: "-" } },
+  { label: "Ajustar à tela", spec: { shift: true, key: "1" } },
+  { label: "Zoom 100%", spec: { mod: true, key: "0" } },
+  { label: "Nível de detalhe: Nome", spec: { key: "1" } },
+  { label: "Nível de detalhe: Chaves", spec: { key: "2" } },
+  { label: "Nível de detalhe: Colunas", spec: { key: "3" } },
+  { label: "Nível de detalhe: Documentação", spec: { key: "4" } },
+  { label: "Modo foco de tabela", spec: { key: "F" } },
+  { label: "Rastrear linhagem do campo", spec: { key: "T" } },
+  { label: "Mini-mapa", spec: { key: "M" } },
 ];
 
 export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {
@@ -29,11 +53,13 @@ export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {
   if (mac) {
     let result = "";
     if (spec.mod) result += "⌘";
+    if (spec.alt) result += "⌥";
     if (spec.shift) result += "⇧";
     return result + key;
   }
   const parts: string[] = [];
   if (spec.mod) parts.push("Ctrl");
+  if (spec.alt) parts.push("Alt");
   if (spec.shift) parts.push("Shift");
   parts.push(key);
   return parts.join("+");

@@ -155,18 +155,11 @@ describe('sqlToModel — leitura do rodapé', () => {
   });
   it('linhagem, notas e records continuam round-trippando junto com as cores', () => {
     const dbml = `${DBML}
-Lineage {
-  silver.fato_venda < silver.dim_cliente
-}
-
 LineageFields {
   silver.fato_venda.cliente_key < silver.dim_cliente.cliente_key [note: 'lookup']
 }
 `;
     const back = sqlToModel(modelToInputSql(dbmlToModel(dbml), 'oracle'));
-    expect(back.lineage).toEqual([
-      { target: 'silver.fato_venda', sources: ['silver.dim_cliente'] },
-    ]);
     expect(back.lineageFields?.[0]).toMatchObject({
       targetTable: 'silver.fato_venda',
       targetColumn: 'cliente_key',

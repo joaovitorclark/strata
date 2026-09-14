@@ -32,14 +32,6 @@ function refsForTable(model: Model, t: Table): Ref[] {
   return model.refs.filter((r) => r.from.table === qn || r.from.table === t.name);
 }
 
-function lineageSourcesForTable(model: Model, t: Table): string[] {
-  const qn = qualifiedName(t);
-  const entry = model.lineage?.find(
-    (l) => l.target === qn || l.target.toLowerCase() === qn.toLowerCase(),
-  );
-  return entry?.sources ?? [];
-}
-
 function fieldMapsForTable(model: Model, t: Table): Map<string, FieldLineageEntry> {
   const qn = qualifiedName(t);
   const map = new Map<string, FieldLineageEntry>();
@@ -92,15 +84,12 @@ function emitLineageFooter(t: Table, fieldMaps: Map<string, FieldLineageEntry>):
   return lines.length > 1 ? lines : [];
 }
 
-function emitMetaComments(t: Table, refs: Ref[], lineageSources: string[]): string[] {
+function emitMetaComments(t: Table, refs: Ref[]): string[] {
   const lines: string[] = [];
   if (t.layer) lines.push(`-- @layer: ${t.layer}`);
   if (t.group) lines.push(`-- @group: ${t.group}`);
   if (t.note && (t.noteInRecordsOnly || t.records?.rows.length)) {
     lines.push(`-- @note: ${t.note}`);
-  }
-  if (lineageSources.length) {
-    lines.push(`-- @origen: ${lineageSources.join(', ')}`);
   }
   for (const r of refs) {
     lines.push(`-- @fk: ${r.from.column} -> ${r.to.table}.${r.to.column}`);
@@ -156,10 +145,9 @@ function emitInserts(t: Table, dialect: 'spark' | 'oracle'): string[] {
 function tableToSql(t: Table, model: Model, dialect: InputDialect): string {
   const resolved = resolveDialect(t, dialect);
   const refs = refsForTable(model, t);
-  const lineageSources = lineageSourcesForTable(model, t);
   const fieldMaps = fieldMapsForTable(model, t);
   const parts: string[] = [];
-  const meta = emitMetaComments(t, refs, lineageSources);
+  const meta = emitMetaComments(t, refs);
   if (meta.length) parts.push(...meta);
   parts.push(resolved === 'oracle' ? oracleCreateTable(t, refs) : sparkCreateTable(t));
   if (t.note && resolved === 'oracle' && !t.noteInRecordsOnly) {

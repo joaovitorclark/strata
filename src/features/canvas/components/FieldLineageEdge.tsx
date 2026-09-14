@@ -1,6 +1,9 @@
-import { BaseEdge, getSmoothStepPath, type Edge, type EdgeProps } from "@xyflow/react";
+import { useState } from "react";
+import { BaseEdge, getBezierPath, type Edge, type EdgeProps } from "@xyflow/react";
 
+import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
 import { useColumnEdgeCoords } from "@/features/canvas/hooks/useColumnEdgeCoords";
+import { useSchemaStore } from "@/features/schema/store";
 
 import { lineageMarkerUrl } from "./EdgeMarkers";
 import "./edgeClasses.css";
@@ -24,6 +27,7 @@ export type FieldLineageEdgeData = {
 type FieldLineageFlowEdge = Edge<FieldLineageEdgeData>;
 
 export function FieldLineageEdge({
+  id,
   source,
   target,
   sourceHandleId,
@@ -37,6 +41,9 @@ export function FieldLineageEdge({
   selected,
   data,
 }: EdgeProps<FieldLineageFlowEdge>) {
+  useFlowZoom();
+  const [localHover, setLocalHover] = useState(false);
+  const peeked = useSchemaStore((s) => s.peekedEdge);
   const coords = useColumnEdgeCoords(
     source,
     target,
@@ -51,28 +58,32 @@ export function FieldLineageEdge({
     targetPosition,
   );
 
-  const [path] = getSmoothStepPath({
+  const [path] = getBezierPath({
     sourceX: coords.sourceX,
     sourceY: coords.sourceY,
     targetX: coords.targetX,
     targetY: coords.targetY,
     sourcePosition,
     targetPosition,
-    borderRadius: 6,
   });
   const active = !!(selected || data?.highlighted);
   const focused = active || !!data?.emphasized;
+  const hovered = localHover || peeked === id;
+  const strokeWidth = focused ? 2 : hovered ? 1.5 : 1;
+  const dash = focused ? "6 4" : "4 3";
 
   return (
     <BaseEdge
       path={path}
       markerEnd={lineageMarkerUrl(focused)}
-      className="edge-path--field-lineage animate-lineage-flow"
+      className="edge-path--field-lineage"
       style={{
-        strokeWidth: focused ? 2.4 : 1.4,
-        strokeDasharray: "6 6",
+        strokeWidth,
+        strokeDasharray: dash,
         strokeLinecap: "round",
       }}
+      onMouseEnter={() => setLocalHover(true)}
+      onMouseLeave={() => setLocalHover(false)}
     />
   );
 }

@@ -1,6 +1,8 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
+  Handle,
   NodeResizeControl,
+  Position,
   useEdges,
   useNodeId,
   useStore,
@@ -9,13 +11,17 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
-import { LineagePorts } from "@/features/canvas/components/LineagePorts";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
-import { resolveLod } from "@/features/canvas/utils/lod";
-import { isLineageHandle } from "@/features/canvas/utils/lineageHandles";
+import {
+  AGGREGATED_SOURCE_HANDLE,
+  AGGREGATED_TARGET_HANDLE,
+} from "@/features/canvas/hooks/useCanvasEdges";
+import { resolveLod, type LodState } from "@/features/canvas/utils/lod";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
+import { TableInfoPopover } from "@/features/panels/TableInfoPopover";
 import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,9 +30,24 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  clearRenameDraft,
+  getRenameDraft,
+  retainRenamePointerArm,
+  setRenameDraft,
+} from "@/features/canvas/components/columnRenameSession";
+
+function headerTint(color: string | undefined): string | undefined {
+  if (!color || color.startsWith("hsl(")) return undefined;
+  return `color-mix(in srgb, ${color} 10%, hsl(var(--surface)))`;
+}
 
 function layerEdgeClass(layerId: string | undefined): string {
   switch ((layerId ?? "").toLowerCase()) {
@@ -74,39 +95,83 @@ function participatingColumns(tableId: string, edge: PeekEdge): string[] | undef
     if (mapping.sourceTable === tableId) cols.add(mapping.sourceColumn);
     if (mapping.targetTable === tableId) cols.add(mapping.targetColumn);
   }
-  if (edge.source === tableId && edge.sourceHandle && !isLineageHandle(edge.sourceHandle)) {
-    cols.add(edge.sourceHandle.replace(/^[st]:/, ""));
+  if (edge.source === tableId && edge.sourceHandle) {
+    if (
+      edge.sourceHandle !== AGGREGATED_SOURCE_HANDLE &&
+      edge.sourceHandle !== AGGREGATED_TARGET_HANDLE
+    ) {
+      cols.add(edge.sourceHandle.replace(/^(?:fl:)?[st]:/, ""));
+    }
   }
-  if (edge.target === tableId && edge.targetHandle && !isLineageHandle(edge.targetHandle)) {
-    cols.add(edge.targetHandle.replace(/^[st]:/, ""));
+  if (edge.target === tableId && edge.targetHandle) {
+    if (
+      edge.targetHandle !== AGGREGATED_SOURCE_HANDLE &&
+      edge.targetHandle !== AGGREGATED_TARGET_HANDLE
+    ) {
+      cols.add(edge.targetHandle.replace(/^(?:fl:)?[st]:/, ""));
+    }
   }
   return [...cols].filter(Boolean);
 }
 
 function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table">>) {
+  const { t } = useTranslation();
   const actions = useCanvasActions();
   const selectedColumn = useSchemaStore((s) =>
     s.selectedColumn && s.selectedColumn.table === data.id ? s.selectedColumn.column : null,
   );
   const lodPin = useSchemaStore((s) => s.nodeLod[data.id]);
+  const detailLevel = useSchemaStore((s) => s.detailLevel);
   const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
   const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
   const lineageMode = useSchemaStore((s) => s.lineageMode);
-  const lineageVisible = useSchemaStore((s) => s.lineageVisible);
-  const showLineagePorts = lineageMode || lineageVisible;
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
-
-  useEffect(() => {
-    if (!showLineagePorts || !nodeId) return;
-    updateNodeInternals(nodeId);
-  }, [showLineagePorts, nodeId, updateNodeInternals]);
   const edges = useEdges();
   const [filter, setFilter] = useState("");
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const cachedRename = getRenameDraft(data.id);
+  const [editing, setEditing] = useState<string | null>(cachedRename?.column ?? null);
+  const [draft, setDraft] = useState(cachedRename?.draft ?? "");
+  const ignoreNextBlur = useRef(Boolean(cachedRename));
+  const [settling, setSettling] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
-  const state = useStore((s) => resolveLod(s.transform[2], { pinned: lodPin, selected }));
+  useEffect(() => retainRenamePointerArm(), []);
+  useEffect(() => {
+    if (editing) {
+      setRenameDraft(data.id, {
+        column: editing,
+        draft,
+      });
+      return;
+    }
+    clearRenameDraft(data.id);
+  }, [data.id, editing, draft]);
+  useEffect(() => {
+    if (!editing) return;
+    const root = document.querySelector(`[data-testid="rf__node-${data.id}"]`);
+    const input = root?.querySelector("input.col-edit");
+    if (input instanceof HTMLInputElement) input.focus();
+  }, [editing, data.id]);
+
+  const zoom = useStore((s) => s.transform[2]);
+  const { state, simplified } = resolveLod(zoom, {
+    level: detailLevel,
+    pinned: lodPin,
+    selected,
+  });
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (prevState.current === state) return;
+    prevState.current = state;
+    setSettling(true);
+    const timer = window.setTimeout(() => setSettling(false), 180);
+    return () => window.clearTimeout(timer);
+  }, [state]);
+  useEffect(() => {
+    if (!nodeId) return;
+    updateNodeInternals(nodeId);
+  }, [nodeId, updateNodeInternals, lineageMode, state]);
   const peeked = peekedEdgeId ? edges.find((e) => e.id === peekedEdgeId) : undefined;
   const peekCols = peeked ? participatingColumns(data.id, peeked) : undefined;
   const dimPeek = peekedEdgeId != null && peekCols === undefined;
@@ -115,22 +180,54 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const layer = actions.layers.find((l) => l.id === layerId);
   const rel = (data.meta.fks?.length ?? 0) + (data.meta.refsIn?.length ?? 0);
 
-  const commitEdit = (oldName: string) => {
+  const commitEdit = (oldName: string, cause: "blur" | "enter" = "enter") => {
+    if (cause === "blur" && ignoreNextBlur.current) {
+      ignoreNextBlur.current = false;
+      return;
+    }
     const v = draft.trim();
     if (v && v !== oldName) actions.onRenameColumn(data.id, oldName, v);
     setEditing(null);
+    clearRenameDraft(data.id);
   };
+
+  const pinLevel = (lod: LodState) => {
+    useSchemaStore.getState().setNodeLod(data.id, lod);
+  };
+  const followGlobal = () => {
+    const current = useSchemaStore.getState().nodeLod;
+    if (!(data.id in current)) return;
+    const next = { ...current };
+    delete next[data.id];
+    useSchemaStore.setState({ nodeLod: next });
+  };
+
+  const tableLabel = data.schema ? `${data.schema}.${data.name}` : data.name;
+  const tint = headerTint(data.headerColor);
 
   return (
     <div
-      className={cn(
-        "relative table-node-shell",
-        lineageMode && "table-node-shell--lineage",
-        showLineagePorts && "table-node-shell--lineage-ports",
-      )}
+      className={cn("group relative table-node-shell", lineageMode && "table-node-shell--lineage")}
       style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}
+      role="group"
+      aria-label={t("canvas.node.tableAria", { name: tableLabel, count: data.columns.length })}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      {showLineagePorts ? <LineagePorts /> : null}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id={AGGREGATED_TARGET_HANDLE}
+        isConnectable={false}
+        className="pointer-events-none !h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id={AGGREGATED_SOURCE_HANDLE}
+        isConnectable={false}
+        className="pointer-events-none !h-px !w-px !min-h-0 !min-w-0 !border-0 !bg-transparent !opacity-0"
+      />
       <NodeResizeControl
         position="bottom-right"
         minWidth={200}
@@ -142,6 +239,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         className={cn(
           "relative flex min-w-[200px] flex-col overflow-hidden rounded-lg bg-card text-card-foreground shadow-md",
           selected && "shadow-glow ring-1 ring-primary",
+          settling && "animate-node-settle",
         )}
         title={layer?.name ?? "raw"}
       >
@@ -154,25 +252,41 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         />
         <div
           className="box-border flex shrink-0 items-center gap-1 overflow-hidden bg-surface pl-3 pr-1"
-          style={{ height: TABLE_HEADER_H }}
+          style={{ height: TABLE_HEADER_H, backgroundColor: tint }}
         >
-          <span
-            className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
-            title="Duplo-clique para renomear a tabela"
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              const nv = prompt("Novo nome da tabela (schema.tabela):", data.id);
-              if (nv && nv.trim()) actions.onRenameTable(data.id, nv.trim());
-            }}
-          >
-            {data.schema ? <span className="text-muted-foreground">{data.schema}.</span> : null}
-            {data.name}
-          </span>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <span
+                className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
+                title={t("canvas.node.renameTableTitle")}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  const nv = prompt("Novo nome da tabela (schema.tabela):", data.id);
+                  if (nv && nv.trim()) actions.onRenameTable(data.id, nv.trim());
+                }}
+              >
+                {data.schema ? <span className="text-muted-foreground">{data.schema}</span> : null}
+                {data.schema ? <span className="text-muted-foreground"> · </span> : null}
+                <span className="font-medium text-foreground">{data.name}</span>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              align="start"
+              className="max-w-none border-0 bg-transparent p-0 shadow-none"
+            >
+              <TableInfoPopover meta={data.meta} />
+            </TooltipContent>
+          </Tooltip>
           {state === "sigil" ? (
             <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
-              {data.columns.length} cols · {rel} rel
+              {t("canvas.node.relations", { count: rel })}
             </span>
-          ) : null}
+          ) : (
+            <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
+              {data.columns.length}
+            </span>
+          )}
           {state === "full" ? (
             <input
               className="nodrag nopan nowheel h-6 w-24 rounded-md border border-input bg-background px-1.5 font-mono text-2xs text-foreground outline-none placeholder:text-muted-foreground"
@@ -189,7 +303,12 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="nodrag nopan h-6 w-6 shrink-0 text-foreground"
+                data-testid="table-menu-trigger"
+                className={cn(
+                  "nodrag nopan h-6 w-6 shrink-0 text-foreground opacity-0",
+                  "focus:opacity-100 focus-visible:opacity-100 group-hover:opacity-100",
+                  (hovered || selected) && "opacity-100",
+                )}
                 aria-label="Table menu"
               >
                 <MoreHorizontal className="size-4" />
@@ -236,6 +355,27 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
                 No layer
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>{t("canvas.detail.pinLevel")}</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="nodrag nopan">
+                  <DropdownMenuItem onSelect={() => pinLevel("sigil")}>
+                    {t("canvas.detail.name")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("keys")}>
+                    {t("canvas.detail.keys")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("full")}>
+                    {t("canvas.detail.columns")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("docs")}>
+                    {t("canvas.detail.docs")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={followGlobal}>
+                    {t("canvas.detail.followGlobal")}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
                 onSelect={() => {
@@ -254,6 +394,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
           state={state}
           pinned={pinned}
           peekColumns={peekCols && peekCols.length > 0 ? peekCols : undefined}
+          simplified={simplified}
           filter={state === "full" ? filter : ""}
           selectedColumn={selectedColumn}
           editing={editing}
@@ -275,12 +416,17 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
             actions.onSelectColumn(data.id, column);
           }}
           onStartEdit={(column) => {
+            ignoreNextBlur.current = true;
+            setRenameDraft(data.id, { column, draft: column });
             setEditing(column);
             setDraft(column);
           }}
           onDraftChange={setDraft}
           onCommitEdit={commitEdit}
-          onCancelEdit={() => setEditing(null)}
+          onCancelEdit={() => {
+            setEditing(null);
+            clearRenameDraft(data.id);
+          }}
           onShowMore={() => useSchemaStore.getState().setNodeLod(data.id, "full")}
         />
         {state !== "sigil" ? (

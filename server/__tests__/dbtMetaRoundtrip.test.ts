@@ -31,10 +31,6 @@ LayerGroup prata [color: #c0c0c0] {
   silver.fato_venda
 }
 
-Lineage {
-  silver.fato_venda < silver.dim_cliente
-}
-
 LineageFields {
   silver.fato_venda.cliente_key < silver.dim_cliente.cliente_key [note: 'lookup']
 }
@@ -213,8 +209,7 @@ describe('round-trip completo DBML → dbt → Model → DBML', () => {
     expect(dbml).toMatch(/\(venda_key, cliente_key\) \[pk\]/);
     expect(dbml).toMatch(/Records silver\.dim_cliente/);
     expect(dbml).toMatch(/LineageFields\s*\{[^}]*silver\.fato_venda\.cliente_key < silver\.dim_cliente\.cliente_key/);
-    // L1 via ref()/source() dos models .sql, com nomes qualificados pelo schema
-    expect(dbml).toMatch(/Lineage\s*\{[^}]*silver\.fato_venda < silver\.dim_cliente/);
+    expect(dbml).not.toContain('Lineage {');
   });
 
   it('preserva Pins no round-trip model → dbt → model', () => {

@@ -15,6 +15,7 @@ import {
   autolayoutLineagePositions,
   autolayoutPositions,
 } from "@/features/canvas/utils/autolayout";
+import { lodStateForLevel } from "@/features/canvas/utils/lod";
 import { defaultTablePosition } from "@/features/canvas/utils/defaultTablePosition";
 import {
   allTablesPage,
@@ -37,10 +38,8 @@ import {
   addColumn,
   addFieldLineageEntry,
   addLayerGroup,
-  addLineageEntry,
   appendRef,
   removeFieldLineageEntry,
-  removeLineageEntry,
   removeRef,
   removeTable,
   renameColumnAllRefs,
@@ -50,6 +49,7 @@ import {
   setTableLayer,
   updateFieldLineageEntry,
 } from "@/features/schema/model/edit";
+import { tableLineageFrom } from "@/features/schema/model/lineage";
 import { exportInputL2Warning } from "@/features/schema/model/exportWarnings";
 import { layerColorOf, layersFromGroups, tableLayerMap } from "@/features/schema/model/layers";
 import { lineOfTable, resolveTableId, tableAtLine } from "@/features/schema/model/lineLocate";
@@ -574,10 +574,11 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const handleAutolayout = useCallback(() => {
     const lineageMode = useSchemaStore.getState().lineageMode;
+    const lodState = lodStateForLevel(useSchemaStore.getState().detailLevel);
     const layoutModel = activePageIds.includes(ALL_PAGE_ID) ? canvasBaseModel : canvasActiveModel;
     const base = lineageMode
-      ? autolayoutLineagePositions(layoutModel, density)
-      : autolayoutPositions(layoutModel, false, density);
+      ? autolayoutLineagePositions(layoutModel, density, lodState)
+      : autolayoutPositions(layoutModel, false, density, lodState);
     const next = canvasStubs.length ? layoutExternalStubsOnTop(base, canvasStubs) : base;
     useSchemaStore.getState().setPositions(next);
     setFitViewTrigger((n) => n + 1);
@@ -593,19 +594,19 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const lineage = useMemo<LineageLink[]>(() => {
     const out: LineageLink[] = [];
-    for (const entry of activeModel.lineage) {
+    for (const entry of tableLineageFrom(activeModel.lineageFields ?? [])) {
       for (const s of entry.sources) out.push({ source: s, target: entry.target });
     }
     return out;
-  }, [activeModel.lineage]);
+  }, [activeModel.lineageFields]);
 
   const canvasLineage = useMemo<LineageLink[]>(() => {
     const out: LineageLink[] = [];
-    for (const entry of canvasActiveModel.lineage) {
+    for (const entry of tableLineageFrom(canvasActiveModel.lineageFields ?? [])) {
       for (const s of entry.sources) out.push({ source: s, target: entry.target });
     }
     return out;
-  }, [canvasActiveModel.lineage]);
+  }, [canvasActiveModel.lineageFields]);
 
   const tableGroupsKey = useMemo(() => {
     const groups = new Set<string>();
@@ -792,19 +793,6 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     [layersArr],
   );
 
-  const handleCreateLineage = useCallback(
-    (source: string, target: string) => {
-      if (!source || !target || source === target) return;
-      mutateDbml((d) => addLineageEntry(d, source, target));
-    },
-    [mutateDbml],
-  );
-  const handleRemoveLineage = useCallback(
-    (source: string, target: string) => {
-      mutateDbml((d) => removeLineageEntry(d, source, target));
-    },
-    [mutateDbml],
-  );
   const handleAddFieldLineage = useCallback(
     (
       sourceTable: string,
@@ -1097,11 +1085,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
         const result = await api.exportFormat(s.dbml, format, dialect);
         const files = result.files.join(", ");
         if (format === "localdrawdb") {
-          const l2Warn = exportInputL2Warning(
-            activeModel.tables,
-            activeModel.lineageFields ?? [],
-            activeModel.lineage ?? [],
-          );
+          const l2Warn = exportInputL2Warning(activeModel.tables, activeModel.lineageFields ?? []);
           return l2Warn ? `${l2Warn} — Gerado: ${files}` : `Gerado: ${files}`;
         }
         return `Gerado: ${files}`;
@@ -1309,8 +1293,6 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     handleRemoveSelectedRef,
     handleRemoveTable,
     handleRemoveTables,
-    handleCreateLineage,
-    handleRemoveLineage,
     handleCreateFieldLineage,
     handleRemoveFieldLineage,
     handleAddFieldLineage,

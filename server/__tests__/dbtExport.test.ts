@@ -50,9 +50,19 @@ function buildModel(): Model {
     refs: [
       { from: { table: 'pedido', column: 'cliente_id' }, to: { table: 'dim_cliente', column: 'id' }, kind: '>' },
     ],
-    lineage: [
-      { target: 'pedido', sources: ['raw_pedido'] },
-      { target: 'dim_cliente', sources: ['pedido'] },
+    lineageFields: [
+      {
+        sourceTable: 'bronze.raw_pedido',
+        sourceColumn: 'id',
+        targetTable: 'prata.pedido',
+        targetColumn: 'id',
+      },
+      {
+        sourceTable: 'prata.pedido',
+        sourceColumn: 'id',
+        targetTable: 'ouro.dim_cliente',
+        targetColumn: 'id',
+      },
     ],
   };
 }

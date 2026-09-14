@@ -31,18 +31,13 @@ export function viewportScale(): Cypress.Chainable<number> {
 }
 
 function zoomButton(dir: "in" | "out"): string {
-  const cls = dir === "in" ? "zoomin" : "zoomout";
-  return `[data-testid="rf__controls"] .react-flow__controls-${cls}`;
+  const zoom = dir === "in" ? "in" : "out";
+  return `[data-testid="canvas-toolbar"] [data-zoom="${zoom}"]`;
 }
 
-/** Layers panel sits over RF Controls; collapse it so zoom specs can click them. */
+/** Layers panel sits in the left tab (S02); no overlay over the canvas. */
 export function collapseLayersPanel(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if (!$p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("have.class", "is-collapsed");
+  /* no-op */
 }
 
 /** Click RF Controls until viewport scale is in [min, max] (inclusive). */
@@ -65,6 +60,17 @@ export function zoomToRange(min: number, max: number): void {
     });
   };
   step(0);
+}
+
+export function selectCanvasDetailLevel(
+  label: "Nome" | "Chaves" | "Colunas" | "Documentação",
+): void {
+  cy.get("body").type("{esc}");
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').click({ force: true });
+  cy.get('[role="menuitemradio"]').contains(label).click({ force: true });
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').should("contain", label);
 }
 
 export function clickPane(): void {
@@ -180,13 +186,13 @@ export function ensureHubFull(): void {
   const hub = '[data-testid="rf__node-wide.hub"]';
   cy.get(hub).then(($n) => {
     if ($n.find('input[aria-label="Filter columns"]').length) return;
-    if (/more columns/.test($n.text() ?? "")) {
+    if (/colunas/.test($n.text() ?? "")) {
       cy.get(hub)
-        .contains("button", /more columns/)
+        .contains("button", /colunas/)
         .click({ force: true });
       return;
     }
-    zoomToRange(1.12, 2);
+    selectCanvasDetailLevel("Colunas");
   });
   cy.get(`${hub} input[aria-label="Filter columns"]`).should("exist");
 }

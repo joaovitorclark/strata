@@ -26,7 +26,7 @@ describe("shell chrome", () => {
     document.documentElement.classList.remove("dark");
   });
 
-  it("renders navbar mark, breadcrumb, ⌘K chip, theme, export dbt, share, avatar", () => {
+  it("renders navbar mark, breadcrumb, ⌘K chip, theme, export dbt", () => {
     render(<Navbar domain="Local" project="vendas" />);
 
     expect(screen.getByText("Strata")).toBeTruthy();
@@ -35,8 +35,8 @@ describe("shell chrome", () => {
     expect(screen.getByRole("button", { name: "Buscar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Alternar tema" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Exportar" }).textContent).toMatch(/dbt/);
-    expect(screen.getByRole("button", { name: "Compartilhar" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Conta" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Compartilhar" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Conta" })).toBeNull();
   });
 
   it("persists dark/light via THEME_STORAGE_KEY and applyThemeClass", () => {
@@ -63,14 +63,13 @@ describe("shell chrome", () => {
     }
   });
 
-  it("renders statusbar problems, DBML handle, zoom, and density", () => {
-    render(<StatusBar problemCount={3} zoomPercent={100} />);
+  it("renders statusbar problems, DBML handle, and density", () => {
+    render(<StatusBar problemCount={3} />);
     expect(screen.getByRole("button", { name: "Problemas 3" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "DBML" })).toBeTruthy();
-    expect(screen.getByText("100%")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Reduzir zoom" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Aumentar zoom" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Ajustar à tela" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reduzir zoom" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Aumentar zoom" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ajustar à tela" })).toBeNull();
     expect(screen.getByRole("button", { name: "Densidade" })).toBeTruthy();
   });
 
@@ -113,5 +112,54 @@ describe("shell chrome", () => {
     expect(src).toContain("EXPORTERS.map");
     expect(src).toContain("t(exporter.labelKey)");
     expect(src).not.toMatch(/<ul[\s\S]*role="menu"/);
+  });
+
+  it("renders EditorChrome actions when history, editActions, and save are passed", () => {
+    const onUndo = vi.fn();
+    const onAddTable = vi.fn();
+    const onSave = vi.fn();
+    render(
+      <Navbar
+        history={{ canUndo: true, canRedo: false, onUndo, onRedo: vi.fn() }}
+        editActions={{
+          onAddTable,
+          onAddMetadata: vi.fn(),
+          onImport: vi.fn(),
+          onOrganize: vi.fn(),
+        }}
+        save={{
+          label: "Salvar",
+          state: "dirty",
+          autoSave: false,
+          onSave,
+          onToggleAutoSave: vi.fn(),
+          onDiff: vi.fn(),
+        }}
+        onHelp={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Desfazer" }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "+ Tabela" }));
+    expect(onAddTable).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("navbar-save"));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Atalhos e gestos" })).toBeTruthy();
+  });
+
+  it("StatusBar Problemas opens the popover content and Registros is wired", () => {
+    const onRecords = vi.fn();
+    render(
+      <StatusBar
+        problemCount={0}
+        problemsContent={<p data-problems-empty>empty</p>}
+        problemsOpen
+        onProblemsOpenChange={vi.fn()}
+        onRecordsToggle={onRecords}
+      />,
+    );
+    expect(screen.getByTestId("problems-popover")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Registros" }));
+    expect(onRecords).toHaveBeenCalledTimes(1);
   });
 });

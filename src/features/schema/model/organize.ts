@@ -10,8 +10,9 @@ const ORDER: BlockType[] = [
   'tableGroup',
   'layerGroup',
   'ref',
-  'lineage',
+  'lineageFields',
   'pins',
+  'views',
   'dbt',
   'records',
 ];

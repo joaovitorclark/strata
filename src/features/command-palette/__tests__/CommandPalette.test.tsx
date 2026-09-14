@@ -267,12 +267,12 @@ describe("global palette shortcuts", () => {
     expect(ctx.removeSelectedRef).toHaveBeenCalledOnce();
   });
 
-  it("Escape with the palette closed clears selection and closes modals", () => {
+  it("Escape with the palette closed does not steal canvas selection", () => {
     const ctx = makeContext();
     useSchemaStore.getState().selectTable("gold.dim_customer");
     render(<CommandPalette open={false} context={ctx} onOpenChange={vi.fn()} />);
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(useSchemaStore.getState().selectedTable).toBeNull();
-    expect(ctx.closeModals).toHaveBeenCalledOnce();
+    expect(useSchemaStore.getState().selectedTable).toBe("gold.dim_customer");
+    expect(ctx.closeModals).not.toHaveBeenCalled();
   });
 });

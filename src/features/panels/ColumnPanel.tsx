@@ -64,6 +64,7 @@ export type ColumnPanelProps = {
     },
   ) => void;
   onRemoveMapping: (sourceTable: string, sourceColumn: string, targetColumn: string) => void;
+  embedded?: boolean;
 };
 
 function loadCollapsed(): boolean {
@@ -84,6 +85,7 @@ export function ColumnPanel({
   onAddMapping,
   onUpdateMapping,
   onRemoveMapping,
+  embedded = false,
 }: ColumnPanelProps) {
   const sel = useSchemaStore((s) => s.selectedColumn);
   const selectColumn = useSchemaStore((s) => s.selectColumn);
@@ -163,7 +165,10 @@ export function ColumnPanel({
     <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          "column-panel rounded-md border border-border bg-card p-3 text-xs text-card-foreground shadow-md",
+          "column-panel text-xs text-card-foreground",
+          embedded
+            ? "w-full bg-sidebar p-3"
+            : "rounded-md border border-border bg-card p-3 shadow-md",
           collapsed && "is-collapsed",
         )}
         data-mapping-count={mappings.length}

@@ -1,9 +1,13 @@
-import { saveViaPaletteShortcut, waitForCanvas } from "./canvas-support";
+import { fireWindowKey, saveViaPaletteShortcut, waitForCanvas } from "./canvas-support";
 
 describe("connectHandles helper", () => {
   beforeEach(() => {
     cy.resetFixture("smoke");
     waitForCanvas();
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+    fireWindowKey({ key: "3" });
+    cy.get('[data-testid="detail-level-select"]').should("contain", "Colunas");
+    cy.get('[data-handleid="s:sku"]').should("exist");
   });
 
   it("actually creates a Ref in the DBML", () => {

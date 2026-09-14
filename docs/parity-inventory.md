@@ -51,11 +51,11 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 39 | Canvas | Hover a column or ref highlights connected FK relations | src/help/gestures.ts:10 | ☑ canvas-select-sync.cy.ts |
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
-| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | dropped — trigger is table hover (`hoveredTableId` → TableInfoPopover); ⓘ affordance deliberately not restored. Same popover content; hover verified in canvas-select-sync.cy.ts and canvas-actions.cy.ts (row 63). |
-| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-select-sync.cy.ts (Cmd/Ctrl+click; rubber-band does not stick — panOnDrag default true disables selectionOnDrag) |
-| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | ☑ canvas-edges.cy.ts |
+| 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | ☑ S07 remounts TableInfoPopover as a 500ms tooltip on the table name (node-anatomy.cy.ts; canvas-select-sync.cy.ts). |
+| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-rubber-band.cy.ts |
+| 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | dropped — superseded by field-only lineage (this spec) |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
-| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | dropped — CommandPalette window-capture Escape calls clearCanvasSelection() before Canvas's stacked handler; first press already clears the table. canvas-select-sync.cy.ts records the attempt. |
+| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☑ canvas-rubber-band.cy.ts |
 | 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ canvas-actions.cy.ts |
 | 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☑ canvas-actions.cy.ts |
 | 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☑ canvas-actions.cy.ts |
@@ -76,8 +76,8 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 64 | Canvas | Drag a table (or multi-selected tables) updates stored positions | src/canvas/Canvas.tsx:479 | ☑ canvas-drag.cy.ts |
 | 65 | Canvas | Drag a TableGroup by its handle moves all member tables | src/canvas/Canvas.tsx:458 | dropped — XYDrag does not latch from the harness on GroupNode's dragHandle (label and edge tried; members stay at dx=0). canvas-select-sync.cy.ts records the attempt. Do not rewrite GroupNode. |
 | 66 | Canvas | Drop a column source handle on a column target handle creates a Ref (PK side preferred as target) | src/canvas/Canvas.tsx:450 | ☑ canvas-create.cy.ts |
-| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | ☑ canvas-create.cy.ts |
-| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | dropped — ColumnRow does not mount `fl:` handles (LDB TableColumnList swaps to them in lineage mode); canvas-create.cy.ts counted 0. Canvas onConnect already accepts `fl:`. Do not add handles. |
+| 67 | Canvas | In lineage mode, drag between edge ports creates a table-level lineage entry | src/canvas/Canvas.tsx:407 | dropped — superseded by field-only lineage (this spec) |
+| 68 | Canvas | In lineage mode, drag between field handles (`fl:`) creates a field-level (L2) mapping | src/canvas/Canvas.tsx:403 | ☑ cypress/e2e/s01-field-lineage.cy.ts |
 | 69 | Canvas | Drag a relation edge endpoint onto another column retargets the Ref | src/canvas/Canvas.tsx:513 | ☑ canvas-create.cy.ts |
 | 70 | Canvas | Delete or Backspace on selected table node(s) deletes those tables and related refs | src/canvas/Canvas.tsx:492 | ☑ canvas-delete-chrome.cy.ts |
 | 71 | Canvas | Delete or Backspace on a selected relation/lineage/field-lineage edge removes that edge from the DBML | src/canvas/Canvas.tsx:502 | ☑ canvas-delete-chrome.cy.ts |
@@ -85,8 +85,8 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 73 | Canvas | Click a table (not a column row) focuses it and scrolls the editor to its block | src/canvas/Canvas.tsx:569 | ☑ canvas-select-sync.cy.ts |
 | 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☑ canvas-select-sync.cy.ts |
 | 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☑ canvas-select-sync.cy.ts |
-| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | ☑ canvas-select-sync.cy.ts (fit view + lock; zoom in/out already canvas-lod.cy.ts) |
-| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ stress-large-diagram.cy.ts |
+| 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | dropped — superseded by S02 (Controls removed; zoom/fit live on the canvas pill; lock is not in the S02 ZoomControls placeholder) |
+| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ cypress/e2e/minimap.cy.ts (S12 remounts MiniMap; default on when > 40 tables) |
 | 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ canvas-delete-chrome.cy.ts |
 | 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ canvas-delete-chrome.cy.ts (Table menu Delete + confirm; no × on TableNode) |
 | 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☑ canvas-palette.cy.ts |
@@ -125,9 +125,9 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 113 | Panel:LayersPanel | Insert preset "Inbound / Staging / Solutions" | src/canvas/LayersPanel.tsx:160 | ☑ |
 | 114 | Panel:LayersPanel | Insert preset "SOR / SOT / Spec" | src/canvas/LayersPanel.tsx:160 | ☑ |
 | 115 | Panel:LayersPanel | "Esmaecer (em vez de esconder)" dims hidden layers instead of hiding them | src/canvas/LayersPanel.tsx:176 | ☑ |
-| 116 | Panel:LayersPanel | "Mostrar linhagem" shows or hides L1 lineage edges | src/canvas/LayersPanel.tsx:182 | ☑ |
-| 117 | Panel:LayersPanel | "Mostrar relacionamentos" shows or hides FK relation edges | src/canvas/LayersPanel.tsx:186 | ☑ |
-| 118 | Panel:LayersPanel | "Mostrar linhagem de campos" shows or hides L2 field-lineage edges | src/canvas/LayersPanel.tsx:190 | ☑ |
+| 116 | Panel:LayersPanel | "Mostrar linhagem" shows or hides L1 lineage edges | src/canvas/LayersPanel.tsx:182 | dropped — L1 table lineage removed (S01); remaining lineage visibility lives in EdgeVisibility (S02); canvas-edges.cy.ts |
+| 117 | Panel:LayersPanel | "Mostrar relacionamentos" shows or hides FK relation edges | src/canvas/LayersPanel.tsx:186 | ☑ moved to canvas/toolbar/EdgeVisibility.tsx (S02); canvas-delete-chrome.cy.ts |
+| 118 | Panel:LayersPanel | "Mostrar linhagem de campos" shows or hides L2 field-lineage edges | src/canvas/LayersPanel.tsx:190 | dropped — fieldLineageVisible removed (S01); field edges share lineageVisible in EdgeVisibility (S02) |
 | 119 | Panel:LayersPanel | "Modo linhagem" toggles lineage-edit mode | src/canvas/LayersPanel.tsx:197 | ☑ |
 | 120 | Panel:LayersPanel | Search box filters the table list by id | src/canvas/LayersPanel.tsx:212 | ☑ |
 | 121 | Panel:LayersPanel | Click (or double-click) a table name to pan/focus it on the canvas | src/canvas/LayersPanel.tsx:226 | ☑ |
@@ -168,7 +168,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 156 | Panel:CredentialsWizard | "Cancelar" dismisses the wizard | src/domains/CredentialsWizard.tsx:70 | ☑ |
 | 157 | Panel:StatusLog | Click the status/save-state button to open the last-100 session log | src/canvas/StatusLog.tsx:75 | ☑ |
 | 158 | Panel:StatusLog | Click outside the popover to close the log | src/canvas/StatusLog.tsx:53 | ☑ |
-| 159 | Panel:TableInfoPopover | View sources, sample rows (up to 5), PKs/FKs, dbt badges, and comments while hovering ⓘ | src/canvas/TableInfoPopover.tsx:6 | ☑ |
+| 159 | Panel:TableInfoPopover | View sources, sample rows (up to 5), PKs/FKs, dbt badges, and comments while hovering ⓘ | src/canvas/TableInfoPopover.tsx:6 | ☑ S07 remounts TableInfoPopover in the table-name tooltip (node-anatomy.cy.ts). |
 | 160 | Panel:SelectionBar | Remove one table from the multi-selection via the chip × | src/canvas/SelectionBar.tsx:41 | ☑ |
 | 161 | Panel:SelectionBar | "Apagar selecionadas" confirms then deletes all selected tables | src/canvas/SelectionBar.tsx:52 | ☑ |
 | 162 | Panel:SelectionBar | "Limpar" clears a multi-table selection | src/canvas/SelectionBar.tsx:63 | ☑ |
@@ -266,7 +266,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 254 | Editor | Rename modal "Aplicar" rewrites refs to follow the renamed table/column | src/editor/RenameConfirmModal.tsx:28 | ☑ |
 | 255 | Editor | Rename modal "Manter separado" registers rolenames so child FKs keep their own names | src/editor/RenameConfirmModal.tsx:29 | ☑ |
 | 256 | Editor | Click the rename-modal backdrop to close without applying | src/editor/RenameConfirmModal.tsx:20 | ☑ |
-| 257 | Editor | Canvas "?" button opens the shortcuts-and-gestures overlay | src/App.tsx:1752 | ☑ |
+| 257 | Editor | Canvas "?" button opens the shortcuts-and-gestures overlay | src/App.tsx:1752 | ☑ Navbar "?" (S02 moved help off the canvas); shell-shortcuts.cy.ts still drives "?" |
 | 258 | Editor | Overlay close button (×) closes shortcuts help | src/help/ShortcutsOverlay.tsx:59 | ☑ |
 | 259 | Editor | Autosave, when on, saves 1.5s after the document becomes dirty | src/App.tsx:425 | ☑ autosave 1.5s wired in useWorkspace; save API exercised in Workspace.test |
 | 260 | Editor | Undo/Redo toolbar buttons (same as palette Undo/Redo) | src/App.tsx:1608 | ☑ |
@@ -336,10 +336,10 @@ Live Cypress closed the remaining canvas mutation surface. Specs: `canvas-action
 Dropped this plan (harness/component not rewritten to make a spec pass):
 
 - **42** — ⓘ not restored; hover trigger covers `TableInfoPopover` (`canvas-select-sync.cy.ts`)
-- **46** — CommandPalette capture Escape clears the table on the first press
+- **46** — restored by S03 (`canvas-rubber-band.cy.ts` stacked Escape)
 - **65** — GroupNode `dragHandle` does not latch XYDrag from the harness
 - **68** — `ColumnRow` does not mount `fl:` handles
 
-**Count after Plan 4 Task 54: 254 ☑ · 0 ☐ · 6 dropped.**
+**Count after Plan 4 Task 54: 254 ☑ · 0 ☐ · 6 dropped.** S03 restored row 46 (255 ☑ · 5 dropped among the original six).
 
 
