@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { MiniMap, useStore, type Node } from "@xyflow/react";
 import { Map } from "lucide-react";
@@ -6,8 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import { useCanvasActions } from "@/features/canvas/actions";
 import { isTypingTarget } from "@/features/command-palette/gestures";
-import { parseDbml } from "@/features/schema/model/parse";
-import { useSchemaStore } from "@/features/schema/store";
 import { cn } from "@/lib/utils";
 import {
   MINIMAP_BOTTOM_PX,
@@ -25,10 +23,9 @@ const FOCUS =
 export function MiniMapToggle() {
   const { t } = useTranslation();
   const { layerOf } = useCanvasActions();
-  const dbml = useSchemaStore((s) => s.dbml);
-  const parsedCount = useMemo(() => parseDbml(dbml).tables.length, [dbml]);
-  const rfCount = useStore((s) => s.nodes.filter((node: Node) => node.type === "table").length);
-  const tableCount = Math.max(parsedCount, rfCount);
+  // Count from React Flow's nodes: re-parsing the whole DBML here ran on every keystroke in the
+  // source drawer, duplicating the workspace parse on large models.
+  const tableCount = useStore((s) => s.nodes.filter((node: Node) => node.type === "table").length);
   const domNode = useStore((s) => s.domNode);
   const [override, setOverride] = useState<boolean | null>(() => {
     try {

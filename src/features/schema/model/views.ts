@@ -25,19 +25,59 @@ function stripQuotes(s: string): string {
   return s.replace(/["`]/g, "").trim();
 }
 
-function extractViewsInner(src: string): string | null {
-  const h = /Views\s*\{/i.exec(src);
-  if (!h) return null;
-  const start = h.index + h[0].length;
-  let depth = 1;
-  let i = start;
-  while (i < src.length && depth > 0) {
-    const c = src[i];
+/** Brace delta of one line, ignoring quoted strings and `//` comments. */
+function lineBraceDelta(line: string): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quote) {
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === "'" || c === '"' || c === "`") {
+      quote = c;
+      continue;
+    }
+    if (c === "/" && line[i + 1] === "/") break;
     if (c === "{") depth++;
     else if (c === "}") depth--;
-    i++;
   }
-  return src.slice(start, depth === 0 ? i - 1 : src.length);
+  return depth;
+}
+
+const VIEWS_HEADER = /^\s*Views\s*\{/i;
+
+/**
+ * Line range [start, end) of the top-level `Views {}` block. Only a line at depth 0 that starts
+ * with `Views {` counts: a table named `reporting.daily_views {` or a note mentioning `Views {`
+ * must never be mistaken for it, or replacing the block would overwrite that table.
+ */
+function findViewsRange(lines: readonly string[]): { start: number; end: number } | null {
+  let depth = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (depth === 0 && VIEWS_HEADER.test(lines[i])) {
+      let d = lineBraceDelta(lines[i]);
+      let end = i + 1;
+      while (end < lines.length && d > 0) {
+        d += lineBraceDelta(lines[end]);
+        end++;
+      }
+      return { start: i, end };
+    }
+    depth = Math.max(0, depth + lineBraceDelta(lines[i]));
+  }
+  return null;
+}
+
+function extractViewsInner(src: string): string | null {
+  const lines = src.split("\n");
+  const range = findViewsRange(lines);
+  if (!range) return null;
+  const block = lines.slice(range.start, range.end).join("\n");
+  const open = block.indexOf("{");
+  const close = block.lastIndexOf("}");
+  return block.slice(open + 1, close > open ? close : block.length);
 }
 
 function parsePositions(raw: string): Record<string, ViewPosition> | undefined {
@@ -200,39 +240,18 @@ export function uniqueViewId(base: string, existing: readonly string[]): string 
 
 /** Grava (ou remove, se vazio) o bloco `Views {}` no documento. */
 export function replaceViewsBlock(src: string, views: readonly SchemaView[]): string {
-  const serialized = serializeViewsBlock(views);
-  const blocksHint = /Views\s*\{/i.test(src);
-  if (!blocksHint) {
+  const serialized = serializeViewsBlock(views).replace(/\n+$/, "");
+  const lines = src.split("\n");
+  const range = findViewsRange(lines);
+  if (!range) {
     if (!serialized) return src;
-    const sep = src.endsWith("\n") || src === "" ? "" : "\n";
-    return `${src.replace(/\n+$/, "")}${sep}\n${serialized}`.replace(/^\n+/, "");
+    const body = src.replace(/\n+$/, "");
+    return body ? `${body}\n\n${serialized}\n` : `${serialized}\n`;
   }
-  const h = /Views\s*\{/i.exec(src);
-  if (!h) return src;
-  let depth = 0;
-  let i = h.index;
-  let started = false;
-  while (i < src.length) {
-    const c = src[i];
-    if (c === "{") {
-      depth++;
-      started = true;
-    } else if (c === "}") {
-      depth--;
-      i++;
-      if (started && depth === 0) break;
-      continue;
-    }
-    i++;
-  }
-  const before = src.slice(0, h.index).replace(/\n+$/, "");
-  const after = src.slice(i).replace(/^\n+/, "");
-  if (!serialized) {
-    const joined = [before, after].filter(Boolean).join("\n\n");
-    return joined ? `${joined.replace(/\n+$/, "")}\n` : "";
-  }
-  const mid = serialized.replace(/\n+$/, "");
-  return `${before}${before ? "\n\n" : ""}${mid}${after ? `\n\n${after}` : "\n"}`;
+  const before = lines.slice(0, range.start).join("\n").replace(/\n+$/, "");
+  const after = lines.slice(range.end).join("\n").replace(/^\n+/, "").replace(/\n+$/, "");
+  const parts = [before, serialized, after].filter(Boolean);
+  return parts.length ? `${parts.join("\n\n")}\n` : "";
 }
 
 export function pruneMissingTablesFromViews(

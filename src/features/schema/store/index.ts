@@ -73,7 +73,14 @@ export const useSchemaStore = create<SchemaStore>()(
           rawSetDbml(next);
           return;
         }
-        const tableIds = parseDbml(next).tables.map((t) => t.id);
+        const parsedNext = parseDbml(next);
+        // A transient parse error (mid-typing) yields zero tables: pruning then would empty
+        // every view permanently. Only prune against a document that actually parsed.
+        if (parsedNext.error) {
+          rawSetDbml(next);
+          return;
+        }
+        const tableIds = parsedNext.tables.map((t) => t.id);
         const pruned = pruneMissingTablesFromViews(views, tableIds);
         rawSetDbml(viewsPruned(views, pruned) ? replaceViewsBlock(next, pruned) : next);
       },
