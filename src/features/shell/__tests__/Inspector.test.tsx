@@ -31,6 +31,23 @@ const pedido: TableView = {
   ],
 };
 
+const cliente: TableView = {
+  id: "loja.cliente",
+  name: "cliente",
+  schema: "loja",
+  columns: [
+    { name: "id", type: "bigint", pk: true, notNull: true },
+    { name: "nome", type: "string", pk: false, notNull: false },
+  ],
+};
+
+const item: TableView = {
+  id: "loja.item",
+  name: "item",
+  schema: "loja",
+  columns: [{ name: "id", type: "bigint", pk: true, notNull: true }],
+};
+
 const fullMeta = meta({
   sources: ["loja.raw_pedido"],
   sample: {
@@ -55,6 +72,24 @@ const fullMeta = meta({
   has: true,
 });
 
+const DBML = `Table loja.cliente {
+  id bigint [pk]
+  nome string
+}
+
+Table loja.pedido {
+  id bigint [pk]
+  cliente_id bigint [not null]
+  Note: 'pedidos da loja'
+}
+
+Table loja.item {
+  id bigint [pk]
+}
+
+Ref: loja.pedido.cliente_id > loja.cliente.id
+`;
+
 function renderInspector(overrides: Partial<InspectorProps> = {}) {
   const props: InspectorProps = {
     tableMeta: () => fullMeta,
@@ -62,7 +97,23 @@ function renderInspector(overrides: Partial<InspectorProps> = {}) {
     colorOf: () => undefined,
     onSetColor: vi.fn(),
     layers: [{ id: "bronze", name: "Bronze", color: "unused" }],
-    tables: [pedido],
+    tables: [pedido, cliente, item],
+    dbml: DBML,
+    onApply: vi.fn(),
+    lineageFields: [
+      {
+        targetTable: "loja.pedido",
+        targetColumn: "cliente_id",
+        sourceTable: "loja.cliente",
+        sourceColumn: "id",
+      },
+    ],
+    problemCount: 2,
+    onFocusTable: vi.fn(),
+    onSetLayer: vi.fn(),
+    onRenameTable: vi.fn(),
+    onRenameColumn: vi.fn(),
+    onRemoveTables: vi.fn(),
     ...overrides,
   };
   return {
@@ -84,40 +135,35 @@ describe("Inspector", () => {
     document.documentElement.classList.remove("dark");
   });
 
-  it("shows an empty state when no table is selected", () => {
+  it("shows a project summary and Selecione uma tabela when nothing is selected", () => {
     renderInspector();
     expect(screen.getByText("Selecione uma tabela")).toBeTruthy();
-    expect(screen.queryByText("loja.pedido")).toBeNull();
+    const summary = screen.getByTestId("inspector-summary");
+    expect(summary.textContent).toMatch(/3/);
+    expect(summary.textContent).toMatch(/2/);
   });
 
-  it("renders table, layer chip, column count, PK, FK target, materialization, tags", () => {
+  it("opens Tabela and Colunas when a table is selected", () => {
     useSchemaStore.getState().selectTable("loja.pedido");
-    const tableMeta = vi.fn(() => fullMeta);
-    const { container } = renderInspector({ tableMeta });
-
-    expect(tableMeta).toHaveBeenCalledWith("loja.pedido");
-    expect(screen.getByText("loja.pedido").className).toMatch(/font-mono/);
-    expect(screen.getByText("Bronze")).toBeTruthy();
-    expect(container.querySelector("[data-field='columns']")?.textContent).toContain("2");
-    expect(container.querySelector("[data-field='pks']")?.textContent).toContain("id");
-    expect(screen.getByText("cliente_id → loja.cliente(id)")).toBeTruthy();
-    expect(screen.getByText("incremental")).toBeTruthy();
-    expect(screen.getByText("#pii")).toBeTruthy();
+    renderInspector();
+    expect(screen.getByTestId("inspector-section-table").getAttribute("data-state")).toBe("open");
+    expect(screen.getByTestId("inspector-section-columns").getAttribute("data-state")).toBe("open");
+    expect(screen.getByTestId("inspector-header-name").textContent).toMatch(/loja/);
+    expect(screen.getByTestId("inspector-header-name").textContent).toMatch(/pedido/);
+    expect(screen.getByTestId("inspector-layer-chip").textContent).toMatch(/Bronze/);
+    expect(screen.getByTestId("inspector").textContent).toContain("loja.pedido");
   });
 
-  it("renders the remaining TableMeta fields and omits has", () => {
+  it("keeps tableMeta fields visible for the selected table", () => {
     useSchemaStore.getState().selectTable("loja.pedido");
     const { container } = renderInspector();
-
     expect(screen.getByText(/loja\.raw_pedido/)).toBeTruthy();
     expect(screen.getByText("pedidos da loja")).toBeTruthy();
     expect(screen.getByText(/surrogate/)).toBeTruthy();
+    expect(screen.getByText("incremental")).toBeTruthy();
+    expect(screen.getByText("#pii")).toBeTruthy();
     expect(screen.getByText("model")).toBeTruthy();
-    expect(screen.getByText(/referenciada por/)).toBeTruthy();
-    expect(screen.getByText("loja.item")).toBeTruthy();
-    expect(container.querySelectorAll("[data-field='sample'] tbody tr")).toHaveLength(5);
     expect(container.querySelector("[data-field='has']")).toBeNull();
-    expect(screen.queryByText(/^has$/i)).toBeNull();
   });
 
   it("picks a colour from TABLE_COLORS and can clear it", () => {
@@ -132,13 +178,21 @@ describe("Inspector", () => {
     expect(onSetColor).toHaveBeenCalledWith("loja.pedido", null);
   });
 
-  it("shows the selected column from tableMeta", () => {
+  it("expands the selected column and shows lineage comes-from", () => {
     useSchemaStore.getState().selectColumn({ table: "loja.pedido", column: "cliente_id" });
-    const { container } = renderInspector();
-    const columnField = container.querySelector("[data-field='column']");
-    expect(columnField?.textContent).toContain("cliente_id");
-    expect(columnField?.textContent).toContain("bigint");
-    expect(screen.getByText("cliente_id → loja.cliente(id)")).toBeTruthy();
+    renderInspector();
+    const detail = screen.getByTestId("inspector-column-cliente_id");
+    expect(detail.textContent).toContain("cliente_id");
+    expect(detail.textContent).toContain("bigint");
+    expect(screen.getByTestId("inspector-comes-from").textContent).toContain("loja.cliente.id");
+    expect(screen.queryByText("Rastrear")).toBeNull();
+  });
+
+  it("shows batch actions for multiple selected tables", () => {
+    useSchemaStore.getState().setSelectedTableIds(["loja.pedido", "loja.cliente", "loja.item"]);
+    renderInspector();
+    expect(screen.getByText("3 tabelas selecionadas")).toBeTruthy();
+    expect(screen.getByTestId("inspector-batch-layer")).toBeTruthy();
   });
 
   it("closes the inspector without editing AppShell", () => {

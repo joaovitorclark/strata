@@ -37,6 +37,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  clearRenameDraft,
+  getRenameDraft,
+  retainRenamePointerArm,
+  setRenameDraft,
+} from "@/features/canvas/components/columnRenameSession";
 
 function headerTint(color: string | undefined): string | undefined {
   if (!color || color.startsWith("hsl(")) return undefined;
@@ -123,10 +129,30 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const updateNodeInternals = useUpdateNodeInternals();
   const edges = useEdges();
   const [filter, setFilter] = useState("");
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const cachedRename = getRenameDraft(data.id);
+  const [editing, setEditing] = useState<string | null>(cachedRename?.column ?? null);
+  const [draft, setDraft] = useState(cachedRename?.draft ?? "");
+  const ignoreNextBlur = useRef(Boolean(cachedRename));
   const [settling, setSettling] = useState(false);
   const [hovered, setHovered] = useState(false);
+
+  useEffect(() => retainRenamePointerArm(), []);
+  useEffect(() => {
+    if (editing) {
+      setRenameDraft(data.id, {
+        column: editing,
+        draft,
+      });
+      return;
+    }
+    clearRenameDraft(data.id);
+  }, [data.id, editing, draft]);
+  useEffect(() => {
+    if (!editing) return;
+    const root = document.querySelector(`[data-testid="rf__node-${data.id}"]`);
+    const input = root?.querySelector("input.col-edit");
+    if (input instanceof HTMLInputElement) input.focus();
+  }, [editing, data.id]);
 
   const zoom = useStore((s) => s.transform[2]);
   const { state, simplified } = resolveLod(zoom, {
@@ -154,10 +180,15 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const layer = actions.layers.find((l) => l.id === layerId);
   const rel = (data.meta.fks?.length ?? 0) + (data.meta.refsIn?.length ?? 0);
 
-  const commitEdit = (oldName: string) => {
+  const commitEdit = (oldName: string, cause: "blur" | "enter" = "enter") => {
+    if (cause === "blur" && ignoreNextBlur.current) {
+      ignoreNextBlur.current = false;
+      return;
+    }
     const v = draft.trim();
     if (v && v !== oldName) actions.onRenameColumn(data.id, oldName, v);
     setEditing(null);
+    clearRenameDraft(data.id);
   };
 
   const pinLevel = (lod: LodState) => {
@@ -385,12 +416,17 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
             actions.onSelectColumn(data.id, column);
           }}
           onStartEdit={(column) => {
+            ignoreNextBlur.current = true;
+            setRenameDraft(data.id, { column, draft: column });
             setEditing(column);
             setDraft(column);
           }}
           onDraftChange={setDraft}
           onCommitEdit={commitEdit}
-          onCancelEdit={() => setEditing(null)}
+          onCancelEdit={() => {
+            setEditing(null);
+            clearRenameDraft(data.id);
+          }}
           onShowMore={() => useSchemaStore.getState().setNodeLod(data.id, "full")}
         />
         {state !== "sigil" ? (

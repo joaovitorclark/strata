@@ -31,7 +31,7 @@ export type ColumnRowProps = {
   onSelect: (column: string, altKey: boolean, metaKey: boolean) => void;
   onStartEdit: (column: string) => void;
   onDraftChange: (value: string) => void;
-  onCommitEdit: (oldName: string) => void;
+  onCommitEdit: (oldName: string, cause?: "blur" | "enter") => void;
   onCancelEdit: () => void;
 };
 
@@ -175,9 +175,9 @@ function ColumnRowImpl({
           autoFocus
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
-          onBlur={() => onCommitEdit(c.name)}
+          onBlur={() => onCommitEdit(c.name, "blur")}
           onKeyDown={(e) => {
-            if (e.key === "Enter") onCommitEdit(c.name);
+            if (e.key === "Enter") onCommitEdit(c.name, "enter");
             if (e.key === "Escape") onCancelEdit();
           }}
           onClick={(e) => e.stopPropagation()}
@@ -203,6 +203,7 @@ function ColumnRowImpl({
           <button
             type="button"
             data-testid="col-rename"
+            data-col-name={c.name}
             className="col-action nodrag nopan rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
             aria-label={t("canvas.node.renameColumn")}
             onPointerDown={(e) => {

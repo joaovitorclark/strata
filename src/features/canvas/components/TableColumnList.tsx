@@ -55,7 +55,7 @@ export type TableColumnListProps = {
   onSelect: (column: string, altKey: boolean, metaKey: boolean) => void;
   onStartEdit: (column: string) => void;
   onDraftChange: (value: string) => void;
-  onCommitEdit: (oldName: string) => void;
+  onCommitEdit: (oldName: string, cause?: "blur" | "enter") => void;
   onCancelEdit: () => void;
   onShowMore?: () => void;
 };

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendRef, refExists, removeRef, removeTable, setColumnSetting, getColumnSettings,
   renameColumn, addColumn, renameTable, setTableNote, setRecordsNote, setTableOrRecordsNote,
+  setColumnType, setColumnUnique, setTablesHidden,
 } from '@/features/schema/model/edit';
 import { parseDbml } from '@/features/schema/model/parse';
 
@@ -234,5 +235,39 @@ describe('notas de tabela e records', () => {
     expect(out).toContain("Note: 'nova nota'");
     expect(out).not.toContain("'antiga'");
     expect(setTableOrRecordsNote(src, 'loja.cliente', 'via helper')).toContain("Note: 'via helper'");
+  });
+});
+
+describe('S10 inspector edit helpers', () => {
+  it('G8: setColumnType writes the new type and keeps settings', () => {
+    const out = setColumnType(SRC, 'loja.cliente', 'id', 'uuid');
+    expect(out).toMatch(/id uuid \[pk\]/);
+    expect(reparses(out)).toBe(true);
+    const decimal = setColumnType(SRC, 'loja.pedido', 'cliente_id', 'decimal(18,2)');
+    expect(decimal).toMatch(/cliente_id decimal\(18,2\)/);
+    expect(reparses(decimal)).toBe(true);
+  });
+
+  it('G8: setColumnUnique toggles unique on the column', () => {
+    const on = setColumnUnique(SRC, 'loja.cliente', 'nome', true);
+    expect(on).toMatch(/nome string \[unique\]/);
+    expect(reparses(on)).toBe(true);
+    const off = setColumnUnique(on, 'loja.cliente', 'nome', false);
+    expect(off).toMatch(/nome string$/m);
+    expect(off).not.toMatch(/nome string \[unique\]/);
+    expect(reparses(off)).toBe(true);
+    const withPk = setColumnUnique(SRC, 'loja.cliente', 'id', true);
+    expect(withPk).toMatch(/id bigint \[pk, unique\]/);
+  });
+
+  it('G8: setTablesHidden writes hide markers that stay in the DBML', () => {
+    const hidden = setTablesHidden(SRC, ['loja.cliente', 'loja.pedido'], true);
+    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
+    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
+    expect(reparses(hidden)).toBe(true);
+    const shown = setTablesHidden(hidden, ['loja.cliente'], false);
+    expect(shown).not.toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
+    expect(shown).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
+    expect(reparses(shown)).toBe(true);
   });
 });

@@ -58,7 +58,12 @@ export function DetailLevelSelect() {
           {t("canvas.toolbar.detailLevel", { level: label })} ▾
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="top" className="nodrag nopan">
+      <DropdownMenuContent
+        align="center"
+        side="top"
+        className="nodrag nopan"
+        onCloseAutoFocus={(event) => event.preventDefault()}
+      >
         <DropdownMenuRadioGroup
           value={detailLevel}
           onValueChange={(value) => {
