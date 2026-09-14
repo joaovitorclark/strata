@@ -1,7 +1,7 @@
 # 0001 — O projeto dbt é a fonte da verdade
 
 **Data:** 2026-09-14
-**Status:** proposta — aceita em princípio pelo dono do produto; **vinculante só depois do spike
+**Status:** proposta — aceita em princípio pelo dono do produto, com as decisões complementares de §7; **vinculante só depois do spike
 S14 passar** (`docs/superpowers/specs/2026-09-14-s14-dbt-source-spike.md`).
 **Substitui:** a fonte da verdade em DBML (`AGENTS.md` north star 4 e 6, `ux-ui-research.md` §5).
 
@@ -132,14 +132,48 @@ para modelos gerenciados.
 - **Enums e índices** dependem de `meta.strata` para não perder informação.
 - **Migração** dos projetos DBML existentes (conversão única, com relatório).
 
-## 7. Questões abertas (fechar antes das specs de implementação)
+## 7. Decisões complementares (2026-09-14)
 
-1. Usuários sem dbt: um projeto só de sources, com PK/FK como testes, atende?
-2. Versão mínima de dbt suportada (contracts exigem ≥ 1.5).
-3. `.sql` de modelo gerenciado: um cabeçalho `-- managed by Strata` além do `meta`?
-4. Qual projeção abre por padrão no drawer: DBML ou DDL?
-5. Onde fica `dbt_project.yml` quando o domínio tem vários projetos (um por projeto Strata, ou um
-   projeto dbt por domínio)?
+1. **Usuários sem dbt são atendidos por projetos só de sources.** PK/FK viram testes
+   (`unique`, `not_null`, `relationships`) e **a linhagem de campo também vale entre sources**
+   (`meta.strata.lineage` nas colunas de `_sources.yml`). Nenhuma feature do canvas depende de haver
+   models.
+2. **Versão do dbt: sempre a última estável.** Consequência prática: escrever `meta` e configs
+   **sob `config:`** (forma exigida nas versões recentes; `meta` solto em coluna/model está
+   depreciado) e `data_tests:` em vez de `tests:`. O spike S14 falha se `dbt parse` emitir qualquer
+   *deprecation warning*.
+3. **Modelo gerenciado: `meta` + cabeçalho + hash.**
+   - `config.meta.strata.managed: true` é a autoridade.
+   - O `.sql` começa com um cabeçalho de 2 linhas para humanos:
+     `-- Gerado pelo Strata a partir do canvas. Edições manuais convertem este modelo para manual.`
+   - `config.meta.strata.sql_hash` guarda o hash do SQL gerado. Se o arquivo mudar fora do Strata
+     (IDE, outro editor, merge), o Strata detecta no load e **pergunta** se converte para manual ou
+     regenera — nunca sobrescreve em silêncio. Sem o hash, uma edição feita no VS Code seria apagada
+     na próxima regeneração.
+4. **Drawer de código abre nos arquivos dbt reais.** Abas, nesta ordem: **dbt** (o YAML/SQL da
+   tabela ou do model selecionado — é a verdade, sem tradução), **DDL** (projeção, dialeto Spark por
+   padrão, trocável) e **DBML** (projeção). A última aba usada é lembrada por usuário.
+   Motivo: quem usa dbt lê YAML e SQL; DBML é desconhecido para boa parte desse público e a DDL é
+   familiar a todos. Mostrar a verdade por padrão evita a surpresa de "editei aqui e o arquivo ficou
+   diferente".
+5. **Um projeto dbt por domínio.** O domínio já é o repositório git; um projeto Strata vira uma
+   **pasta** dentro dele:
+   ```
+   <domínio>/                      ← repo git
+     dbt_project.yml                ← único
+     models/<projeto>/<camada>/...  ← cada projeto Strata é um diretório
+     seeds/<projeto>/...
+     .strata/<projeto>/{canvas,views,project}.yml
+   ```
+   Cada model recebe `tags: ["strata:<projeto>"]`, então `dbt build --select tag:strata:<projeto>`
+   roda um projeto isolado.
+   Motivos: (a) é assim que times usam dbt — um projeto, muitas pastas; (b) projetos do mesmo
+   domínio podem se referenciar com `ref()` normal — com um projeto dbt por projeto Strata, um
+   `silver` que lê o `bronze` de outro projeto exigiria dbt Mesh/pacotes; (c) casa com o git no nível
+   do domínio. Custo: renomear um projeto move uma pasta e atualiza as tags; nomes de model precisam
+   ser únicos no domínio (o Strata valida e sugere prefixo).
+
+Continua aberto só o que depende de evidência: nada — o spike S14 confirma 2 e 3.
 
 ## 8. Plano
 

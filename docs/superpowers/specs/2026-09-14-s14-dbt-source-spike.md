@@ -71,7 +71,7 @@ cast, 1 left join, `where`, e 1 modelo com `group_by` + agregação.
 
 ### 3.6 Validação externa
 `scripts/spike-s14/validate.sh`:
-1. cria `.venv-s14`, instala `dbt-core>=1.8` e `dbt-duckdb` e `sqlglot`;
+1. cria `.venv-s14`, instala as **últimas versões estáveis** de `dbt-core`, `dbt-duckdb` e `sqlglot` (sem pin de faixa; registrar as versões resolvidas);
 2. escreve o projeto gerado por `toDbtProject(kitchen-sink)` em um diretório temporário com um
    `profiles.yml` duckdb em memória;
 3. roda `dbt parse` e `dbt compile`;
@@ -88,7 +88,15 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
   `-- managed by Strata`); as demais ficam listadas como não respondidas;
 - **veredito**: `aprovar 0001`, `aprovar com ajustes (listar)` ou `revisar 0001 (motivos)`.
 
-## 4. Gates (12)
+### 3.8 Ajustes das decisões complementares (0001 §7)
+- Layout **por domínio**: gerar a fixture como um domínio com **2 projetos Strata** (`vendas` e
+  `estoque`), em que um model de `estoque` faz `ref()` a um model de `vendas`. Tags
+  `strata:<projeto>` em todo model.
+- `meta` e configs sempre sob `config:`; `data_tests:` em vez de `tests:`.
+- Um projeto **só de sources** (sem models) com PK/FK como testes e linhagem entre sources.
+- Modelos gerenciados com o cabeçalho de 2 linhas e `config.meta.strata.sql_hash`.
+
+## 4. Gates (15)
 
 1. Vitest: `fromDbml(kitchen-sink)` → `toDbtProject` → `fromDbtProject` → **igual** ao primeiro
    `StrataModel` (comparação estrutural normalizada; diferenças esperadas listadas e justificadas no
@@ -110,6 +118,14 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
     equivalente ao de `toDbtSql` (sem Jinja) — saída salva.
 11. `scripts/spike-s14/validate.sh`: `sqlglot` parseia todo Spark SQL gerado sem erro — saída salva.
 12. Relatório presente com as seções de §3.7 e veredito.
+13. `validate.sh`: `dbt parse` com a **última versão estável** de `dbt-core` e `dbt-duckdb` (versões
+    registradas no relatório) sem nenhum *deprecation warning* — saída salva.
+14. Vitest: `dbt build --select tag:strata:estoque` equivalente — `fromDbtProject` filtrado por tag
+    devolve só as tabelas de `estoque`, e o `ref()` para `vendas` resolve (a tabela de `vendas`
+    aparece como externa, não como ausente).
+15. Vitest: editar o `.sql` gerenciado fora do Strata (alterar o conteúdo sem atualizar o hash) →
+    `fromDbtProject` marca o model como `drift` e **não** o trata como gerenciado limpo; regenerar
+    exige confirmação explícita (função pura com flag).
 
 ## 5. Fora de escopo
 
