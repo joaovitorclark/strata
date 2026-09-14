@@ -239,6 +239,22 @@ describe('notas de tabela e records', () => {
 });
 
 describe('S10 inspector edit helpers', () => {
+  it('R5: setColumnType keeps notes with brackets/commas, array types and trailing comments', () => {
+    const src = [
+      'Table loja.cliente {',
+      "  id int [pk, note: 'ids [legado], migrados'] // chave antiga",
+      '  tags text[] [not null]',
+      '}',
+      '',
+    ].join('\n');
+    const out = setColumnType(src, 'loja.cliente', 'id', 'bigint');
+    expect(out).toContain("  id bigint [pk, note: 'ids [legado], migrados'] // chave antiga");
+    const arr = setColumnType(src, 'loja.cliente', 'tags', 'varchar[]');
+    expect(arr).toContain('  tags varchar[] [not null]');
+    const uni = setColumnUnique(src, 'loja.cliente', 'id', true);
+    expect(uni).toContain("  id int [pk, note: 'ids [legado], migrados', unique] // chave antiga");
+  });
+
   it('G8: setColumnType writes the new type and keeps settings', () => {
     const out = setColumnType(SRC, 'loja.cliente', 'id', 'uuid');
     expect(out).toMatch(/id uuid \[pk\]/);
