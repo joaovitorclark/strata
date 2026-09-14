@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendRef, refExists, removeRef, removeTable, setColumnSetting, getColumnSettings,
   renameColumn, addColumn, renameTable, setTableNote, setRecordsNote, setTableOrRecordsNote,
-  setColumnType, setColumnUnique, setTablesHidden,
+  setColumnType, setColumnUnique,
 } from '@/features/schema/model/edit';
 import { parseDbml } from '@/features/schema/model/parse';
 
@@ -276,14 +276,4 @@ describe('S10 inspector edit helpers', () => {
     expect(withPk).toMatch(/id bigint \[pk, unique\]/);
   });
 
-  it('G8: setTablesHidden writes hide markers that stay in the DBML', () => {
-    const hidden = setTablesHidden(SRC, ['loja.cliente', 'loja.pedido'], true);
-    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
-    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
-    expect(reparses(hidden)).toBe(true);
-    const shown = setTablesHidden(hidden, ['loja.cliente'], false);
-    expect(shown).not.toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
-    expect(shown).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
-    expect(reparses(shown)).toBe(true);
-  });
 });

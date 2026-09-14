@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
-import { setTableColor, setTableLayer, setTablesHidden } from "@/features/schema/model/edit";
+import { setTableColor, setTableLayer } from "@/features/schema/model/edit";
 import { useSchemaStore } from "@/features/schema/store";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +53,8 @@ export function BatchSection({
     tableIds.forEach((id) => onSetColor(id, color));
   };
 
+  // Visibility is view state (S04): it never touches the DBML.
   const hide = () => {
-    if (dbml && onApply) applyAll(setTablesHidden(dbml, tableIds, true));
     setHiddenTables([...new Set([...hiddenTableIds, ...tableIds])]);
   };
 

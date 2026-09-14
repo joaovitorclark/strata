@@ -865,32 +865,3 @@ export function setColumnUnique(src: string, table: string, column: string, uniq
       .join('\n'),
   );
 }
-
-const HIDDEN_LINE = /^\/\/\s*strata\.hidden\s+(\S+)\s*$/i;
-
-/** Marca tabelas como ocultas no DBML via comentário `// strata.hidden <id>`. */
-export function setTablesHidden(src: string, tableIds: string[], hidden: boolean): string {
-  const wanted = new Set(tableIds.map(stripQuotes).filter(Boolean));
-  if (!wanted.size) return src;
-  const lines = src.split('\n');
-  const seen = new Set<string>();
-  const kept: string[] = [];
-  for (const line of lines) {
-    const m = HIDDEN_LINE.exec(line.trim());
-    if (m) {
-      const id = stripQuotes(m[1]);
-      if (wanted.has(id)) {
-        seen.add(id);
-        if (hidden) kept.push(`// strata.hidden ${id}`);
-        continue;
-      }
-    }
-    kept.push(line);
-  }
-  if (hidden) {
-    for (const id of wanted) {
-      if (!seen.has(id)) kept.push(`// strata.hidden ${id}`);
-    }
-  }
-  return kept.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') + '\n';
-}
