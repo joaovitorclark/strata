@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Moon, Search, Sun } from "lucide-react";
+import { ChevronDown, Link, Moon, Search, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -9,15 +10,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { Toaster } from "@/components/ui/sonner";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { EXPORTERS, exporterCommandId } from "@/features/command-palette/actions";
+import { useSchemaStore } from "@/features/schema/store";
 import {
   applyThemeClass,
   resolveTheme,
   THEME_STORAGE_KEY,
   type ThemeName,
 } from "@/features/shell/AppShell";
+import { HIDDEN_URL_LIMIT, serializeUrlState } from "@/features/shell/urlState";
+import { flushUrlSync } from "@/features/shell/useUrlSync";
 import type { ExportFormat } from "@/infrastructure/api";
 import { cn } from "@/lib/utils";
 
@@ -139,11 +144,47 @@ export function Navbar({
   const nextTheme: ThemeName = theme === "dark" ? "light" : "dark";
   const ThemeIcon = theme === "dark" ? Sun : Moon;
   const wide = useWideChrome();
+  const selectedTable = useSchemaStore((s) => s.selectedTable);
+  const hiddenCount = useSchemaStore((s) => s.hiddenTableIds.length);
+  const omitHidden = hiddenCount > HIDDEN_URL_LIMIT;
 
   const toggleTheme = () => {
     setTheme(nextTheme);
     applyThemeClass(nextTheme);
     persistTheme(nextTheme);
+  };
+
+  const copyText = async (value: string) => {
+    try {
+      await navigator.clipboard?.writeText(value);
+      toast.success(t("shell.linkCopied"));
+    } catch {
+      /* clipboard may be unavailable */
+    }
+  };
+
+  const copyCurrentLink = () => {
+    flushUrlSync();
+    void copyText(window.location.href);
+  };
+
+  const copyTableLink = () => {
+    const store = useSchemaStore.getState();
+    if (!store.selectedTable) return;
+    const href = serializeUrlState(
+      {
+        project: store.currentProjectId || undefined,
+        detail: store.detailLevel,
+        focus: store.selectedTable,
+      },
+      `${window.location.origin}${window.location.pathname}`,
+    );
+    void copyText(href);
+  };
+
+  const copyViewLink = () => {
+    flushUrlSync();
+    void copyText(window.location.href);
   };
 
   const editButtons = editActions ? (
@@ -317,6 +358,52 @@ export function Navbar({
             </>
           ) : null}
 
+          <div className="flex shrink-0 items-center">
+            <button
+              type="button"
+              data-testid="copy-link"
+              aria-label={t("shell.copyLink")}
+              className={cn(
+                FOCUS,
+                "inline-flex h-8 items-center gap-1.5 rounded-l-md border border-input bg-background px-2.5",
+                "text-sm hover:bg-accent hover:text-accent-foreground",
+              )}
+              onClick={copyCurrentLink}
+            >
+              <Link size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+              {t("shell.copyLink")}
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  data-testid="copy-link-menu"
+                  aria-label={t("shell.copyLinkMenu")}
+                  className={cn(
+                    FOCUS,
+                    "inline-flex h-8 items-center rounded-r-md border border-l-0 border-input bg-background px-1.5",
+                    "text-sm hover:bg-accent hover:text-accent-foreground",
+                  )}
+                >
+                  <ChevronDown size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" data-testid="copy-link-menu-content">
+                <DropdownMenuItem disabled={!selectedTable} onSelect={copyTableLink}>
+                  {t("shell.copyLinkTable")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={copyViewLink}>
+                  {t("shell.copyLinkView")}
+                </DropdownMenuItem>
+                {omitHidden ? (
+                  <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                    {t("shell.copyLinkHiddenWarning")}
+                  </p>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           {onExportOption ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -404,6 +491,9 @@ export function Navbar({
           </Tooltip>
         </div>
       </div>
+      {typeof window !== "undefined" && typeof window.matchMedia === "function" ? (
+        <Toaster />
+      ) : null}
     </TooltipProvider>
   );
 }
