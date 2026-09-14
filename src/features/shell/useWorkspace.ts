@@ -183,6 +183,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       baselineRef.current = loaded.snapshot;
       pushStatus(loadStatusMessage(loaded.tableCount, loaded.active0, statusOverride));
       store.setSaveState("saved");
+      store.setHydratedProjectId(projectId);
     },
     [pushStatus],
   );
@@ -962,6 +963,7 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     async (id: string) => {
       const s = useSchemaStore.getState();
       if (id === s.currentProjectId) return;
+      s.setHydratedProjectId(null);
       if (s.currentProjectId) {
         try {
           await api.saveProjectById(s.currentProjectId, s.dbml, {
