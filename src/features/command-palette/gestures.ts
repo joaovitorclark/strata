@@ -45,6 +45,7 @@ export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
   { label: "Nível de detalhe: Documentação", spec: { key: "4" } },
   { label: "Modo foco de tabela", spec: { key: "F" } },
   { label: "Rastrear linhagem do campo", spec: { key: "T" } },
+  { label: "Mini-mapa", spec: { key: "M" } },
 ];
 
 export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {

@@ -209,6 +209,20 @@ describe("AppGate / Workspace cutover", () => {
     await waitFor(() => expect(api.importFromInputForProject).toHaveBeenCalled());
   });
 
+  it("keeps the canvas mounted until the project hydrates", () => {
+    vi.mocked(api.loadProjectById).mockReturnValue(new Promise(() => {}));
+    render(<App domain={domain} />);
+    expect(screen.getByTestId("canvas-stub")).toBeTruthy();
+    expect(screen.queryByTestId("workspace-empty-state")).toBeNull();
+  });
+
+  it("G4: mounts EmptyState instead of canvas when the model has zero tables", async () => {
+    vi.mocked(api.loadProjectById).mockResolvedValue({ dbml: "// empty\n", canvas: {} });
+    render(<App domain={domain} />);
+    expect(await screen.findByTestId("workspace-empty-state")).toBeTruthy();
+    expect(screen.queryByTestId("canvas-stub")).toBeNull();
+  });
+
   it("mounts GitPanel and loads git status when the domain has git", async () => {
     render(<App domain={gitDomain} />);
     await waitFor(() => expect(api.getGitStatus).toHaveBeenCalledWith("dom-1"));

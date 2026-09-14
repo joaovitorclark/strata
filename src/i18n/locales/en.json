@@ -20,6 +20,18 @@
     "backToDomains": "← Domains",
     "help": "Shortcuts and gestures",
     "addTable": "+ Table",
+    "empty": {
+      "title": "Start your model",
+      "paste": "Paste SQL / DBML / schema.rb",
+      "importDbt": "Import dbt project",
+      "dropHint": "or drop a .sql, .dbml, .rb, or .yml file here",
+      "pasteTitle": "Paste schema",
+      "pasteHint": "Paste SQL, DBML, or a file's contents. Rails (schema.rb) has no importer yet.",
+      "applyPaste": "Paste into model",
+      "invalid": "Could not recognize the format. Use DBML (Table x {) or SQL (CREATE TABLE).",
+      "unsupported": "schema.rb / Rails has no importer in this version. Paste DBML or SQL, or import a dbt project.",
+      "emptyPaste": "Paste schema contents before applying."
+    },
     "addTablePrompt": "New table name (schema.table):",
     "addMetadata": "+ Metadata",
     "importInput": "Import (input/)",
@@ -119,6 +131,7 @@
   },
   "canvas": {
     "toolbar": {
+      "minimap": "Mini-map",
       "layout": "Organize canvas",
       "edges": "Edges",
       "relations": "Relations",

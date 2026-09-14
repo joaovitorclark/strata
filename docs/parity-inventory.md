@@ -86,7 +86,7 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 74 | Canvas | Click a TableGroup selects that group (Records panel then filters to the group) | src/canvas/Canvas.tsx:570 | ☑ canvas-select-sync.cy.ts |
 | 75 | Canvas | Hover a table sets hover-focus so related tables stay highlighted | src/canvas/Canvas.tsx:567 | ☑ canvas-select-sync.cy.ts |
 | 76 | Canvas | React Flow Controls: zoom in, zoom out, fit view, and lock interactivity | src/canvas/Canvas.tsx:602 | dropped — superseded by S02 (Controls removed; zoom/fit live on the canvas pill; lock is not in the S02 ZoomControls placeholder) |
-| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | dropped — superseded by S02 (MiniMap removed from Canvas; returns in S12) |
+| 77 | Canvas | MiniMap is pannable and zoomable (lite colouring above the table threshold) | src/canvas/Canvas.tsx:604 | ☑ cypress/e2e/minimap.cy.ts (S12 remounts MiniMap; default on when > 40 tables) |
 | 78 | Canvas | Double-click a table title prompts for a new `schema.tabela` name and renames it | src/canvas/TableNode.tsx:70 | ☑ canvas-delete-chrome.cy.ts |
 | 79 | Canvas | Click × on a table confirms then deletes the table and related refs | src/canvas/TableNode.tsx:104 | ☑ canvas-delete-chrome.cy.ts (Table menu Delete + confirm; no × on TableNode) |
 | 80 | Canvas | Click the colour/layer control to open the table palette | src/canvas/TableNode.tsx:118 | ☑ canvas-palette.cy.ts |
