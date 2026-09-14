@@ -37,6 +37,7 @@ import {
 } from "../utils/pageFilter";
 import { useCanvasEdges } from "../hooks/useCanvasEdges";
 import {
+  filterEdgesByVisibleIds,
   useCanvasNodes,
   type NodeExtras,
   type NodeOpts,
@@ -471,7 +472,7 @@ export function Canvas(props: Props) {
     density,
   ]);
 
-  useCanvasNodes(
+  const visibleTableIds = useCanvasNodes(
     parsed,
     positions,
     setNodes,
@@ -496,6 +497,16 @@ export function Canvas(props: Props) {
     onRemoveRef,
     onRemoveFieldLineage,
   });
+
+  const visibleEdges = useMemo(() => {
+    const tableIds = new Set(parsed.tables.map((t) => t.id));
+    const allowed = new Set(visibleTableIds);
+    for (const edge of edges) {
+      if (!tableIds.has(edge.source)) allowed.add(edge.source);
+      if (!tableIds.has(edge.target)) allowed.add(edge.target);
+    }
+    return filterEdgesByVisibleIds(edges, allowed);
+  }, [edges, visibleTableIds, parsed.tables]);
 
   const onSelectionChange = useCallback(
     ({ nodes: selNodes, edges: selEdges }: OnSelectionChangeParams) => {
@@ -681,7 +692,7 @@ export function Canvas(props: Props) {
         <TooltipProvider delayDuration={300}>
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={visibleEdges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
