@@ -39,6 +39,8 @@ npm run cy:run         # Cypress smoke specs
 npm run cy:run:stress  # Cypress stress specs (187-column table, 200-table diagram)
 ```
 
+CI (GitHub Actions) runs `npm ci` then typecheck, lint, format:check, test, and build on every PR and every push to `main` and `research/**`; e2e (`cy:run`) needs verify; stress (`cy:run:stress`) is manual via `workflow_dispatch`.
+
 The app needs the server: it is not a static SPA. Projects, git and every export live behind
 Fastify, and the built app is served by it through `@fastify/static`.
 
