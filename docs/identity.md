@@ -81,7 +81,7 @@ of the work of not looking like an ERD tool.
 | Group | Tokens | Purpose |
 | --- | --- | --- |
 | Medallion layers | `--layer-bronze` (peach), `--layer-silver` (lavender/subtext0), `--layer-gold` (yellow), `--layer-raw` (overlay1) | Left edge of each node; layer chips; band tints |
-| Edge semantics | `--rel-fk` (blue), `--rel-lineage` (teal), `--rel-active` (mauve), `--rel-muted` | Lineage must never read as a foreign key |
+| Edge semantics | `--rel-fk` (blue), `--rel-lineage` (mauve / `--primary`), `--rel-active` (mauve), `--rel-muted` | Lineage is mauve; FK stays blue. Active vs rest is thickness, dash, and motion — not hue |
 | Key badges | `--key-pk`, `--key-fk`, `--key-unique`, `--key-index`, `--key-pin` | Column markers |
 | DBML syntax | `--syn-keyword` (mauve), `--syn-string` (green), `--syn-number` (peach), `--syn-type` (yellow), `--syn-operator` (sky), `--syn-punct`, `--syn-comment`, `--syn-line-active`, `--syn-gutter` | Per the Catppuccin style guide |
 
@@ -226,15 +226,14 @@ height, and always accompanied by the layer name in the header tooltip and the i
 
 | Kind | Colour | Line | Terminal |
 | --- | --- | --- | --- |
-| Foreign key | `--rel-fk` (blue) | solid, 1.5px, orthogonal | crow's foot |
-| Aggregated lineage | `--rel-lineage` (teal) | dashed, animated flow, count label (`N campos`) | tapered arrow |
-| Field lineage | `--rel-lineage` (teal) | dashed, animated flow, column to column | tapered arrow |
-| Active trace | `--rel-active` (mauve) | solid, 2.5px | arrow + glow |
+| Foreign key | `--rel-muted` at rest, `--rel-fk` (blue) on hover in IE, `--rel-active` in focus | solid, 1px rest / 1.5 hover / 2 focus, orthogonal `smoothstep` r=8 | IE crow's foot / Barker / minimal arrow — configurable per project |
+| Aggregated lineage | `--rel-lineage` (mauve) | dashed 4 3, **no animation at rest**, count pill (`N campos`, 10px); hover 2px; focus 2px dash 6 4 + `lineage-flow` | tapered arrow |
+| Field lineage | `--rel-lineage` (mauve) | dashed 4 3, 1px, **no animation at rest**; hover 1.5; focus 2px dash 6 4 + `lineage-flow` | tapered arrow |
+| Active trace | `--rel-active` (mauve) | 2px; dash/flow only on lineage | matching terminal + glow |
 
 Overview (either node at `keys` or `sigil`) draws **one aggregated edge per table pair**, labelled with the mapping count. Detail (both nodes `full`) expands it into per-field edges. The aggregate is derived and read-only.
 
-Lineage animates; foreign keys never do. That behavioural difference is legible even at a zoom where
-colour has stopped being distinguishable.
+Lineage is mauve, same family as selection: rest vs focus is thickness, dash, and `lineage-flow` (only under `.edge--focus` / `.lineage-flow`). Foreign keys never animate. `prefers-reduced-motion` kills the flow.
 
 ---
 

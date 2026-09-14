@@ -110,6 +110,7 @@ export default {
         /* ── Strata domain: edge semantics ─────────────────────────────── */
         rel: {
           fk: "hsl(var(--rel-fk))",
+          /* S09: --rel-lineage resolves to mauve (--ctp-mauve / --primary) in both themes. */
           lineage: "hsl(var(--rel-lineage))",
           active: "hsl(var(--rel-active))",
           muted: "hsl(var(--rel-muted))",

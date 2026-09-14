@@ -91,6 +91,10 @@
       "edges": "Arestas",
       "relations": "Relações",
       "lineage": "Linhagem",
+      "notation": "Notação",
+      "notationIe": "IE",
+      "notationBarker": "Barker",
+      "notationMinimal": "Mínima",
       "zoomPercent": "{{percent}}%",
       "zoomMenu": "Nível de zoom",
       "zoomFit": "Ajustar",
@@ -109,6 +113,7 @@
       "removeRelation": "Remover relação",
       "removeLineage": "Remover linhagem",
       "derivedFrom": "derivado de",
+      "fkLabel": "{{from}} → {{to}}",
       "fieldCount": "{{count}} campos",
       "externalLinks": "{{count}} ligações → {{label}}"
     },
