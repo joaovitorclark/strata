@@ -63,14 +63,13 @@ describe("shell chrome", () => {
     }
   });
 
-  it("renders statusbar problems, DBML handle, zoom, and density", () => {
-    render(<StatusBar problemCount={3} zoomPercent={100} />);
+  it("renders statusbar problems, DBML handle, and density", () => {
+    render(<StatusBar problemCount={3} />);
     expect(screen.getByRole("button", { name: "Problemas 3" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "DBML" })).toBeTruthy();
-    expect(screen.getByText("100%")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Reduzir zoom" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Aumentar zoom" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Ajustar à tela" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reduzir zoom" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Aumentar zoom" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ajustar à tela" })).toBeNull();
     expect(screen.getByRole("button", { name: "Densidade" })).toBeTruthy();
   });
 

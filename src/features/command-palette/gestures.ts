@@ -12,12 +12,14 @@ export const CANVAS_GESTURES: Gesture[] = [
   { gesture: "Clicar em coluna", effect: "Abre o painel do campo" },
   { gesture: "Clicar em ⓘ na tabela", effect: "Abre metadados da tabela" },
   { gesture: "Cmd/Ctrl + clique ou arrasto", effect: "Seleciona várias tabelas" },
+  { gesture: "Arrastar retângulo no canvas", effect: "Seleciona as tabelas cobertas" },
+  { gesture: "Espaço + arrasto", effect: "Pan do canvas (cursor grab)" },
   {
     gesture: "Modo linhagem: arrastar entre pontos das colunas",
     effect: "Cria mapeamento de campo no DBML",
   },
   { gesture: "Delete", effect: "Remove ref selecionada" },
-  { gesture: "Escape", effect: "Limpa seleção e fecha modais" },
+  { gesture: "Escape", effect: "1º limpa a coluna; 2º limpa a tabela e fecha modais" },
 ];
 
 export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
@@ -25,6 +27,10 @@ export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
   { label: "Remover ref selecionada", spec: { key: "Delete" } },
   { label: "Limpar seleção / fechar modais", spec: { key: "Escape" } },
   { label: "Atalhos e gestos", spec: { key: "?" } },
+  { label: "Aumentar zoom", spec: { mod: true, key: "+" } },
+  { label: "Reduzir zoom", spec: { mod: true, key: "-" } },
+  { label: "Ajustar à tela", spec: { shift: true, key: "1" } },
+  { label: "Zoom 100%", spec: { mod: true, key: "0" } },
 ];
 
 export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {

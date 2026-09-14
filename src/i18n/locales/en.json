@@ -76,7 +76,10 @@
       "layout": "Organize canvas",
       "edges": "Edges",
       "relations": "Relations",
-      "lineage": "Lineage"
+      "lineage": "Lineage",
+      "zoomPercent": "{{percent}}%",
+      "zoomMenu": "Zoom level",
+      "zoomFit": "Fit"
     },
     "edges": {
       "removeRelation": "Remove relation",

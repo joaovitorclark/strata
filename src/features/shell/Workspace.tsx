@@ -100,7 +100,6 @@ export function Workspace(props: WorkspaceProps) {
     handleOrganize,
     handleAddTable,
     handleAddMetadata,
-    bumpFitView,
     handleExportOption,
     handleDbmlChange,
     handleCreateRef,
@@ -440,7 +439,6 @@ export function Workspace(props: WorkspaceProps) {
           statusbar={
             <StatusBar
               problemCount={modelIssues.length}
-              zoomPercent={100}
               density={density}
               dbmlOpen={sourceDrawerOpen && drawerTab === "dbml"}
               recordsOpen={sourceDrawerOpen && drawerTab === "records"}
@@ -468,7 +466,6 @@ export function Workspace(props: WorkspaceProps) {
               statusLog={<StatusLog status={status} saveState={saveState} logs={logs} />}
               onDbmlToggle={() => toggleDrawer("dbml")}
               onRecordsToggle={() => toggleDrawer("records")}
-              onFitView={bumpFitView}
               onDensityChange={setDensity}
             />
           }

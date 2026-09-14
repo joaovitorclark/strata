@@ -77,14 +77,10 @@ export function CommandPalette({
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (open) {
-          e.preventDefault();
-          setOpen(false);
-          return;
-        }
-        if (isTypingTarget(e.target)) return;
-        useSchemaStore.getState().clearCanvasSelection();
-        context.closeModals?.();
+        if (!open) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen(false);
         return;
       }
 
