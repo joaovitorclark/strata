@@ -156,10 +156,12 @@ export function Navbar({
 
   const copyText = async (value: string) => {
     try {
-      await navigator.clipboard?.writeText(value);
+      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(value);
       toast.success(t("shell.linkCopied"));
     } catch {
-      /* clipboard may be unavailable */
+      // Insecure origin or denied permission: say so instead of claiming success.
+      toast.error(t("shell.linkCopyFailed"));
     }
   };
 

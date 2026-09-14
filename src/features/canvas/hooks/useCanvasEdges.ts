@@ -1,4 +1,5 @@
 // Arestas do canvas: rebuild estrutural separado do highlight (Fase 3 perf).
+import { sharingFan } from "@/features/canvas/utils/relationEndpoints";
 import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useStore, type Edge } from "@xyflow/react";
 import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
@@ -293,6 +294,17 @@ function buildStructuralEdges(
   const { parsed, aggregatedCrossLinks, lineageFields, relationsVisible } = input;
   const lodByTable = input.lodByTable ?? {};
 
+  // Fan offsets for relations sharing a column end, computed once here instead of every
+  // RelationEdge scanning the whole edge list on each store change (O(E²)).
+  const sourceGroups = new Map<string, string[]>();
+  const targetGroups = new Map<string, string[]>();
+  for (const r of parsed.refs) {
+    const sk = `${r.source}\u0000${r.fromCol}`;
+    const tk = `${r.target}\u0000${r.toCol}`;
+    sourceGroups.set(sk, [...(sourceGroups.get(sk) ?? []), r.id]);
+    targetGroups.set(tk, [...(targetGroups.get(tk) ?? []), r.id]);
+  }
+
   const relEdges: Edge[] = relationsVisible
     ? [
         ...parsed.refs.map((r) => {
@@ -313,6 +325,8 @@ function buildStructuralEdges(
             data: {
               fromRel: r.fromRel,
               toRel: r.toRel,
+              sourceFan: sharingFan(sourceGroups.get(`${r.source}\u0000${r.fromCol}`) ?? [], r.id),
+              targetFan: sharingFan(targetGroups.get(`${r.target}\u0000${r.toCol}`) ?? [], r.id),
               endpoints,
               onRemove: () => onRemoveRef(r.source, r.fromCol, r.target, r.toCol),
             },

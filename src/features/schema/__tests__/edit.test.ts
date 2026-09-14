@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendRef, refExists, removeRef, removeTable, setColumnSetting, getColumnSettings,
   renameColumn, addColumn, renameTable, setTableNote, setRecordsNote, setTableOrRecordsNote,
-  setColumnType, setColumnUnique, setTablesHidden,
+  setColumnType, setColumnUnique,
 } from '@/features/schema/model/edit';
 import { parseDbml } from '@/features/schema/model/parse';
 
@@ -239,6 +239,22 @@ describe('notas de tabela e records', () => {
 });
 
 describe('S10 inspector edit helpers', () => {
+  it('R5: setColumnType keeps notes with brackets/commas, array types and trailing comments', () => {
+    const src = [
+      'Table loja.cliente {',
+      "  id int [pk, note: 'ids [legado], migrados'] // chave antiga",
+      '  tags text[] [not null]',
+      '}',
+      '',
+    ].join('\n');
+    const out = setColumnType(src, 'loja.cliente', 'id', 'bigint');
+    expect(out).toContain("  id bigint [pk, note: 'ids [legado], migrados'] // chave antiga");
+    const arr = setColumnType(src, 'loja.cliente', 'tags', 'varchar[]');
+    expect(arr).toContain('  tags varchar[] [not null]');
+    const uni = setColumnUnique(src, 'loja.cliente', 'id', true);
+    expect(uni).toContain("  id int [pk, note: 'ids [legado], migrados', unique] // chave antiga");
+  });
+
   it('G8: setColumnType writes the new type and keeps settings', () => {
     const out = setColumnType(SRC, 'loja.cliente', 'id', 'uuid');
     expect(out).toMatch(/id uuid \[pk\]/);
@@ -260,14 +276,4 @@ describe('S10 inspector edit helpers', () => {
     expect(withPk).toMatch(/id bigint \[pk, unique\]/);
   });
 
-  it('G8: setTablesHidden writes hide markers that stay in the DBML', () => {
-    const hidden = setTablesHidden(SRC, ['loja.cliente', 'loja.pedido'], true);
-    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
-    expect(hidden).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
-    expect(reparses(hidden)).toBe(true);
-    const shown = setTablesHidden(hidden, ['loja.cliente'], false);
-    expect(shown).not.toMatch(/\/\/\s*strata\.hidden\s+loja\.cliente/);
-    expect(shown).toMatch(/\/\/\s*strata\.hidden\s+loja\.pedido/);
-    expect(reparses(shown)).toBe(true);
-  });
 });

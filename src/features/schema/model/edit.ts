@@ -764,7 +764,71 @@ export function migrateCanvasPins(src: string, byTable?: Record<string, string[]
   return out;
 }
 
-/** Troca o tipo da coluna, preservando o sufixo `[settings]`. */
+/**
+ * Splits a field line's `rest` into type, settings body and trailing text, respecting quoted
+ * strings: a `]` or `,` inside `note: '...'` does not end the settings, and a trailing `// comment`
+ * is kept rather than swallowed.
+ */
+function splitFieldRest(rest: string): { type: string; settings: string | null; trailing: string } {
+  let quote: string | null = null;
+  let open = -1;
+  for (let i = 0; i < rest.length; i++) {
+    const ch = rest[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '/' && rest[i + 1] === '/' && open < 0) {
+      return { type: rest.slice(0, i).trim(), settings: null, trailing: rest.slice(i) };
+    }
+    // Settings open after whitespace; `int[]` is an array type, not a settings block.
+    if (ch === '[' && open < 0 && /\s/.test(rest[i - 1] ?? '')) {
+      open = i;
+      continue;
+    }
+    if (ch === ']' && open >= 0) {
+      return {
+        type: rest.slice(0, open).trim(),
+        settings: rest.slice(open + 1, i),
+        trailing: rest.slice(i + 1).trim(),
+      };
+    }
+  }
+  return { type: rest.trim(), settings: null, trailing: '' };
+}
+
+/** Comma-separated setting tokens, ignoring commas inside quoted strings. */
+function splitSettingTokens(body: string): string[] {
+  const out: string[] = [];
+  let quote: string | null = null;
+  let start = 0;
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+    } else if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch;
+    } else if (ch === ',') {
+      out.push(body.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  out.push(body.slice(start).trim());
+  return out.filter(Boolean);
+}
+
+function joinFieldRest(type: string, tokens: string[], trailing: string): string {
+  const settings = tokens.length ? ` [${tokens.join(', ')}]` : '';
+  return `${type}${settings}${trailing ? ` ${trailing}` : ''}`;
+}
+
+/** Troca o tipo da coluna, preservando o sufixo `[settings]` e comentário no fim da linha. */
 export function setColumnType(src: string, table: string, column: string, type: string): string {
   const trimmed = type.trim();
   if (!trimmed) return src;
@@ -775,9 +839,9 @@ export function setColumnType(src: string, table: string, column: string, type: 
         if (!isFieldLine(line)) return line;
         const f = parseFieldLine(line);
         if (!f || f.name !== stripQuotes(column)) return line;
-        const bracket = /\[([^\]]*)\]\s*$/.exec(f.rest);
-        const settings = bracket ? ` [${bracket[1]}]` : '';
-        return `${f.indent}${f.name} ${trimmed}${settings}`;
+        const parts = splitFieldRest(f.rest);
+        const tokens = parts.settings === null ? [] : splitSettingTokens(parts.settings);
+        return `${f.indent}${f.name} ${joinFieldRest(trimmed, tokens, parts.trailing)}`;
       })
       .join('\n'),
   );
@@ -792,45 +856,12 @@ export function setColumnUnique(src: string, table: string, column: string, uniq
         if (!isFieldLine(line)) return line;
         const f = parseFieldLine(line);
         if (!f || f.name !== stripQuotes(column)) return line;
-        const bracket = /\[([^\]]*)\]\s*$/.exec(f.rest);
-        const typePart = bracket ? f.rest.slice(0, bracket.index).trim() : f.rest.trim();
-        const existing = bracket
-          ? bracket[1].split(',').map((x) => x.trim()).filter(Boolean)
-          : [];
+        const parts = splitFieldRest(f.rest);
+        const existing = parts.settings === null ? [] : splitSettingTokens(parts.settings);
         const without = existing.filter((tok) => !/^unique$/i.test(tok));
         const tokens = unique ? [...without, 'unique'] : without;
-        const rest = tokens.length ? `${typePart} [${tokens.join(', ')}]` : typePart;
-        return `${f.indent}${f.name} ${rest}`;
+        return `${f.indent}${f.name} ${joinFieldRest(parts.type, tokens, parts.trailing)}`;
       })
       .join('\n'),
   );
-}
-
-const HIDDEN_LINE = /^\/\/\s*strata\.hidden\s+(\S+)\s*$/i;
-
-/** Marca tabelas como ocultas no DBML via comentário `// strata.hidden <id>`. */
-export function setTablesHidden(src: string, tableIds: string[], hidden: boolean): string {
-  const wanted = new Set(tableIds.map(stripQuotes).filter(Boolean));
-  if (!wanted.size) return src;
-  const lines = src.split('\n');
-  const seen = new Set<string>();
-  const kept: string[] = [];
-  for (const line of lines) {
-    const m = HIDDEN_LINE.exec(line.trim());
-    if (m) {
-      const id = stripQuotes(m[1]);
-      if (wanted.has(id)) {
-        seen.add(id);
-        if (hidden) kept.push(`// strata.hidden ${id}`);
-        continue;
-      }
-    }
-    kept.push(line);
-  }
-  if (hidden) {
-    for (const id of wanted) {
-      if (!seen.has(id)) kept.push(`// strata.hidden ${id}`);
-    }
-  }
-  return kept.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') + '\n';
 }

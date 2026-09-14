@@ -5,7 +5,6 @@ import {
   getSmoothStepPath,
   Position,
   useInternalNode,
-  useStore,
   type Edge,
   type EdgeProps,
   type InternalNode,
@@ -34,7 +33,6 @@ import {
 import {
   borderX,
   nearestRelationSides,
-  sharingFan,
   type Side,
 } from "@/features/canvas/utils/relationEndpoints";
 import type { Cardinality } from "@/features/schema/model/parse";
@@ -56,6 +54,9 @@ export type RelationEdgeData = {
   stubLabel?: string;
   externalDetails?: string[];
   onRemove?: () => void;
+  /** Vertical offset when several relations share this column end (see useCanvasEdges). */
+  sourceFan?: number;
+  targetFan?: number;
 };
 
 type RelationFlowEdge = Edge<RelationEdgeData>;
@@ -72,23 +73,6 @@ function columnNullable(
   const col = node.data.columns?.find((c) => c.name === column);
   if (!col) return false;
   return !col.notNull && !col.pk;
-}
-
-function sharingIds(
-  edges: Edge[],
-  nodeId: string,
-  column: string,
-  end: "source" | "target",
-): string[] {
-  return edges
-    .filter((e) => {
-      if (e.type !== "relation") return false;
-      if (end === "source") {
-        return e.source === nodeId && parseRelationColumnHandle(e.sourceHandle)?.column === column;
-      }
-      return e.target === nodeId && parseRelationColumnHandle(e.targetHandle)?.column === column;
-    })
-    .map((e) => e.id);
 }
 
 export function RelationEdge({
@@ -128,7 +112,6 @@ export function RelationEdge({
   const targetNode = useInternalNode<Node<TableNodeData>>(target);
   const rowH = useCanvasRowH();
   const scrollFor = useTableScrollStore((s) => s.byNode);
-  const edges = useStore((s) => s.edges);
 
   const srcCol = parseRelationColumnHandle(sourceHandleId);
   const tgtCol = parseRelationColumnHandle(targetHandleId);
@@ -166,10 +149,10 @@ export function RelationEdge({
   }
 
   if (srcCol) {
-    sy += sharingFan(sharingIds(edges, source, srcCol.column, "source"), id);
+    sy += data?.sourceFan ?? 0;
   }
   if (tgtCol) {
-    ty += sharingFan(sharingIds(edges, target, tgtCol.column, "target"), id);
+    ty += data?.targetFan ?? 0;
   }
 
   const [path, labelX, labelY] = getSmoothStepPath({

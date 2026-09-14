@@ -48,6 +48,22 @@ describe("focusGraph", () => {
     }
   });
 
+  it("R4: both = union of up and down closures, never siblings via a shared parent", () => {
+    // A and C both reference B. From A, "up" reaches B; "down" reaches nothing.
+    const refs = [
+      { source: "A", target: "B" },
+      { source: "C", target: "B" },
+    ];
+    for (const hops of [2, "all"] as const) {
+      expect(
+        sorted(
+          focusTables({ seeds: ["A"], hops, direction: "both", kind: "fk", refs, lineageFields: [] }),
+        ),
+        `hops=${hops}`,
+      ).toEqual(["A", "B"]);
+    }
+  });
+
   it("G2: kind fk ignora linhagem e vice-versa", () => {
     const refs = [{ source: "A", target: "B" }];
     const lineageFields: ParsedFieldLineage[] = [
