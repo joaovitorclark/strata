@@ -76,7 +76,17 @@
       "layout": "Organizar canvas",
       "edges": "Arestas",
       "relations": "Relações",
-      "lineage": "Linhagem"
+      "lineage": "Linhagem",
+      "detail": "Nível de detalhe",
+      "detailLevel": "Detalhe: {{level}}"
+    },
+    "detail": {
+      "name": "Nome",
+      "keys": "Chaves",
+      "columns": "Colunas",
+      "docs": "Documentação",
+      "pinLevel": "Fixar nível",
+      "followGlobal": "Seguir global"
     },
     "edges": {
       "removeRelation": "Remover relação",

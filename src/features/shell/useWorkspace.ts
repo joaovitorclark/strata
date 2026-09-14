@@ -15,6 +15,7 @@ import {
   autolayoutLineagePositions,
   autolayoutPositions,
 } from "@/features/canvas/utils/autolayout";
+import { lodStateForLevel } from "@/features/canvas/utils/lod";
 import { defaultTablePosition } from "@/features/canvas/utils/defaultTablePosition";
 import {
   allTablesPage,
@@ -573,10 +574,11 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
 
   const handleAutolayout = useCallback(() => {
     const lineageMode = useSchemaStore.getState().lineageMode;
+    const lodState = lodStateForLevel(useSchemaStore.getState().detailLevel);
     const layoutModel = activePageIds.includes(ALL_PAGE_ID) ? canvasBaseModel : canvasActiveModel;
     const base = lineageMode
-      ? autolayoutLineagePositions(layoutModel, density)
-      : autolayoutPositions(layoutModel, false, density);
+      ? autolayoutLineagePositions(layoutModel, density, lodState)
+      : autolayoutPositions(layoutModel, false, density, lodState);
     const next = canvasStubs.length ? layoutExternalStubsOnTop(base, canvasStubs) : base;
     useSchemaStore.getState().setPositions(next);
     setFitViewTrigger((n) => n + 1);

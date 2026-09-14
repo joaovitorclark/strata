@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
   Handle,
   NodeResizeControl,
@@ -11,6 +11,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
@@ -18,7 +19,7 @@ import {
   AGGREGATED_SOURCE_HANDLE,
   AGGREGATED_TARGET_HANDLE,
 } from "@/features/canvas/hooks/useCanvasEdges";
-import { resolveLod } from "@/features/canvas/utils/lod";
+import { resolveLod, type LodState } from "@/features/canvas/utils/lod";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
 import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -98,11 +102,13 @@ function participatingColumns(tableId: string, edge: PeekEdge): string[] | undef
 }
 
 function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table">>) {
+  const { t } = useTranslation();
   const actions = useCanvasActions();
   const selectedColumn = useSchemaStore((s) =>
     s.selectedColumn && s.selectedColumn.table === data.id ? s.selectedColumn.column : null,
   );
   const lodPin = useSchemaStore((s) => s.nodeLod[data.id]);
+  const detailLevel = useSchemaStore((s) => s.detailLevel);
   const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
   const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
   const lineageMode = useSchemaStore((s) => s.lineageMode);
@@ -112,8 +118,22 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [settling, setSettling] = useState(false);
 
-  const state = useStore((s) => resolveLod(s.transform[2], { pinned: lodPin, selected }));
+  const zoom = useStore((s) => s.transform[2]);
+  const { state, simplified } = resolveLod(zoom, {
+    level: detailLevel,
+    pinned: lodPin,
+    selected,
+  });
+  const prevState = useRef(state);
+  useEffect(() => {
+    if (prevState.current === state) return;
+    prevState.current = state;
+    setSettling(true);
+    const timer = window.setTimeout(() => setSettling(false), 180);
+    return () => window.clearTimeout(timer);
+  }, [state]);
   useEffect(() => {
     if (!nodeId) return;
     updateNodeInternals(nodeId);
@@ -130,6 +150,17 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
     const v = draft.trim();
     if (v && v !== oldName) actions.onRenameColumn(data.id, oldName, v);
     setEditing(null);
+  };
+
+  const pinLevel = (lod: LodState) => {
+    useSchemaStore.getState().setNodeLod(data.id, lod);
+  };
+  const followGlobal = () => {
+    const current = useSchemaStore.getState().nodeLod;
+    if (!(data.id in current)) return;
+    const next = { ...current };
+    delete next[data.id];
+    useSchemaStore.setState({ nodeLod: next });
   };
 
   return (
@@ -162,6 +193,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         className={cn(
           "relative flex min-w-[200px] flex-col overflow-hidden rounded-lg bg-card text-card-foreground shadow-md",
           selected && "shadow-glow ring-1 ring-primary",
+          settling && "animate-node-settle",
         )}
         title={layer?.name ?? "raw"}
       >
@@ -256,6 +288,27 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
                 No layer
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>{t("canvas.detail.pinLevel")}</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="nodrag nopan">
+                  <DropdownMenuItem onSelect={() => pinLevel("sigil")}>
+                    {t("canvas.detail.name")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("keys")}>
+                    {t("canvas.detail.keys")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("full")}>
+                    {t("canvas.detail.columns")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => pinLevel("docs")}>
+                    {t("canvas.detail.docs")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={followGlobal}>
+                    {t("canvas.detail.followGlobal")}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
                 onSelect={() => {
@@ -274,6 +327,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
           state={state}
           pinned={pinned}
           peekColumns={peekCols && peekCols.length > 0 ? peekCols : undefined}
+          simplified={simplified}
           filter={state === "full" ? filter : ""}
           selectedColumn={selectedColumn}
           editing={editing}

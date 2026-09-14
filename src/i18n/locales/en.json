@@ -76,7 +76,17 @@
       "layout": "Organize canvas",
       "edges": "Edges",
       "relations": "Relations",
-      "lineage": "Lineage"
+      "lineage": "Lineage",
+      "detail": "Detail level",
+      "detailLevel": "Detail: {{level}}"
+    },
+    "detail": {
+      "name": "Name",
+      "keys": "Keys",
+      "columns": "Columns",
+      "docs": "Documentation",
+      "pinLevel": "Pin level",
+      "followGlobal": "Follow global"
     },
     "edges": {
       "removeRelation": "Remove relation",

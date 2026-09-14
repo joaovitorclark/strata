@@ -127,7 +127,7 @@ function fieldEdgeVisible(
   return focusSet.has(m.targetTable) || focusSet.has(m.sourceTable) || fieldEdgeId(m) === focusedEdgeId;
 }
 
-/** Pure builder: field edges when both ends are `full`, else one aggregated edge per pair. */
+/** Pure builder: field edges when neither end is `sigil`, else one aggregated edge per pair. */
 export function buildLineageCanvasEdges(
   lineageFields: ParsedFieldLineage[],
   lodByTable: Record<string, LodState>,
@@ -158,10 +158,11 @@ export function buildLineageCanvasEdges(
   const out: Edge[] = [];
   for (const group of groups.values()) {
     const first = group[0];
-    const bothFull =
-      lodOf(lodByTable, first.sourceTable) === "full" && lodOf(lodByTable, first.targetTable) === "full";
+    const bothField =
+      lodOf(lodByTable, first.sourceTable) !== "sigil" &&
+      lodOf(lodByTable, first.targetTable) !== "sigil";
 
-    if (bothFull) {
+    if (bothField) {
       for (const m of group) {
         if (
           !fieldEdgeVisible(m, opts.lineageMode, focusSet, focusedEdgeId, opts.selectedColumn)
@@ -426,6 +427,7 @@ export function useCanvasEdges(
   const zoom = useBridgedFlowZoom();
   const nodeLod = useSchemaStore((s) => s.nodeLod);
   const selectedTableIds = useSchemaStore((s) => s.selectedTableIds);
+  const detailLevel = useSchemaStore((s) => s.detailLevel);
   const lineageVisible = input.lineageVisible ?? input.showLineageEdges ?? false;
 
   const lodByTable = useMemo(() => {
@@ -439,12 +441,13 @@ export function useCanvasEdges(
     const selected = new Set(selectedTableIds);
     for (const id of ids) {
       out[id] = resolveLod(zoom, {
+        level: detailLevel,
         pinned: nodeLod[id],
         selected: selected.has(id),
-      });
+      }).state;
     }
     return out;
-  }, [input.parsed.tables, input.lineageFields, zoom, nodeLod, selectedTableIds]);
+  }, [input.parsed.tables, input.lineageFields, zoom, nodeLod, selectedTableIds, detailLevel]);
 
   const inputRef = useRef(input);
   const lodRef = useRef(lodByTable);

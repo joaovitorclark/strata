@@ -4,6 +4,7 @@ import { tableLineageFrom } from '@/features/schema/model/lineage';
 import { tableLayerMap } from '@/features/schema/model/layers';
 import type { Positions } from '../hooks/useCanvasNodes';
 import { nodeHeight, nodeWidth, type NodeMetricsOpts } from './nodeMetrics';
+import type { LodState } from './lod';
 
 function tableLineageOf(parsed: ParseResult) {
   return tableLineageFrom(parsed.lineageFields ?? []);
@@ -71,8 +72,9 @@ function sortTablesForPack(
 function layoutMetrics(
   compact: boolean,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): NodeMetricsOpts {
-  return { compact, layout: true, density };
+  return { compact, layout: true, density, ...(state ? { state } : {}) };
 }
 
 function layerForTable(t: TableView, layerMap: Record<string, string>): string | undefined {
@@ -646,8 +648,9 @@ function countAllOverlaps(positions: Positions, tables: TableView[], metrics: No
 export function autolayoutLineagePositions(
   parsed: ParseResult,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): Positions {
-  const metrics = layoutMetrics(false, density);
+  const metrics = layoutMetrics(false, density, state);
   const layerMap = tableLayerMap(parsed.layerGroups);
   const tables = parsed.tables;
   if (!tables.length) return {};
@@ -728,8 +731,9 @@ export function autolayoutPositions(
   parsed: ParseResult,
   compact = false,
   density: NodeMetricsOpts["density"] = "cozy",
+  state?: LodState,
 ): Positions {
-  const metrics = layoutMetrics(compact, density);
+  const metrics = layoutMetrics(compact, density, state);
   const layerMap = tableLayerMap(parsed.layerGroups);
 
   const byCluster = new Map<string, TableView[]>();

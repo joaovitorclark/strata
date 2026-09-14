@@ -57,6 +57,17 @@ export function setEdgeVisibility(kind: "Relações" | "Linhagem", on: boolean):
     });
 }
 
+export function selectCanvasDetailLevel(
+  label: "Nome" | "Chaves" | "Colunas" | "Documentação",
+): void {
+  cy.get("body").type("{esc}");
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').click({ force: true });
+  cy.get('[role="menuitemradio"]').contains(label).click({ force: true });
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').should("contain", label);
+}
+
 export function translateOf(style: string | undefined): { x: number; y: number } {
   const m = /translate\(\s*(-?[\d.]+)px,\s*(-?[\d.]+)px\s*\)/.exec(style ?? "");
   if (!m) throw new Error(`no translate in style: ${style}`);

@@ -3,7 +3,7 @@ import {
   collapseLayersPanel,
   heightSamples,
   restoreSmoke,
-  zoomToRange,
+  selectCanvasDetailLevel,
   type HeightRow,
   type HeightSample,
   type LodState,
@@ -27,6 +27,10 @@ function waitHubLod(state: LodState): void {
     cy.get(hub).contains(/more columns/);
     return;
   }
+  if (state === "docs") {
+    cy.get(hub).find(".col-row").should("have.length", 0);
+    return;
+  }
   cy.get(`${hub} input[aria-label="Filter columns"]`).should("exist");
 }
 
@@ -44,9 +48,10 @@ function measureState(
   density: (typeof DENSITIES)[number],
 ): Cypress.Chainable<Pick<HeightRow, "id" | "state" | "density" | "offsetHeight">[]> {
   clickPane();
-  if (state === "sigil") zoomToRange(0.25, 0.54);
-  else if (state === "keys") zoomToRange(0.56, 1.09);
-  else zoomToRange(1.12, 2);
+  if (state === "sigil") selectCanvasDetailLevel("Nome");
+  else if (state === "keys") selectCanvasDetailLevel("Chaves");
+  else if (state === "docs") selectCanvasDetailLevel("Documentação");
+  else selectCanvasDetailLevel("Colunas");
   waitHubLod(state);
 
   return cy.then(() => {

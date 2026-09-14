@@ -3,15 +3,11 @@ import {
   nodeSel,
   openLayersTab,
   saveViaPaletteShortcut,
+  selectCanvasDetailLevel,
   setEdgeVisibility,
   SMOKE_NODES,
   waitForCanvas,
-  zoomUntil,
 } from "./canvas-support";
-
-/** Mirror `lod.ts` — Cypress webpack cannot resolve that file's `@/` imports. */
-const LOD_SIGIL_BELOW = 0.55;
-const LOD_FULL_ABOVE = 1.1;
 
 const NEW_MAP = "vendas.pedido.id < vendas.item.sku";
 
@@ -33,12 +29,13 @@ function showLineage(): void {
 
 function zoomToFull(): void {
   collapseLayersPanel();
-  zoomUntil((z) => z > LOD_FULL_ABOVE, "in");
+  selectCanvasDetailLevel("Colunas");
 }
 
 function zoomToSigil(): void {
   collapseLayersPanel();
-  zoomUntil((z) => z < LOD_SIGIL_BELOW, "out");
+  cy.get(".react-flow__pane").click(20, 20, { force: true });
+  selectCanvasDetailLevel("Nome");
 }
 
 describe("S01 field lineage only", () => {
@@ -85,7 +82,7 @@ describe("S01 field lineage only", () => {
     cy.get('[data-handleid^="fl:"]').should("not.exist");
   });
 
-  it("G19: zoom below LOD_SIGIL_BELOW shows aggregated edge with the count", () => {
+  it("G19: Nome (sigil) shows aggregated edge with the count", () => {
     showLineage();
     zoomToSigil();
     cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
@@ -98,7 +95,7 @@ describe("S01 field lineage only", () => {
     });
   });
 
-  it("G20: zoom above LOD_FULL_ABOVE and select shows field edges", () => {
+  it("G20: Colunas (full) shows field edges", () => {
     showLineage();
     zoomToFull();
     cy.get(nodeSel(SMOKE_NODES.resumo)).click("top", { force: true });

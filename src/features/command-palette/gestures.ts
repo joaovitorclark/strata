@@ -4,7 +4,12 @@ export type Gesture = { gesture: string; effect: string };
 
 export type ShortcutRow = { keys: string; label: string };
 
-export type ShortcutSpec = { mod?: boolean; shift?: boolean; key: string };
+export type ShortcutSpec = { mod?: boolean; shift?: boolean; alt?: boolean; key: string };
+
+export function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest("input, textarea, select, [contenteditable], .cm-editor"));
+}
 
 export const CANVAS_GESTURES: Gesture[] = [
   { gesture: "Hover em coluna ou ref", effect: "Destaca relações FK conectadas" },
@@ -25,6 +30,10 @@ export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
   { label: "Remover ref selecionada", spec: { key: "Delete" } },
   { label: "Limpar seleção / fechar modais", spec: { key: "Escape" } },
   { label: "Atalhos e gestos", spec: { key: "?" } },
+  { label: "Nível de detalhe: Nome", spec: { key: "1" } },
+  { label: "Nível de detalhe: Chaves", spec: { key: "2" } },
+  { label: "Nível de detalhe: Colunas", spec: { key: "3" } },
+  { label: "Nível de detalhe: Documentação", spec: { key: "4" } },
 ];
 
 export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {
@@ -32,11 +41,13 @@ export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {
   if (mac) {
     let result = "";
     if (spec.mod) result += "⌘";
+    if (spec.alt) result += "⌥";
     if (spec.shift) result += "⇧";
     return result + key;
   }
   const parts: string[] = [];
   if (spec.mod) parts.push("Ctrl");
+  if (spec.alt) parts.push("Alt");
   if (spec.shift) parts.push("Shift");
   parts.push(key);
   return parts.join("+");

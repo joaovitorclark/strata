@@ -62,6 +62,17 @@ export function zoomToRange(min: number, max: number): void {
   step(0);
 }
 
+export function selectCanvasDetailLevel(
+  label: "Nome" | "Chaves" | "Colunas" | "Documentação",
+): void {
+  cy.get("body").type("{esc}");
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').click({ force: true });
+  cy.get('[role="menuitemradio"]').contains(label).click({ force: true });
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').should("contain", label);
+}
+
 export function clickPane(): void {
   cy.get(".react-flow__pane").click(20, 20, { force: true });
 }
@@ -181,7 +192,7 @@ export function ensureHubFull(): void {
         .click({ force: true });
       return;
     }
-    zoomToRange(1.12, 2);
+    selectCanvasDetailLevel("Colunas");
   });
   cy.get(`${hub} input[aria-label="Filter columns"]`).should("exist");
 }

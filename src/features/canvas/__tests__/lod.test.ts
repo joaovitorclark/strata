@@ -1,33 +1,61 @@
 import { describe, expect, it } from "vitest";
-import { keyColumns, lodHeight, resolveLod, SIGIL_H } from "@/features/canvas/utils/lod";
+import {
+  DOCS_NOTE_BLOCK_H,
+  keyColumns,
+  lodHeight,
+  resolveLod,
+  SIGIL_H,
+  type DetailLevel,
+  type LodState,
+} from "@/features/canvas/utils/lod";
 import {
   COLUMN_VIRTUAL_ROW_H,
   columnVirtualViewportCss,
   columnVirtualViewportPx,
 } from "@/features/canvas/utils/scaleLimits";
+import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
+
+const LEVELS: readonly DetailLevel[] = ["name", "keys", "columns", "docs"];
+const FROM_LEVEL: Record<DetailLevel, LodState> = {
+  name: "sigil",
+  keys: "keys",
+  columns: "full",
+  docs: "docs",
+};
 
 describe("resolveLod", () => {
-  it("collapses to a sigil when zoomed out", () => {
-    expect(resolveLod(0.4, {})).toBe("sigil");
+  it("G1: 4 levels × {selected, pinned, none} = 12 cases", () => {
+    const cases: Array<{
+      name: string;
+      opts: { level: DetailLevel; selected?: boolean; pinned?: LodState };
+      expected: LodState;
+    }> = LEVELS.flatMap((level) => [
+      { name: `${level}/none`, opts: { level }, expected: FROM_LEVEL[level] },
+      {
+        name: `${level}/selected`,
+        opts: { level, selected: true },
+        expected: level === "name" || level === "keys" ? "full" : FROM_LEVEL[level],
+      },
+      {
+        name: `${level}/pinned`,
+        opts: { level, selected: true, pinned: "sigil" },
+        expected: "sigil" as const,
+      },
+    ]);
+    expect(cases).toHaveLength(12);
+    for (const row of cases) {
+      expect(resolveLod(1, row.opts).state, row.name).toBe(row.expected);
+    }
   });
 
-  it("shows keys at normal zoom", () => {
-    expect(resolveLod(1, {})).toBe("keys");
-    expect(resolveLod(0.55, {})).toBe("keys");
-    expect(resolveLod(1.1, {})).toBe("keys");
-  });
-
-  it("opens fully past the threshold", () => {
-    expect(resolveLod(1.3, {})).toBe("full");
-  });
-
-  it("lets a pinned state override the zoom", () => {
-    expect(resolveLod(0.4, { pinned: "full" })).toBe("full");
-    expect(resolveLod(1.5, { pinned: "sigil" })).toBe("sigil");
-  });
-
-  it("opens the selected node early", () => {
-    expect(resolveLod(1, { selected: true })).toBe("full");
+  it("G2: simplified true only below 0.35, independent of level", () => {
+    for (const level of LEVELS) {
+      expect(resolveLod(0.34, { level }).simplified, `${level} 0.34`).toBe(true);
+      expect(resolveLod(0.35, { level }).simplified, `${level} 0.35`).toBe(false);
+      expect(resolveLod(1, { level }).simplified, `${level} 1`).toBe(false);
+      expect(resolveLod(0.2, { level, selected: true }).simplified, `${level} selected`).toBe(true);
+      expect(resolveLod(0.2, { level, pinned: "full" }).simplified, `${level} pinned`).toBe(true);
+    }
   });
 });
 
@@ -56,6 +84,14 @@ describe("keyColumns", () => {
       meta: { pks: [], fks: [] },
     } as never;
     expect(keyColumns(data).map((c) => c.name)).toEqual(["dia", "regiao"]);
+  });
+
+  it("G3: keyColumns includes a lineage column", () => {
+    expect(keyColumns(data, [], ["nota"]).map((c) => c.name)).toEqual([
+      "id",
+      "cliente_id",
+      "nota",
+    ]);
   });
 });
 
@@ -108,5 +144,22 @@ describe("lodHeight", () => {
     expect(lodHeight(hub, "keys")).toBe(110);
     expect(lodHeight(hub, "keys", [], 21)).toBe(34 + 2 * 21 + 26);
     expect(lodHeight(hub, "keys", [], 21)).toBe(102);
+  });
+
+  it('G4: lodHeight("docs") for a table with 3 notes', () => {
+    const documented = {
+      columns: [
+        { name: "id", note: "pk" },
+        { name: "cliente_id" },
+        { name: "total_brl", note: "money" },
+        { name: "nota", note: "comment" },
+      ],
+      meta: { pks: ["id"], fks: [] },
+    } as never;
+    const noted = 3;
+    const expected =
+      TABLE_HEADER_H + noted * (COLUMN_VIRTUAL_ROW_H + DOCS_NOTE_BLOCK_H) + TABLE_FOOTER_H;
+    expect(lodHeight(documented, "docs")).toBe(expected);
+    expect(lodHeight(documented, "docs")).toBe(34 + 3 * (25 + 22) + 26);
   });
 });

@@ -4,14 +4,11 @@ import {
   nodeSel,
   openLayersTab,
   saveViaPaletteShortcut,
+  selectCanvasDetailLevel,
   setEdgeVisibility,
   SMOKE_NODES,
   waitForCanvas,
-  zoomUntil,
 } from "./canvas-support";
-
-/** Mirror `lod.ts` — Cypress webpack cannot resolve that file's `@/` imports. */
-const LOD_FULL_ABOVE = 1.1;
 
 Cypress.on("uncaught:exception", (err) => {
   if (/ResizeObserver loop/.test(err.message)) return false;
@@ -55,7 +52,7 @@ function showFieldLineageEdges(): void {
   openLayersTab();
   cy.get(".layers-panel__lineage-btn").click();
   cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
-  zoomUntil((z) => z > LOD_FULL_ABOVE, "in");
+  selectCanvasDetailLevel("Colunas");
   cy.get(".edge-path--field-lineage").should("have.length.at.least", 1);
 }
 
