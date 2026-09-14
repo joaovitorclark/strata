@@ -136,7 +136,7 @@ describe("S07 node anatomy", () => {
       .contains(".col-row span", /^sku$/)
       .parents(".col-row")
       .find('[data-testid="col-rename"]')
-      .click({ force: true });
+      .trigger("pointerdown", { force: true, eventConstructor: "PointerEvent" });
     cy.get(nodeSel(SMOKE_NODES.item)).find("input.col-edit").should("be.visible");
     cy.get(nodeSel(SMOKE_NODES.item)).find("input.col-edit").clear().type("sku_s07{enter}");
     saveViaPaletteShortcut();

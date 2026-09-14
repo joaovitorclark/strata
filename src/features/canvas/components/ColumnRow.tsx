@@ -212,7 +212,6 @@ function ColumnRowImpl({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              onStartEdit(c.name);
             }}
           >
             <Pencil className="size-3" strokeWidth={1.5} />
