@@ -44,8 +44,9 @@ Table vendas.resumo {
 
 Ref: vendas.pedido.cliente_id > vendas.cliente.id
 
-Lineage {
-  vendas.resumo < vendas.pedido
+LineageFields {
+  vendas.resumo.id < vendas.pedido.id
+  vendas.resumo.total < vendas.pedido.total
 }
 
 LayerGroup bronze {
@@ -229,7 +230,7 @@ async function main() {
       throw new Error("smoke dbml missing vendas.pedido");
     }
     if (!/^Ref:/m.test(smoke.dbml)) throw new Error("smoke missing Ref");
-    if (!/Lineage\s*\{/.test(smoke.dbml)) throw new Error("smoke missing Lineage");
+    if (!/LineageFields\s*\{/.test(smoke.dbml)) throw new Error("smoke missing LineageFields");
     for (const layer of ["bronze", "prata", "ouro"]) {
       if (!new RegExp(`LayerGroup ${layer}`).test(smoke.dbml)) {
         throw new Error(`smoke missing LayerGroup ${layer}`);

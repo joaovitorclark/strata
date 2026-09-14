@@ -107,7 +107,6 @@ export function Workspace(props: WorkspaceProps) {
     canvasActiveModel,
     canvasStubs,
     canvasView,
-    canvasLineage,
     canvasParsePending,
     modelIssues,
     nodeExtras,
@@ -132,8 +131,6 @@ export function Workspace(props: WorkspaceProps) {
     handleRemoveRef,
     handleRemoveTable,
     handleRemoveTables,
-    handleCreateLineage,
-    handleRemoveLineage,
     handleCreateFieldLineage,
     handleRemoveFieldLineage,
     handleAddFieldLineage,
@@ -242,10 +239,7 @@ export function Workspace(props: WorkspaceProps) {
                 onRemoveTable={handleRemoveTable}
                 onRemoveTables={handleRemoveTables}
                 staleWarning={!!parsed.error || canvasParsePending}
-                lineage={canvasLineage}
                 lineageFields={canvasActiveModel.lineageFields ?? []}
-                onCreateLineage={handleCreateLineage}
-                onRemoveLineage={handleRemoveLineage}
                 onRemoveFieldLineage={handleRemoveFieldLineage}
                 onCreateFieldLineage={handleCreateFieldLineage}
                 layerOf={layerOf}

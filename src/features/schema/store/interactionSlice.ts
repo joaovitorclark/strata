@@ -51,8 +51,6 @@ export type InteractionSlice = {
   relationsVisible: boolean;
   toggleRelationsVisible: () => void;
 
-  fieldLineageVisible: boolean;
-  toggleFieldLineageVisible: () => void;
   focusedFieldMapping: FieldMappingFocus | null;
   setFocusedFieldMapping: (m: InteractionSlice["focusedFieldMapping"]) => void;
   fieldMappingFocusNonce: number;
@@ -151,11 +149,6 @@ export const createInteractionSlice: StateCreator<
       state.relationsVisible = !state.relationsVisible;
     }),
 
-  fieldLineageVisible: false,
-  toggleFieldLineageVisible: () =>
-    set((state) => {
-      state.fieldLineageVisible = !state.fieldLineageVisible;
-    }),
   focusedFieldMapping: null,
   setFocusedFieldMapping: (m) =>
     set((state) => {
@@ -165,17 +158,18 @@ export const createInteractionSlice: StateCreator<
   focusFieldMapping: (m) =>
     set((state) => {
       state.focusedFieldMapping = m;
-      state.fieldLineageVisible = true;
+      state.lineageVisible = true;
       state.fieldMappingFocusNonce = state.fieldMappingFocusNonce + 1;
     }),
   selectFieldLineageMapping: (m) =>
     set((state) => {
       state.selectedTable = m.targetTable;
-      state.selectedTableIds = [m.targetTable];
+      // Leave selectedTableIds alone so React Flow does not mark the table
+      // selected — Delete would then drop the table with the mapping.
       state.selectedColumn = { table: m.targetTable, column: m.targetColumn };
       state.selectedGroup = null;
       state.focusedFieldMapping = m;
-      state.fieldLineageVisible = true;
+      state.lineageVisible = true;
       state.fieldMappingFocusNonce = state.fieldMappingFocusNonce + 1;
       state.mappingPanelOpen = true;
     }),

@@ -46,10 +46,7 @@ export type Ref = {
   kind: '>' | '<' | '-' | '<>'; // n:1, 1:n, 1:1, n:n
 };
 
-/** Linhagem L1 tabela→tabela (DBML `Lineage { }`). */
-export type LineageEntry = { target: string; sources: string[] };
-
-/** Linhagem L2 campo→campo (DBML `LineageFields { }`). */
+/** Linhagem campo→campo (DBML `LineageFields { }`). */
 export type FieldLineageEntry = {
   targetTable: string;
   targetColumn: string;
@@ -59,10 +56,31 @@ export type FieldLineageEntry = {
   ref?: string;
 };
 
+export type TableLineageEntry = { target: string; sources: string[] };
+
+/** Derives table→table pairs from field mappings. Self-mappings are excluded. */
+export function tableLineageFrom(
+  fields: Pick<FieldLineageEntry, 'sourceTable' | 'targetTable'>[],
+): TableLineageEntry[] {
+  const byTarget = new Map<string, Set<string>>();
+  for (const f of fields) {
+    if (!f.sourceTable || !f.targetTable) continue;
+    if (f.sourceTable === f.targetTable) continue;
+    let sources = byTarget.get(f.targetTable);
+    if (!sources) {
+      sources = new Set();
+      byTarget.set(f.targetTable, sources);
+    }
+    sources.add(f.sourceTable);
+  }
+  return [...byTarget.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([target, sources]) => ({ target, sources: [...sources].sort() }));
+}
+
 export type Model = {
   tables: Table[];
   refs: Ref[];
-  lineage?: LineageEntry[];
   lineageFields?: FieldLineageEntry[];
   /** Cores do bloco DBML `Colors {}` — chave: `schema.tabela`, `@grupo` ou `schema.tabela.coluna`. */
   colors?: Record<string, string>;

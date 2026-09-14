@@ -17,6 +17,11 @@ models:
           - not_null
       - name: cliente_id
         data_type: bigint
+        meta:
+          localdrawdb:
+            map:
+              table: loja.cliente
+              column: id
       - name: total
         data_type: decimal(18,2)
       - name: criado_em

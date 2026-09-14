@@ -1,8 +1,13 @@
 import dagre from 'dagre';
 import type { ParseResult, TableView } from '@/features/schema/model/parse';
+import { tableLineageFrom } from '@/features/schema/model/lineage';
 import { tableLayerMap } from '@/features/schema/model/layers';
 import type { Positions } from '../hooks/useCanvasNodes';
 import { nodeHeight, nodeWidth, type NodeMetricsOpts } from './nodeMetrics';
+
+function tableLineageOf(parsed: ParseResult) {
+  return tableLineageFrom(parsed.lineageFields ?? []);
+}
 
 const MARGIN = 20;
 const MARGIN_WIDE = 16;
@@ -94,7 +99,7 @@ function buildDegreeMap(parsed: ParseResult, ids: Set<string>): Map<string, numb
     deg.set(b, (deg.get(b) ?? 0) + 1);
   };
   for (const r of parsed.refs) bump(r.source, r.target);
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) bump(src, entry.target);
@@ -124,7 +129,7 @@ function connectedComponents(ids: Set<string>, parsed: ParseResult): string[][] 
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) unite(r.source, r.target);
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) unite(src, entry.target);
@@ -152,7 +157,7 @@ function countInternalEdges(ids: Set<string>, parsed: ParseResult): number {
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) n++;
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) n++;
@@ -197,7 +202,7 @@ function layoutSubset(
   for (const r of parsed.refs) {
     if (ids.has(r.source) && ids.has(r.target)) g.setEdge(r.source, r.target);
   }
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     if (!ids.has(entry.target)) continue;
     for (const src of entry.sources) {
       if (ids.has(src)) g.setEdge(src, entry.target);
@@ -621,7 +626,7 @@ function layoutLineageGroupInternal(
   margin: number,
 ): Positions {
   const ids = new Set(tables.map((t) => t.id));
-  const internalLineage = parsed.lineage.filter(
+  const internalLineage = tableLineageOf(parsed).filter(
     (e) => ids.has(e.target) && e.sources.some((s) => ids.has(s)),
   );
   if (internalLineage.length > 0 && tables.length >= 2) {
@@ -650,7 +655,7 @@ export function autolayoutLineagePositions(
   const tableById = new Map(tables.map((t) => [t.id, t] as const));
   const ids = new Set(tables.map((t) => t.id));
   const edges: { source: string; target: string }[] = [];
-  for (const entry of parsed.lineage) {
+  for (const entry of tableLineageOf(parsed)) {
     for (const src of entry.sources) {
       if (ids.has(src) && ids.has(entry.target)) edges.push({ source: src, target: entry.target });
     }

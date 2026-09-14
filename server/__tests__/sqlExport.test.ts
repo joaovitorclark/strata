@@ -45,14 +45,13 @@ describe('export input SQL', () => {
     expect(pedido2.group).toBe(pedido0.group);
     expect(model2.refs.some((r) => r.from.column === 'conta_id')).toBe(true);
     expect(pedido2.records?.rows.length).toBeGreaterThan(0);
-    expect(model1.lineage?.length).toBe(model0.lineage?.length);
     expect(model1.lineageFields?.length).toBe(model0.lineageFields?.length);
   });
 
-  it('export emite @origen e rodapé @lineage', () => {
+  it('export emite rodapé @lineage e não emite @origen', () => {
     const model = sqlToModel(demoSql);
     const oracleSql = modelToInputSql(model, 'oracle');
-    expect(oracleSql).toContain('-- @origen: staging.crm_conta');
+    expect(oracleSql).not.toContain('-- @origen:');
     expect(oracleSql).toContain('-- @lineage silver.dim_conta');
     expect(oracleSql).toContain('--   conta_natural_id <- staging.crm_conta.conta_id');
     expect(oracleSql).toContain("note: 'SUM(valor_bruto) por dia'");

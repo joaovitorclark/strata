@@ -227,8 +227,11 @@ height, and always accompanied by the layer name in the header tooltip and the i
 | Kind | Colour | Line | Terminal |
 | --- | --- | --- | --- |
 | Foreign key | `--rel-fk` (blue) | solid, 1.5px, orthogonal | crow's foot |
-| Lineage | `--rel-lineage` (teal) | dashed, animated flow | tapered arrow |
+| Aggregated lineage | `--rel-lineage` (teal) | dashed, animated flow, count label (`N campos`) | tapered arrow |
+| Field lineage | `--rel-lineage` (teal) | dashed, animated flow, column to column | tapered arrow |
 | Active trace | `--rel-active` (mauve) | solid, 2.5px | arrow + glow |
+
+Overview (either node at `keys` or `sigil`) draws **one aggregated edge per table pair**, labelled with the mapping count. Detail (both nodes `full`) expands it into per-field edges. The aggregate is derived and read-only.
 
 Lineage animates; foreign keys never do. That behavioural difference is legible even at a zoom where
 colour has stopped being distinguishable.

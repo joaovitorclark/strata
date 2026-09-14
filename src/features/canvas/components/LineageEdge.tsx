@@ -5,18 +5,27 @@ import {
   type Edge,
   type EdgeProps,
 } from "@xyflow/react";
-import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { lineageMarkerUrl } from "./EdgeMarkers";
 import "./edgeClasses.css";
 
+export type AggregatedMapping = {
+  sourceTable: string;
+  sourceColumn: string;
+  targetTable: string;
+  targetColumn: string;
+};
+
 export type LineageEdgeData = {
   highlighted?: boolean;
   dimmed?: boolean;
-  onRemove?: () => void;
+  count?: number;
+  mappings?: AggregatedMapping[];
 };
 
 type LineageFlowEdge = Edge<LineageEdgeData>;
@@ -31,6 +40,7 @@ export function LineageEdge({
   data,
   selected,
 }: EdgeProps<LineageFlowEdge>) {
+  useFlowZoom();
   const { t } = useTranslation();
   const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -43,6 +53,17 @@ export function LineageEdge({
   });
   const active = !!(selected || data?.highlighted);
   const dimmed = !!data?.dimmed && !selected;
+  const count = data?.count ?? 0;
+  const mappings = data?.mappings ?? [];
+
+  const label = (
+    <div
+      className={`lineage-label nodrag nopan${active ? " lineage-label--active" : ""}`}
+      style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+    >
+      {t("canvas.edges.fieldCount", { count })}
+    </div>
+  );
 
   return (
     <>
@@ -58,29 +79,24 @@ export function LineageEdge({
       />
       {!dimmed && (
         <EdgeLabelRenderer>
-          <div
-            className={`lineage-label nodrag nopan${active ? " lineage-label--active" : ""}`}
-            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
-          >
-            {t("canvas.edges.derivedFrom")}
-            {selected && data?.onRemove && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="edge-delete"
-                    aria-label={t("canvas.edges.removeLineage")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      data.onRemove?.();
-                    }}
-                  >
-                    <X size={14} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>{t("canvas.edges.removeLineage")}</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+          {mappings.length ? (
+            <Tooltip>
+              <TooltipTrigger asChild>{label}</TooltipTrigger>
+              <TooltipContent>
+                <ul className="flex flex-col gap-0.5 font-mono text-2xs">
+                  {mappings.map((m) => (
+                    <li
+                      key={`${m.sourceTable}.${m.sourceColumn}->${m.targetTable}.${m.targetColumn}`}
+                    >
+                      {m.sourceTable}.{m.sourceColumn} → {m.targetTable}.{m.targetColumn}
+                    </li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            label
+          )}
         </EdgeLabelRenderer>
       )}
     </>

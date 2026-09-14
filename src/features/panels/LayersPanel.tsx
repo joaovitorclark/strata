@@ -94,8 +94,6 @@ export function LayersPanel({
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
   const relationsVisible = useSchemaStore((s) => s.relationsVisible);
   const toggleRelationsVisible = useSchemaStore((s) => s.toggleRelationsVisible);
-  const fieldLineageVisible = useSchemaStore((s) => s.fieldLineageVisible);
-  const toggleFieldLineageVisible = useSchemaStore((s) => s.toggleFieldLineageVisible);
 
   const filteredTables = useMemo(() => {
     const q = tableQuery.trim().toLowerCase();
@@ -258,14 +256,6 @@ export function LayersPanel({
               <input type="checkbox" checked={relationsVisible} onChange={toggleRelationsVisible} />
               Mostrar relacionamentos
             </label>
-            <label className="layers-panel__row mt-1 flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={fieldLineageVisible}
-                onChange={toggleFieldLineageVisible}
-              />
-              Mostrar linhagem de campos
-            </label>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -291,7 +281,7 @@ export function LayersPanel({
             </Tooltip>
             {lineageMode && (
               <p className="layers-panel__hint mt-1 text-2xs text-muted-foreground">
-                Arraste entre os pontos nas bordas. Relacionamentos desligam automaticamente.
+                Arraste entre os pontos das colunas. Relacionamentos desligam automaticamente.
                 Organizar canvas empilha TableGroups por camada (bronze→ouro), maiores à esquerda
                 dentro de cada grupo.
               </p>
@@ -354,10 +344,10 @@ export function LayersPanel({
                 : "Ctrl+clique ou arraste para selecionar várias tabelas."}
             </p>
 
-            {fieldLineageVisible && (
+            {lineageVisible && (
               <p className="layers-panel__hint mt-1 text-2xs text-muted-foreground">
-                Arestas finas só nas tabelas selecionadas. Edite mapeamentos no painel inferior
-                direito.
+                Arestas agregadas no overview; campo a campo no detalhe. Edite mapeamentos no modo
+                linhagem.
               </p>
             )}
           </>

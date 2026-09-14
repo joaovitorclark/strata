@@ -120,12 +120,12 @@ Abaixo, o mesmo conteúdo em JSON — útil para parsing automático pelo agente
       "kind": ">"
     }
   ],
-  "lineage": [
+  "lineageFields": [
     {
-      "target": "loja.pedido",
-      "sources": [
-        "loja.cliente"
-      ]
+      "targetTable": "loja.pedido",
+      "targetColumn": "cliente_id",
+      "sourceTable": "loja.cliente",
+      "sourceColumn": "id"
     }
   ],
   "layerColors": {

@@ -6,6 +6,23 @@ describe("schema interaction store", () => {
     useSchemaStore.setState(useSchemaStore.getInitialState(), true);
   });
 
+  it("selectFieldLineageMapping focuses the mapping without RF-selecting the table", () => {
+    useSchemaStore.getState().selectFieldLineageMapping({
+      sourceTable: "vendas.pedido",
+      sourceColumn: "id",
+      targetTable: "vendas.resumo",
+      targetColumn: "id",
+    });
+    const s = useSchemaStore.getState();
+    expect(s.selectedTable).toBe("vendas.resumo");
+    expect(s.selectedTableIds).toEqual([]);
+    expect(s.selectedColumn).toEqual({ table: "vendas.resumo", column: "id" });
+    expect(s.focusedFieldMapping).toMatchObject({
+      targetTable: "vendas.resumo",
+      targetColumn: "id",
+    });
+  });
+
   it("starts with no column selected", () => {
     expect(useSchemaStore.getState().selectedColumn).toBeNull();
   });

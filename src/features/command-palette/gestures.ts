@@ -12,7 +12,10 @@ export const CANVAS_GESTURES: Gesture[] = [
   { gesture: "Clicar em coluna", effect: "Abre o painel do campo" },
   { gesture: "Clicar em ⓘ na tabela", effect: "Abre metadados da tabela" },
   { gesture: "Cmd/Ctrl + clique ou arrasto", effect: "Seleciona várias tabelas" },
-  { gesture: "Modo linhagem: portas nas bordas", effect: "Edita entradas de linhagem" },
+  {
+    gesture: "Modo linhagem: arrastar entre pontos das colunas",
+    effect: "Cria mapeamento de campo no DBML",
+  },
   { gesture: "Delete", effect: "Remove ref selecionada" },
   { gesture: "Escape", effect: "Limpa seleção e fecha modais" },
 ];

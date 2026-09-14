@@ -5,7 +5,7 @@
 // Inverte a codificação do export (F2) para round-trip semântico.
 import yaml from 'js-yaml';
 import { parseTypeName, qualifiedName } from './model.ts';
-import type { Column, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
+import type { Column, FieldLineageEntry, Model, Ref, Table } from './model.ts';
 import { isRecord } from './unknownError.ts';
 
 type LdbMap = { table?: string; column?: string; note?: string; ref?: string };
@@ -371,11 +371,10 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
     if (m.pins?.length) acc.pins.push(...m.pins);
   }
 
-  const lineage: LineageEntry[] = [];
   for (const f of files) {
     if (!/\.sql$/i.test(f.file)) continue;
     const name = (f.file.split('/').pop() ?? f.file).replace(/\.sql$/i, '');
-    const { deps, materialized, tags } = extractSqlDeps(f.content);
+    const { materialized, tags } = extractSqlDeps(f.content);
     let table = [...byKey.values()].find((t) => t.name === name);
     if (!table) {
       table = { name, columns: [] };
@@ -385,21 +384,9 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
     }
     if (!table.materialization) table.materialization = asMaterialization(materialized);
     if (!table.tags && tags?.length) table.tags = tags;
-    if (deps.length) {
-      // Qualifica pelo schema quando a tabela é conhecida (ref()/source() usam nome cru).
-      const byName = (n: string) => [...byKey.values()].find((t) => t.name === n);
-      const sources = deps.map((d) => {
-        const src = byName(d);
-        return src ? qualifiedName(src) : d;
-      });
-      lineage.push({ target: qualifiedName(table), sources });
-    }
   }
 
-  return applyLdbAcc(
-    { tables: [...byKey.values()], refs, ...(lineage.length ? { lineage } : {}) },
-    acc,
-  );
+  return applyLdbAcc({ tables: [...byKey.values()], refs }, acc);
 }
 
 // ---------------------------------------------------------------------------
@@ -413,7 +400,6 @@ export function manifestToModel(manifest: unknown): Model {
   const nodes: Record<string, ManifestNode> = doc.nodes ?? {};
   const sources: Record<string, ManifestNode> = doc.sources ?? {};
   const byId = new Map<string, Table>();
-  const nameById = new Map<string, string>();
   const rawTestsByTable = new Map<string, Map<string, unknown[]>>();
   const refs: Ref[] = [];
 
@@ -440,7 +426,6 @@ export function manifestToModel(manifest: unknown): Model {
     if (Array.isArray(config.tags) && config.tags.length) table.tags = config.tags.map(String);
     addColumns(table, n.columns);
     byId.set(id, table);
-    nameById.set(id, n.name);
   }
 
   // Sources
@@ -451,7 +436,6 @@ export function manifestToModel(manifest: unknown): Model {
     if (s.description) table.note = String(s.description);
     addColumns(table, s.columns);
     byId.set(id, table);
-    nameById.set(id, s.name);
   }
 
   // Tests → coleta crua por (tabela, coluna)
@@ -472,22 +456,13 @@ export function manifestToModel(manifest: unknown): Model {
     rawTestsByTable.set(modelId, perCol);
   }
 
-  // Aplica tests + monta lineage
-  const lineage: LineageEntry[] = [];
+  // Aplica tests (linhagem de tabela a partir de depends_on foi removida — só meta de campo).
   for (const [id, table] of byId) {
     const perCol = rawTestsByTable.get(id) ?? new Map();
     finalizeTests(table, perCol, refs);
   }
-  for (const [, n] of Object.entries(nodes)) {
-    if (!n.resource_type || !MODEL_RESOURCE.has(n.resource_type) || !n.name) continue;
-    const sourcesOf = (n.depends_on?.nodes ?? [])
-      .filter((d: string) => byId.has(d))
-      .map((d: string) => nameById.get(d)!)
-      .filter(Boolean);
-    if (sourcesOf.length) lineage.push({ target: n.name, sources: [...new Set<string>(sourcesOf)] });
-  }
 
-  return { tables: [...byId.values()], refs, ...(lineage.length ? { lineage } : {}) };
+  return { tables: [...byId.values()], refs };
 }
 
 // ---------------------------------------------------------------------------

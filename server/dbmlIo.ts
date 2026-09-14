@@ -5,7 +5,7 @@ import { quoteDbmlNote } from '../src/features/schema/model/dbmlNotes.ts';
 import { resolveMemberTableIds, tableIdsMatch } from '../src/features/schema/model/tableIdMatch.ts';
 import { extractRecords } from './dbmlClean.ts';
 import { parseTypeName, qualifiedName } from './model.ts';
-import type { Column, ColumnTest, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
+import type { Column, ColumnTest, FieldLineageEntry, Model, Ref, Table } from './model.ts';
 
 type DbmlField = {
   name: string;
@@ -44,7 +44,7 @@ function isDegenerateRef(r: Ref): boolean {
 
 /** Faz parse de uma string DBML para o modelo canônico (inclui LayerGroup, Records, PK composta, Dbt). */
 export function dbmlToModel(dbml: string): Model {
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, colors, pins } =
+  const { clean, records, layerGroups, lineageFields, dbtTables, colors, pins } =
     extractRecords(dbml);
   const db = Parser.parse(clean, 'dbml');
   const tables: Table[] = [];
@@ -157,9 +157,6 @@ export function dbmlToModel(dbml: string): Model {
     }
   }
 
-  const modelLineage: LineageEntry[] | undefined = lineage.length
-    ? lineage.map((l) => ({ target: l.target, sources: [...l.sources] }))
-    : undefined;
   const modelLineageFields: FieldLineageEntry[] | undefined = lineageFields.length
     ? lineageFields.map((f) => ({ ...f }))
     : undefined;
@@ -174,7 +171,6 @@ export function dbmlToModel(dbml: string): Model {
   return {
     tables,
     refs,
-    lineage: modelLineage,
     lineageFields: modelLineageFields,
     colors: Object.keys(modelColors).length ? modelColors : undefined,
     layerColors: Object.keys(modelLayerColors).length ? modelLayerColors : undefined,
@@ -219,15 +215,6 @@ export function modelToDbml(model: Model): string {
     out.push(
       `Ref: ${r.from.table}.${r.from.column} ${r.kind} ${r.to.table}.${r.to.column}`,
     );
-  }
-
-  if (model.lineage?.length) {
-    out.push('');
-    out.push('Lineage {');
-    for (const entry of model.lineage) {
-      out.push(`  ${entry.target} < ${entry.sources.join(', ')}`);
-    }
-    out.push('}');
   }
 
   if (model.lineageFields?.length) {

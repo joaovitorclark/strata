@@ -118,7 +118,7 @@ export function filterParseResultByPages(
   selectedIds: string[],
 ): ParseResult {
   if (!selectedIds.length) {
-    return { ...model, tables: [], refs: [], lineage: [], lineageFields: [] };
+    return { ...model, tables: [], refs: [], lineageFields: [] };
   }
   if (selectedIds.includes(ALL_PAGE_ID)) return model;
 
@@ -128,11 +128,10 @@ export function filterParseResultByPages(
   const tables = model.tables.filter((t) => tableInAnyPage(t, selectedPages));
   const ids = new Set(tables.map((t) => t.id));
   const refs = model.refs.filter((r) => ids.has(r.source) && ids.has(r.target));
-  const lineage = model.lineage.filter((l) => ids.has(l.target) && l.sources.every((s) => ids.has(s)));
   const lineageFields = (model.lineageFields ?? []).filter(
     (f) => ids.has(f.targetTable) && ids.has(f.sourceTable),
   );
-  return { ...model, tables, refs, lineage, lineageFields };
+  return { ...model, tables, refs, lineageFields };
 }
 
 /** Modelo visível + stubs/arestas para grupos fora da página ativa. */

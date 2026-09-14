@@ -38,13 +38,7 @@ import {
 } from "../hooks/useCanvasNodes";
 import { useSchemaStore as useInteraction } from "@/features/schema/store";
 import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
-import type { LineageLink, TableSize } from "@/infrastructure/api";
-import {
-  DEFAULT_LINEAGE_SOURCE,
-  DEFAULT_LINEAGE_TARGET,
-  isLineageHandle,
-  pickLineageHandles,
-} from "../utils/lineageHandles";
+import type { TableSize } from "@/infrastructure/api";
 import {
   diagramOverviewBounds,
   focusFieldMappingInView,
@@ -67,10 +61,6 @@ const SHELL_CSS = [
   ".canvas-wrap--focus .react-flow__node-table { opacity: 0.45; transition: opacity 0.12s ease; }",
   ".canvas--lineage-mode .react-flow__pane { cursor: default; }",
   ".table-node-shell { position: relative; }",
-  ".table-node-shell--lineage-ports .lineage-port-handle { opacity: 0.85; }",
-  ".table-node-shell--lineage:hover .lineage-port-handle,",
-  ".table-node-shell--lineage-ports:hover .lineage-port-handle,",
-  ".canvas--lineage-connecting .lineage-port-handle { opacity: 1; }",
 ].join("\n");
 
 const PRIMARY = "hsl(var(--primary))";
@@ -150,10 +140,7 @@ type Props = {
   onRemoveTable: (tableId: string) => void;
   onRemoveTables?: (tableIds: string[]) => void;
   staleWarning?: boolean;
-  lineage: LineageLink[];
   lineageFields: ParsedFieldLineage[];
-  onCreateLineage: (source: string, target: string) => void;
-  onRemoveLineage: (source: string, target: string) => void;
   onRemoveFieldLineage: (
     sourceTable: string,
     sourceColumn: string,
@@ -291,10 +278,7 @@ export function Canvas(props: Props) {
     onRemoveTable,
     onRemoveTables,
     staleWarning,
-    lineage,
     lineageFields,
-    onCreateLineage,
-    onRemoveLineage,
     onRemoveFieldLineage,
     onCreateFieldLineage,
     layerOf,
@@ -315,7 +299,6 @@ export function Canvas(props: Props) {
   const selectedTableIds = useInteraction((s) => s.selectedTableIds);
   const setSelectedTableIds = useInteraction((s) => s.setSelectedTableIds);
   const clearCanvasSelection = useInteraction((s) => s.clearCanvasSelection);
-  const fieldLineageVisible = useInteraction((s) => s.fieldLineageVisible);
   const focusedFieldMapping = useInteraction((s) => s.focusedFieldMapping);
   const selectFieldLineageMapping = useInteraction((s) => s.selectFieldLineageMapping);
   const setFocusedFieldMapping = useInteraction((s) => s.setFocusedFieldMapping);
@@ -329,8 +312,6 @@ export function Canvas(props: Props) {
   const lineageVisible = useInteraction((s) => s.lineageVisible);
   const relationsVisible = useInteraction((s) => s.relationsVisible);
   const selectedTable = useInteraction((s) => s.selectedTable);
-  /** L1 no canvas: só o toggle "Mostrar linhagem" (modo linhagem ≠ mostrar arestas). */
-  const showLineageEdges = lineageVisible;
   const [connecting, setConnecting] = useState(false);
 
   // Esc desseleciona em pilha: 1º só a coluna (tabela continua selecionada),
@@ -363,14 +344,14 @@ export function Canvas(props: Props) {
         ? [focusedFieldMapping.sourceTable]
         : [focusedFieldMapping.sourceTable, focusedFieldMapping.targetTable];
     }
-    if (fieldLineageVisible && selectedTable) return [selectedTable];
+    if (lineageVisible && selectedTable) return [selectedTable];
     if (hovered) return [hovered];
     return [];
   }, [
     selectedTableIds,
     selectedColumn,
     focusedFieldMapping,
-    fieldLineageVisible,
+    lineageVisible,
     selectedTable,
     hovered,
   ]);
@@ -393,12 +374,6 @@ export function Canvas(props: Props) {
         }
       }
       if (lineageVisible) {
-        for (const l of lineage) {
-          if (l.source === ft) set.add(l.target);
-          if (l.target === ft) set.add(l.source);
-        }
-      }
-      if (fieldLineageVisible) {
         for (const m of lineageFields) {
           if (m.targetTable === ft || m.sourceTable === ft) {
             set.add(m.targetTable);
@@ -411,16 +386,7 @@ export function Canvas(props: Props) {
       }
     }
     return set;
-  }, [
-    focusTables,
-    parsed.refs,
-    lineage,
-    lineageFields,
-    lineageMode,
-    lineageVisible,
-    fieldLineageVisible,
-    aggregatedCrossLinks,
-  ]);
+  }, [focusTables, parsed.refs, lineageFields, lineageMode, lineageVisible, aggregatedCrossLinks]);
 
   // Visibilidade por camada + colapso → hidden/dim.
   const opts = useMemo<NodeOpts>(() => {
@@ -470,18 +436,15 @@ export function Canvas(props: Props) {
   useCanvasEdges(setEdges, {
     parsed,
     aggregatedCrossLinks,
-    lineage,
     lineageFields,
     positions,
     relationsVisible,
-    showLineageEdges,
-    fieldLineageVisible,
+    lineageVisible,
     lineageMode,
     focusTables,
     focusedFieldMapping,
     selectedColumn,
     onRemoveRef,
-    onRemoveLineage,
     onRemoveFieldLineage,
   });
 
@@ -527,10 +490,7 @@ export function Canvas(props: Props) {
     (c) => {
       if (!c.source || !c.target || c.source === c.target) return false;
       if (lineageMode) {
-        const portToPort = isLineageHandle(c.sourceHandle) && isLineageHandle(c.targetHandle);
-        const fieldToField =
-          !!c.sourceHandle?.startsWith("fl:s:") && !!c.targetHandle?.startsWith("fl:t:");
-        return portToPort || fieldToField;
+        return !!c.sourceHandle?.startsWith("fl:s:") && !!c.targetHandle?.startsWith("fl:t:");
       }
       return !!c.sourceHandle?.startsWith("s:") && !!c.targetHandle?.startsWith("t:");
     },
@@ -541,7 +501,6 @@ export function Canvas(props: Props) {
     (c: Connection) => {
       if (!c.source || !c.target) return;
       if (lineageMode) {
-        // Puxar entre handles de coluna (fl:) cria mapeamento campo→campo.
         if (c.sourceHandle?.startsWith("fl:s:") && c.targetHandle?.startsWith("fl:t:")) {
           onCreateFieldLineage(
             c.source,
@@ -549,63 +508,12 @@ export function Canvas(props: Props) {
             c.target,
             c.targetHandle.slice(5),
           );
-          return;
         }
-        onCreateLineage(c.source, c.target);
-        const id = `lin:${c.source}->${c.target}`;
-        const sourceHandle =
-          c.sourceHandle && isLineageHandle(c.sourceHandle)
-            ? c.sourceHandle
-            : (() => {
-                const sp = positions[c.source];
-                const tp = positions[c.target];
-                const srcTable = parsed.tables.find((t) => t.id === c.source);
-                const tgtTable = parsed.tables.find((t) => t.id === c.target);
-                return sp && tp
-                  ? pickLineageHandles(sp, tp, srcTable, tgtTable).sourceHandle
-                  : DEFAULT_LINEAGE_SOURCE;
-              })();
-        const targetHandle =
-          c.targetHandle && isLineageHandle(c.targetHandle)
-            ? c.targetHandle
-            : (() => {
-                const sp = positions[c.source];
-                const tp = positions[c.target];
-                const srcTable = parsed.tables.find((t) => t.id === c.source);
-                const tgtTable = parsed.tables.find((t) => t.id === c.target);
-                return sp && tp
-                  ? pickLineageHandles(sp, tp, srcTable, tgtTable).targetHandle
-                  : DEFAULT_LINEAGE_TARGET;
-              })();
-        setEdges((prev) => {
-          const rest = prev.filter((e) => e.id !== id);
-          return [
-            ...rest,
-            {
-              id,
-              source: c.source!,
-              target: c.target!,
-              type: "lineage",
-              sourceHandle,
-              targetHandle,
-              data: { onRemove: () => onRemoveLineage(c.source!, c.target!) },
-            },
-          ];
-        });
         return;
       }
       onCreateRef(c.source, stripHandle(c.sourceHandle), c.target, stripHandle(c.targetHandle));
     },
-    [
-      lineageMode,
-      onCreateLineage,
-      onCreateFieldLineage,
-      onCreateRef,
-      onRemoveLineage,
-      parsed.tables,
-      positions,
-      setEdges,
-    ],
+    [lineageMode, onCreateFieldLineage, onCreateRef],
   );
 
   // Mover grupo inteiro: aplica o delta às tabelas-membro.
@@ -673,15 +581,14 @@ export function Canvas(props: Props) {
   const onEdgesDelete = useCallback(
     (deleted: Edge[]) => {
       for (const e of deleted) {
-        if (e.type === "lineage") onRemoveLineage(e.source, e.target);
-        else if (e.type === "fieldLineage") (e.data as { onRemove?: () => void })?.onRemove?.();
-        else {
+        if (e.type === "fieldLineage") (e.data as { onRemove?: () => void })?.onRemove?.();
+        else if (e.type !== "lineage") {
           const ep = (e.data as { endpoints?: RefEndpoints } | undefined)?.endpoints;
           if (ep) onRemoveRef(ep.fromTbl, ep.fromCol, ep.toTbl, ep.toCol);
         }
       }
     },
-    [onRemoveLineage, onRemoveRef],
+    [onRemoveRef],
   );
 
   const onReconnect = useCallback(

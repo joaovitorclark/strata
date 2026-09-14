@@ -61,7 +61,7 @@
       "tags": "Tags",
       "colour": "Colour",
       "noColour": "No colour",
-      "sources": "Sources (lineage)",
+      "sources": "Sources (mappings)",
       "sample": "Sample data",
       "referencedBy": "referenced by",
       "comments": "Comments",
@@ -74,6 +74,7 @@
       "removeRelation": "Remove relation",
       "removeLineage": "Remove lineage",
       "derivedFrom": "derived from",
+      "fieldCount": "{{count}} fields",
       "externalLinks": "{{count}} links → {{label}}"
     }
   },

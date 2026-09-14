@@ -134,8 +134,8 @@ describe('sqlToModel composite PK', () => {
   });
 });
 
-describe('sqlToModel lineage L1 @origen', () => {
-  it('extrai @origen simples e múltiplas origens', () => {
+describe('sqlToModel ignora @origen (linhagem só de campo)', () => {
+  it('não cria linhagem de tabela a partir de @origen/@origem', () => {
     const m = sqlToModel(`
 CREATE TABLE raw.a (id BIGINT, PRIMARY KEY (id)) USING DELTA;
 CREATE TABLE raw.b (id BIGINT, PRIMARY KEY (id)) USING DELTA;
@@ -143,8 +143,7 @@ CREATE TABLE raw.b (id BIGINT, PRIMARY KEY (id)) USING DELTA;
 -- @origem: raw.b
 CREATE TABLE silver.f (id BIGINT, PRIMARY KEY (id)) USING DELTA;
 `);
-    const entry = m.lineage?.find((l) => l.target === 'silver.f');
-    expect(entry?.sources.sort()).toEqual(['raw.a', 'raw.b']);
+    expect(m.lineageFields ?? []).toEqual([]);
   });
 });
 
@@ -156,14 +155,13 @@ CREATE TABLE raw.src (
   nome STRING,
   PRIMARY KEY (id)
 ) USING DELTA;
--- @origen: raw.src
+-- @layer: silver
 CREATE TABLE silver.tgt (
   cod BIGINT, -- @map <- raw.src.id
   nom STRING, -- @mapeamento <- raw.src.nome [note: 'upper', ref: 'jobs/tgt.sql']
   PRIMARY KEY (cod)
 ) USING DELTA;
 `);
-    expect(m.lineage?.[0]).toEqual({ target: 'silver.tgt', sources: ['raw.src'] });
     expect(m.lineageFields).toHaveLength(2);
     const nom = m.lineageFields?.find((f) => f.targetColumn === 'nom');
     expect(nom).toMatchObject({
@@ -191,13 +189,11 @@ describe('demo_lakehouse_oracle.sql', () => {
     const m = sqlToModel(sql);
     expect(m.tables.length).toBeGreaterThanOrEqual(20);
     expect(m.refs.length).toBeGreaterThanOrEqual(15);
-    expect(m.lineage?.length).toBeGreaterThanOrEqual(8);
     expect(m.lineageFields?.length).toBeGreaterThanOrEqual(20);
     const pedidoFk = m.refs.find(
       (r) => r.from.table === 'staging.erp_pedido' && r.from.column === 'conta_id',
     );
     expect(pedidoFk?.to.table).toBe('staging.crm_conta');
-    expect(m.lineage?.some((l) => l.target === 'silver.dim_conta')).toBe(true);
     expect(
       m.lineageFields?.some(
         (f) =>
@@ -207,7 +203,7 @@ describe('demo_lakehouse_oracle.sql', () => {
       ),
     ).toBe(true);
     const dbml = modelToDbml(m);
-    expect(dbml).toContain('Lineage {');
+    expect(dbml).not.toContain('Lineage {');
     expect(dbml).toContain('LineageFields {');
     const parsed = parseDbml(dbml);
     expect(parsed.error).toBeUndefined();
