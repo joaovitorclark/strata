@@ -55,6 +55,7 @@ bash scripts/dbt/validate.sh   # venv com dbt-core + dbt-duckdb + sqlglot (últi
 | [D4](04-transform.md) | IR de transformação e geração de SQL | D2 | `src/features/dbt-source/transform.ts`, `src/features/dbt-source/yamlEdit.transform.ts` (novo), `src/features/shell/inspector/TransformSection.tsx` (novo), `server/routes/exportRoutes.ts` |
 | [D5](05-managed.md) | Marcação de gerenciados, lockfile e drift | D2 | `src/features/dbt-source/managed.ts`, `src/features/dbt-source/yamlEdit.managed.ts` (novo), `server/dbtSource/lock.ts`, `scripts/strata-verify.mjs`, `.github/workflows/ci.yml` |
 | [D6](06-migrate-and-retire-dbml.md) | Migrar projetos DBML e aposentar o DBML | D3, D4, D5 | tudo que ainda depende de DBML — lista na própria spec |
+| [S15](09-example-domain.md) | Domínio de exemplo realista `varejo` | D1 | `scripts/fixtures/varejo/**`, `fixtures/dbt-source/varejo/**`, `cypress/fixtures/data/varejo/**`, `cypress/e2e/varejo-smoke.cy.ts`, `package.json` (só o script) |
 | [S13](08-infer-lineage.md) | Linhagem inferida de models manuais | D1, D2 | `src/features/dbt-source/infer/**` (novo), `src/features/dbt-source/yamlEdit.infer.ts` (novo), `src/features/canvas/components/FieldLineageEdge.tsx`, `src/features/shell/inspector/LineageSection.tsx`, `src/features/canvas/toolbar/EdgeVisibility.tsx`, `fixtures/dbt-source/infer/**` |
 | [D7](07-transform-canvas.md) | Tela de transformação (antes/depois) — protótipo aprovado | D4, D5, D6 | `src/features/transform/**` (novo), `src/features/shell/Workspace.tsx` (só o mount) |
 
@@ -64,7 +65,7 @@ Caminhos relativos à raiz do repositório.
 
 ```
 Onda A ─ D1
-Onda B ─ D2
+Onda B ─ D2 ║ S15
 Onda C ─ D3 ║ D4 ║ D5 ║ S13        (arquivos donos disjuntos; D4 e D5 NÃO editam yamlEdit.ts —
                               cada uma cria o seu yamlEdit.<fase>.ts reusando os helpers exportados)
 Onda D ─ D6
