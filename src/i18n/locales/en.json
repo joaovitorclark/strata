@@ -14,6 +14,7 @@
     "copyLinkTable": "Copy link to this table",
     "copyLinkView": "Copy link to current view",
     "linkCopied": "Link copied",
+    "linkCopyFailed": "Could not copy. Copy the address from the browser bar.",
     "copyLinkHiddenWarning": "More than 50 hidden tables — the hidden parameter is omitted from the link",
     "avatar": "Account",
     "loading": "Loading…",

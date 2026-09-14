@@ -14,6 +14,7 @@
     "copyLinkTable": "Copiar link desta tabela",
     "copyLinkView": "Copiar link da visão atual",
     "linkCopied": "Link copiado",
+    "linkCopyFailed": "Não foi possível copiar. Copie o endereço da barra do navegador.",
     "copyLinkHiddenWarning": "Mais de 50 tabelas ocultas — o parâmetro hidden não entra no link",
     "avatar": "Conta",
     "loading": "Carregando…",
