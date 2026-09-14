@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNodeId, useUpdateNodeInternals } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import type { TableNodeData } from "@/features/canvas/actions";
-import { ColumnRow, type ColumnRowProps } from "@/features/canvas/components/ColumnRow";
+import {
+  ColumnRow,
+  isPrimaryKeyColumn,
+  type ColumnRowProps,
+} from "@/features/canvas/components/ColumnRow";
 import { computeVirtualWindow } from "@/features/canvas/hooks/useVirtualWindow";
 import { useTableScrollStore } from "@/features/canvas/store/tableScrollStore";
 import { keyColumns, DOCS_NOTE_BLOCK_H, type LodState } from "@/features/canvas/utils/lod";
@@ -11,6 +16,7 @@ import {
   columnVirtualViewportCss,
   columnVirtualViewportPx,
 } from "@/features/canvas/utils/scaleLimits";
+import type { ColumnView } from "@/features/schema/model/parse";
 
 const OVERSCAN = 5;
 
@@ -21,6 +27,19 @@ function scrollToColumnIndex(el: HTMLDivElement, index: number, rowH: number): v
   const viewportH = el.clientHeight || columnVirtualViewportPx(rowH);
   if (rowTop < el.scrollTop) el.scrollTop = rowTop;
   else if (rowBottom > el.scrollTop + viewportH) el.scrollTop = rowBottom - viewportH;
+}
+
+function partitionPkFirst(
+  columns: ColumnView[],
+  data: TableNodeData,
+): { pk: ColumnView[]; rest: ColumnView[]; ordered: ColumnView[] } {
+  const pk: ColumnView[] = [];
+  const rest: ColumnView[] = [];
+  for (const column of columns) {
+    if (isPrimaryKeyColumn(column, data.meta, data.compositePks)) pk.push(column);
+    else rest.push(column);
+  }
+  return { pk, rest, ordered: [...pk, ...rest] };
 }
 
 export type TableColumnListProps = {
@@ -59,18 +78,19 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     onCancelEdit,
     onShowMore,
   } = props;
+  const { t } = useTranslation();
 
   const peekSet = peekColumns?.length ? new Set(peekColumns) : null;
   const scoped = peekSet ? data.columns.filter((c) => peekSet.has(c.name)) : data.columns;
   const filterText = filter.trim().toLowerCase();
-  const columns = filterText
+  const filtered = filterText
     ? scoped.filter(
         (c) =>
           c.name.toLowerCase().includes(filterText) || c.type.toLowerCase().includes(filterText),
       )
     : scoped;
 
-  const scrollable = state === "full" && columns.length > COLUMN_VIRTUALIZE_THRESHOLD;
+  const scrollable = state === "full" && filtered.length > COLUMN_VIRTUALIZE_THRESHOLD;
   const scrollRef = useRef<HTMLDivElement>(null);
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
@@ -78,6 +98,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
   const [scrollTop, setScrollTopLocal] = useState(0);
   const rowH = useCanvasRowH();
   const viewportH = columnVirtualViewportPx(rowH);
+  const lineageSet = useMemo(() => new Set(data.linkedColumns ?? []), [data.linkedColumns]);
 
   const publishScroll = useCallback(
     (next: number) => {
@@ -90,14 +111,34 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     if (nodeId) updateNodeInternals(nodeId);
   }, [nodeId, updateNodeInternals]);
 
+  const columnsForState = useMemo(() => {
+    const peek = peekColumns?.length ? new Set(peekColumns) : null;
+    const scopedCols = peek ? data.columns.filter((c) => peek.has(c.name)) : data.columns;
+    const text = filter.trim().toLowerCase();
+    const filteredCols = text
+      ? scopedCols.filter(
+          (c) => c.name.toLowerCase().includes(text) || c.type.toLowerCase().includes(text),
+        )
+      : scopedCols;
+    if (state === "keys") {
+      const shown = peek ? scopedCols : keyColumns(data, pinned, data.linkedColumns ?? []);
+      return partitionPkFirst(shown, data);
+    }
+    return partitionPkFirst(filteredCols, data);
+  }, [data, filter, peekColumns, pinned, state]);
+
+  const displayColumns = columnsForState.ordered;
+  const pkCount = columnsForState.pk.length;
+  const hasRest = columnsForState.rest.length > 0;
+
   const scrollToColumn = useCallback(
     (columnName: string | null) => {
       const el = scrollRef.current;
       if (!el || !columnName) return;
-      const idx = columns.findIndex((c) => c.name === columnName);
+      const idx = displayColumns.findIndex((c) => c.name === columnName);
       scrollToColumnIndex(el, idx, rowH);
     },
-    [columns, rowH],
+    [displayColumns, rowH],
   );
 
   useEffect(() => {
@@ -131,19 +172,42 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     simplified,
   };
 
+  const renderRow = (
+    c: ColumnView,
+    index: number,
+    list: ColumnView[],
+    opts?: { keyArea?: boolean },
+  ) => {
+    const useKeyArea = opts?.keyArea !== false;
+    return (
+      <ColumnRow
+        key={c.name}
+        {...rowProps}
+        column={c}
+        hasLineage={lineageSet.has(c.name)}
+        isLast={index === list.length - 1}
+        inKeyArea={useKeyArea && index < pkCount}
+        showKeySeparator={useKeyArea && pkCount > 0 && hasRest && index === pkCount - 1}
+      />
+    );
+  };
+
   if (state === "sigil") return null;
 
   if (state === "keys") {
-    const shown = peekSet ? scoped : keyColumns(data, pinned, data.linkedColumns ?? []);
-    const hidden = peekSet ? 0 : data.columns.length - shown.length;
+    const hidden = peekSet ? 0 : data.columns.length - displayColumns.length;
     return (
       <div className="flex flex-col overflow-hidden">
-        {shown.map((c) => (
-          <ColumnRow key={c.name} {...rowProps} column={c} />
-        ))}
+        {pkCount > 0 ? (
+          <div className="relative bg-surface" data-key-area>
+            {columnsForState.pk.map((c, i) => renderRow(c, i, displayColumns))}
+          </div>
+        ) : null}
+        {columnsForState.rest.map((c, i) => renderRow(c, pkCount + i, displayColumns))}
         {hidden > 0 ? (
           <button
             type="button"
+            data-overflow-more
             className="nodrag nopan box-border flex w-full shrink-0 items-center overflow-hidden px-2 text-left font-mono text-2xs leading-none text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             style={{ height: rowH }}
             onClick={(e) => {
@@ -151,7 +215,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
               onShowMore?.();
             }}
           >
-            + {hidden} more columns
+            {t("canvas.node.moreColumns", { count: hidden })}
           </button>
         ) : null}
       </div>
@@ -167,18 +231,18 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
       <div className="flex flex-col overflow-hidden">
         {tableNote ? (
           <p
-            className="box-border overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
+            className="box-border line-clamp-2 overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
             style={{ height: DOCS_NOTE_BLOCK_H }}
           >
             {tableNote}
           </p>
         ) : null}
-        {noted.map((c) => (
+        {noted.map((c, i) => (
           <div key={c.name} className="flex flex-col">
-            <ColumnRow {...rowProps} column={c} />
+            {renderRow(c, i, noted, { keyArea: false })}
             {c.note ? (
               <p
-                className="box-border overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
+                className="box-border line-clamp-2 overflow-hidden px-2 font-mono text-2xs leading-[11px] text-muted-foreground"
                 style={{ height: DOCS_NOTE_BLOCK_H }}
               >
                 {c.note}
@@ -193,21 +257,24 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
   if (!scrollable) {
     return (
       <div className="flex flex-col overflow-hidden">
-        {columns.map((c) => (
-          <ColumnRow key={c.name} {...rowProps} column={c} />
-        ))}
+        {pkCount > 0 ? (
+          <div className="relative bg-surface" data-key-area>
+            {columnsForState.pk.map((c, i) => renderRow(c, i, displayColumns))}
+          </div>
+        ) : null}
+        {columnsForState.rest.map((c, i) => renderRow(c, pkCount + i, displayColumns))}
       </div>
     );
   }
 
   const win = computeVirtualWindow({
-    totalItems: columns.length,
+    totalItems: displayColumns.length,
     itemHeight: rowH,
     viewportHeight: viewportH,
     scrollTop,
     overscan: OVERSCAN,
   });
-  const visible = columns.slice(win.startIndex, win.endIndex);
+  const visible = displayColumns.slice(win.startIndex, win.endIndex);
 
   return (
     <div
@@ -223,9 +290,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     >
       <div style={{ height: win.totalHeight, position: "relative" }}>
         <div style={{ transform: `translateY(${win.offsetY}px)` }}>
-          {visible.map((c) => (
-            <ColumnRow key={c.name} {...rowProps} column={c} />
-          ))}
+          {visible.map((c, i) => renderRow(c, win.startIndex + i, displayColumns))}
         </div>
       </div>
     </div>

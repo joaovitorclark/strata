@@ -21,6 +21,7 @@ import {
 } from "@/features/canvas/hooks/useCanvasEdges";
 import { resolveLod, type LodState } from "@/features/canvas/utils/lod";
 import { TABLE_FOOTER_H, TABLE_HEADER_H } from "@/features/canvas/utils/columnHandleGeometry";
+import { TableInfoPopover } from "@/features/panels/TableInfoPopover";
 import { useSchemaStore } from "@/features/schema/store";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +35,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+
+function headerTint(color: string | undefined): string | undefined {
+  if (!color || color.startsWith("hsl(")) return undefined;
+  return `color-mix(in srgb, ${color} 10%, hsl(var(--surface)))`;
+}
 
 function layerEdgeClass(layerId: string | undefined): string {
   switch ((layerId ?? "").toLowerCase()) {
@@ -119,6 +126,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [settling, setSettling] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const zoom = useStore((s) => s.transform[2]);
   const { state, simplified } = resolveLod(zoom, {
@@ -163,10 +171,17 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
     useSchemaStore.setState({ nodeLod: next });
   };
 
+  const tableLabel = data.schema ? `${data.schema}.${data.name}` : data.name;
+  const tint = headerTint(data.headerColor);
+
   return (
     <div
-      className={cn("relative table-node-shell", lineageMode && "table-node-shell--lineage")}
+      className={cn("group relative table-node-shell", lineageMode && "table-node-shell--lineage")}
       style={dimPeek ? { opacity: PEEK_OPACITY } : undefined}
+      role="group"
+      aria-label={t("canvas.node.tableAria", { name: tableLabel, count: data.columns.length })}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Handle
         type="target"
@@ -206,25 +221,41 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
         />
         <div
           className="box-border flex shrink-0 items-center gap-1 overflow-hidden bg-surface pl-3 pr-1"
-          style={{ height: TABLE_HEADER_H }}
+          style={{ height: TABLE_HEADER_H, backgroundColor: tint }}
         >
-          <span
-            className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
-            title="Duplo-clique para renomear a tabela"
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              const nv = prompt("Novo nome da tabela (schema.tabela):", data.id);
-              if (nv && nv.trim()) actions.onRenameTable(data.id, nv.trim());
-            }}
-          >
-            {data.schema ? <span className="text-muted-foreground">{data.schema}.</span> : null}
-            {data.name}
-          </span>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <span
+                className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
+                title={t("canvas.node.renameTableTitle")}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  const nv = prompt("Novo nome da tabela (schema.tabela):", data.id);
+                  if (nv && nv.trim()) actions.onRenameTable(data.id, nv.trim());
+                }}
+              >
+                {data.schema ? <span className="text-muted-foreground">{data.schema}</span> : null}
+                {data.schema ? <span className="text-muted-foreground"> · </span> : null}
+                <span className="font-medium text-foreground">{data.name}</span>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              align="start"
+              className="max-w-none border-0 bg-transparent p-0 shadow-none"
+            >
+              <TableInfoPopover meta={data.meta} />
+            </TooltipContent>
+          </Tooltip>
           {state === "sigil" ? (
             <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
-              {data.columns.length} cols · {rel} rel
+              {t("canvas.node.relations", { count: rel })}
             </span>
-          ) : null}
+          ) : (
+            <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
+              {data.columns.length}
+            </span>
+          )}
           {state === "full" ? (
             <input
               className="nodrag nopan nowheel h-6 w-24 rounded-md border border-input bg-background px-1.5 font-mono text-2xs text-foreground outline-none placeholder:text-muted-foreground"
@@ -241,7 +272,12 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="nodrag nopan h-6 w-6 shrink-0 text-foreground"
+                data-testid="table-menu-trigger"
+                className={cn(
+                  "nodrag nopan h-6 w-6 shrink-0 text-foreground opacity-0",
+                  "focus:opacity-100 focus-visible:opacity-100 group-hover:opacity-100",
+                  (hovered || selected) && "opacity-100",
+                )}
                 aria-label="Table menu"
               >
                 <MoreHorizontal className="size-4" />

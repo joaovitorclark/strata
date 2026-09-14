@@ -105,6 +105,26 @@
       "derivedFrom": "derivado de",
       "fieldCount": "{{count}} campos",
       "externalLinks": "{{count}} ligações → {{label}}"
+    },
+    "node": {
+      "tableAria": "Tabela {{name}}, {{count}} colunas",
+      "columnAria": "{{name}}, {{type}}, {{flags}}",
+      "moreColumns": "+ {{count}} colunas",
+      "relations": "↔ {{count}}",
+      "tableMenu": "Menu da tabela",
+      "renameColumn": "Renomear coluna",
+      "pinColumn": "Fixar coluna",
+      "unpinColumn": "Desafixar coluna",
+      "filterColumns": "Filtrar colunas",
+      "addColumn": "+ coluna",
+      "renameTableTitle": "Duplo-clique para renomear a tabela",
+      "glyphPk": "Chave primária",
+      "glyphFk": "Chave estrangeira",
+      "glyphLineage": "Tem linhagem",
+      "glyphUnique": "Único",
+      "glyphIndex": "Índice",
+      "glyphNotNull": "Não nulo",
+      "glyphNullable": "Anulável"
     }
   },
   "source": {

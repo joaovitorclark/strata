@@ -19,12 +19,12 @@ function waitHubLod(state: LodState): void {
   if (state === "sigil") {
     cy.get(hub).should(($n) => {
       expect($n.find('input[aria-label="Filter columns"]').length).to.eq(0);
-      expect($n.text()).to.match(/cols/);
+      expect($n.text()).to.match(/↔/);
     });
     return;
   }
   if (state === "keys") {
-    cy.get(hub).contains(/more columns/);
+    cy.get(hub).contains(/colunas/);
     return;
   }
   if (state === "docs") {

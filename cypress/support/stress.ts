@@ -186,9 +186,9 @@ export function ensureHubFull(): void {
   const hub = '[data-testid="rf__node-wide.hub"]';
   cy.get(hub).then(($n) => {
     if ($n.find('input[aria-label="Filter columns"]').length) return;
-    if (/more columns/.test($n.text() ?? "")) {
+    if (/colunas/.test($n.text() ?? "")) {
       cy.get(hub)
-        .contains("button", /more columns/)
+        .contains("button", /colunas/)
         .click({ force: true });
       return;
     }

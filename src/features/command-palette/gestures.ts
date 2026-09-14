@@ -15,7 +15,7 @@ export const CANVAS_GESTURES: Gesture[] = [
   { gesture: "Hover em coluna ou ref", effect: "Destaca relações FK conectadas" },
   { gesture: "Arrastar coluna → coluna", effect: "Cria bloco Ref: no DBML" },
   { gesture: "Clicar em coluna", effect: "Abre o painel do campo" },
-  { gesture: "Clicar em ⓘ na tabela", effect: "Abre metadados da tabela" },
+  { gesture: "Hover no nome da tabela", effect: "Abre metadados da tabela (tooltip)" },
   { gesture: "Cmd/Ctrl + clique ou arrasto", effect: "Seleciona várias tabelas" },
   { gesture: "Arrastar retângulo no canvas", effect: "Seleciona as tabelas cobertas" },
   { gesture: "Espaço + arrasto", effect: "Pan do canvas (cursor grab)" },
