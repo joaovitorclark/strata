@@ -252,11 +252,51 @@ Integração (orquestrador, não produto das specs):
 
 `8ce10ad`
 
-#### Commits S01
+---
 
-`8cfd7e9` `08a0334` `77b9574` `22edc55` `d3e2b89`
+### Onda 3 — S06 ∥ S07 — 2026-09-14 — VERDE
 
-#### Commits S02
+Branch `ux/wave-3`. Base: `3fd980d` (topo verde da onda 2).
 
-`b54bcae` `747cb03` `639399f` `57de8e3` `405cb6b` `11ba63c` `3089ece` `3b9fdb1`
+Worktrees: `/Users/jvclark/www/strata-ux-s06` (`ux/s06`), `/Users/jvclark/www/strata-ux-s07` (`ux/s07`), `/Users/jvclark/www/strata-ux-wave-3`.
+
+#### Validação independente (README §2)
+
+| Spec | typecheck | lint | format | test | build | cy:run | stress |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| S06 `8bc6dd1` | ✓ | ✓ | ✓ | **133 / 915** | 12 230 kB | **116/116** 01:45 (porta 5184) | n/a |
+| S07 `74c1f61` | ✓ | ✓ | ✓ | **133 / 914** | 12 195 kB | **118/118** 01:52 (porta 5185) | **9/9** 00:09 |
+| `ux/wave-3` integrado | ✓ | ✓ | ✓ | **134 / 917** | 12 240 kB | **123/123** 01:56 (porta 5186) | **9/9** 00:09 |
+
+Smoke wall-clock 116s vs onda 2 90s **com 123 testes vs 111**. Por teste: ~0,94s vs ~0,81s. O G10 da S07 (8 screenshots, 14,6s) infla a média; sem ele ~0,83s (+2%). Stress pan 200 tabelas continua 3s. Não é regressão de FPS.
+
+#### Gates
+
+- S06 **G1–G8** (8/8). Vitest G1–G3 `urlState.test.ts`; Cypress G4–G8 `url-state.cy.ts`.
+- S07 **G1–G10** (10/10). Vitest G1–G2 `columnGlyphs.test.tsx`; Cypress G3–G7/G10 `node-anatomy.cy.ts`; G8 edges/handle-connect/stress; G9 = S05 G8 de altura.
+
+#### Testes removidos / reescritos
+
+S06: nenhum.
+
+S07: row 42 de `canvas-select-sync` (popover remonta); stress hub copy `/cols/` → `/↔/`, `/more columns/` → `/colunas/` (anatomia). `canvas-edges` e `handle-connect-smoke` sem alteração de asserção.
+
+#### Merge
+
+`git merge --no-ff ux/s06` depois `ux/s07`. Auto-merge i18n (copy-link S06 + node S07). Sem conflito de produto.
+
+#### Desvios / pendências
+
+- S06: `setViewport` via store interno do React Flow (Canvas não é dono). Toaster da Navbar só monta se `matchMedia` existe (jsdom).
+- S07: protótipo Claude não carregou — spec. Docs note 2 linhas (S05), não 3. `aria-label` do ⋯ em inglês para não quebrar Cypress existente. Screenshots em `cypress/screenshots/node-anatomy.cy.ts/` (gitignore).
+- MiniMap ausente até **S12**. ViewTabs stub até S11. FocusControls até S08.
+- Sem push.
+
+#### Commits S06
+
+`8bc6dd1`
+
+#### Commits S07
+
+`0c6bea1` `74c1f61`
 
