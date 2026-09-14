@@ -57,11 +57,31 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const isMacOs = () =>
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.userAgent);
 
+/** G8 / Space-to-pan: ignore typing surfaces and the source drawer. */
+export function isSpacePanIgnored(event: { target: EventTarget | null }): boolean {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+    return true;
+  }
+  return Boolean(target.closest(".cm-editor") || target.closest('[data-testid="source-drawer"]'));
+}
+
+function panOnDragForCanvas(spaceHeld: boolean): boolean | number[] {
+  if (typeof window !== "undefined") {
+    const w = window as Window & { __STRATA_FORCE_PAN_ON_DRAG?: boolean };
+    if (w.__STRATA_FORCE_PAN_ON_DRAG) return true;
+  }
+  return spaceHeld ? true : [1, 2];
+}
+
 const SHELL_CSS = [
   ".canvas-wrap .react-flow { width: 100%; height: 100%; }",
   ".react-flow__node-group-shell { pointer-events: none !important; }",
   ".canvas-wrap--focus .react-flow__node-table { opacity: 0.45; transition: opacity 0.12s ease; }",
   ".canvas--lineage-mode .react-flow__pane { cursor: default; }",
+  ".canvas-wrap--space-pan .react-flow__pane { cursor: grab; }",
+  ".canvas-wrap--space-pan .react-flow__pane:active { cursor: grabbing; }",
   ".table-node-shell { position: relative; }",
 ].join("\n");
 
@@ -317,6 +337,8 @@ export function Canvas(props: Props) {
   const relationsVisible = useInteraction((s) => s.relationsVisible);
   const selectedTable = useInteraction((s) => s.selectedTable);
   const [connecting, setConnecting] = useState(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
+  const mac = isMacOs();
 
   // Esc desseleciona em pilha: 1º só a coluna (tabela continua selecionada),
   // 2º também a tabela. O editor de nome de coluna trata o próprio Escape.
@@ -339,6 +361,29 @@ export function Canvas(props: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selectColumn, clearCanvasSelection]);
+
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code !== "Space" && e.key !== " ") return;
+      if (e.repeat) return;
+      if (isSpacePanIgnored(e)) return;
+      e.preventDefault();
+      setSpaceHeld(true);
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" && e.key !== " ") return;
+      setSpaceHeld(false);
+    };
+    const clear = () => setSpaceHeld(false);
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+      window.removeEventListener("blur", clear);
+    };
+  }, []);
 
   const focusTables = useMemo(() => {
     if (selectedTableIds.length) return selectedTableIds;
@@ -617,6 +662,7 @@ export function Canvas(props: Props) {
         className={cn(
           "canvas-wrap relative h-full w-full",
           related?.size ? "canvas-wrap--focus" : undefined,
+          spaceHeld && "canvas-wrap--space-pan",
         )}
         style={{ "--row-h": `var(--row-${density})` } as CSSProperties}
       >
@@ -686,9 +732,14 @@ export function Canvas(props: Props) {
               clearCanvasSelection();
             }}
             onSelectionChange={onSelectionChange}
-            selectionOnDrag
+            selectionOnDrag={!spaceHeld}
+            panOnDrag={panOnDragForCanvas(spaceHeld)}
+            panActivationKeyCode={null}
+            panOnScroll={mac}
+            zoomOnScroll={!mac}
+            zoomOnPinch
             selectionMode={SelectionMode.Partial}
-            multiSelectionKeyCode={isMacOs() ? "Meta" : "Control"}
+            multiSelectionKeyCode={mac ? "Meta" : "Control"}
             elementsSelectable
             edgesFocusable
             // Tolerância de jitter do mouse (Windows): até 4px de movimento ainda é clique

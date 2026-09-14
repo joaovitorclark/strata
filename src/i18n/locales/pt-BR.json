@@ -76,7 +76,10 @@
       "layout": "Organizar canvas",
       "edges": "Arestas",
       "relations": "Relações",
-      "lineage": "Linhagem"
+      "lineage": "Linhagem",
+      "zoomPercent": "{{percent}}%",
+      "zoomMenu": "Nível de zoom",
+      "zoomFit": "Ajustar"
     },
     "edges": {
       "removeRelation": "Remover relação",

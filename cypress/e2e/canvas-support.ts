@@ -75,6 +75,49 @@ export function viewportScaleOf(style: string | undefined): number {
   return 1;
 }
 
+/**
+ * Left-button rubber-band over the union of the given nodes.
+ * Relies on `selectionOnDrag && panOnDrag !== true` (xyflow Pane uses pointer capture).
+ * Guard: `canvas-rubber-band.cy.ts` forces panOnDrag true and expects zero `.selected`.
+ */
+export function rubberBandCovering(ids: readonly string[]): void {
+  for (const id of ids) {
+    cy.get(nodeSel(id)).should("exist");
+  }
+  cy.get(".react-flow__pane").then(($pane) => {
+    const el = $pane[0];
+    const win = el.ownerDocument.defaultView!;
+    const pane = el.getBoundingClientRect();
+    const rects = ids.map((id) => {
+      const node = el.ownerDocument.querySelector(nodeSel(id));
+      if (!node) throw new Error(`missing node ${id}`);
+      return node.getBoundingClientRect();
+    });
+    const x1 = Math.max(pane.left + 4, Math.min(...rects.map((r) => r.left)) - 16);
+    const y1 = Math.max(pane.top + 4, Math.min(...rects.map((r) => r.top)) - 16);
+    const x2 = Math.min(pane.right - 4, Math.max(...rects.map((r) => r.right)) + 16);
+    const y2 = Math.min(pane.bottom - 4, Math.max(...rects.map((r) => r.bottom)) + 16);
+    const pe = (type: string, clientX: number, clientY: number, buttons: number) =>
+      new win.PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        view: win,
+        button: 0,
+        buttons,
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        clientX,
+        clientY,
+      });
+    el.dispatchEvent(pe("pointerdown", x1, y1, 1));
+    el.dispatchEvent(pe("pointermove", x1 + 12, y1 + 12, 1));
+    el.dispatchEvent(pe("pointermove", x2, y2, 1));
+    el.dispatchEvent(pe("pointerup", x2, y2, 0));
+  });
+}
+
 export function fireWindowKey(init: KeyboardEventInit): void {
   cy.window().then((win) => {
     win.dispatchEvent(
@@ -152,10 +195,13 @@ export function zoomUntil(
         ? '[data-testid="canvas-toolbar"] [data-zoom="out"]'
         : '[data-testid="canvas-toolbar"] [data-zoom="in"]';
     cy.get(btn).click({ force: true });
+    // S03: zoomIn/Out tween 150ms (scaleBy 1.2). Wait for the step to mostly
+    // settle — a 1px change used to pass with duration 0 and then the next
+    // click cancelled the d3 interpolate.
     cy.get(".react-flow__viewport").should(($next) => {
       const n = viewportScaleOf($next.attr("style"));
-      if (direction === "out") expect(n).to.be.lessThan(z);
-      else expect(n).to.be.greaterThan(z);
+      if (direction === "out") expect(n).to.be.lessThan(z * 0.86);
+      else expect(n).to.be.greaterThan(z * 1.14);
     });
     zoomUntil(pred, direction, remaining - 1);
   });
