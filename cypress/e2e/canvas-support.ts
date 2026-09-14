@@ -20,7 +20,7 @@ export function waitForCanvas(): void {
     .and("match", /scale\(|matrix\(/);
 }
 
-function waitForInitialFit(): void {
+export function waitForInitialFit(): void {
   cy.get(".react-flow__viewport").should(($v) => {
     const style = $v.attr("style") ?? "";
     const z = viewportScaleOf(style);

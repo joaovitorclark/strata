@@ -7,6 +7,7 @@ import {
   translateOf,
   viewportScaleOf,
   waitForCanvas,
+  waitForInitialFit,
 } from "./canvas-support";
 
 const SMOKE_DBML = "cypress/fixtures/data/domains/local/projects/smoke/project.dbml";
@@ -254,36 +255,24 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
 
   it("row 76: pill fit view changes the viewport toward fitting all nodes", () => {
     collapseLayersPanel();
+    waitForInitialFit();
+    cy.get('[data-testid="zoom-percent"]').click();
+    cy.contains('[role="menuitem"]', "200%").click();
+    cy.get(".react-flow__viewport").should(($vp) => {
+      expect(viewportScaleOf($vp.attr("style")), "200% settled").to.eq(2);
+    });
     cy.get(".react-flow__viewport")
       .invoke("attr", "style")
-      .then((before) => {
-        const zBefore = viewportScaleOf(before);
-        cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
+      .then((zoomed) => {
+        const zZoomed = viewportScaleOf(zoomed);
+        cy.get('[data-testid="canvas-toolbar"] [data-zoom="fit"]').click({ force: true });
         cy.get(".react-flow__viewport").should(($vp) => {
-          expect(viewportScaleOf($vp.attr("style")), "first zoom-in settled").to.be.greaterThan(
-            zBefore * 1.14,
+          const style = $vp.attr("style");
+          expect(style, "fit view changed transform").to.not.eq(zoomed);
+          expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(
+            zZoomed + 0.001,
           );
         });
-        cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
-        cy.get(".react-flow__viewport").should(($vp) => {
-          const z = viewportScaleOf($vp.attr("style"));
-          expect($vp.attr("style"), "zoomed in").to.not.eq(before);
-          // maxZoom defaults to 2, so a second 1.2× step may clamp.
-          expect(z, "still zoomed in").to.be.greaterThan(zBefore * 1.14);
-        });
-        cy.get(".react-flow__viewport")
-          .invoke("attr", "style")
-          .then((zoomed) => {
-            const zZoomed = viewportScaleOf(zoomed);
-            cy.get('[data-testid="canvas-toolbar"] [data-zoom="fit"]').click({ force: true });
-            cy.get(".react-flow__viewport").should(($vp) => {
-              const style = $vp.attr("style");
-              expect(style, "fit view changed transform").to.not.eq(zoomed);
-              expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(
-                zZoomed + 0.001,
-              );
-            });
-          });
       });
   });
 
