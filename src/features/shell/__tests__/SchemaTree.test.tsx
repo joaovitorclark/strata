@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import "@/i18n";
 import { SchemaTree, type SchemaTreeTable } from "@/features/shell/SchemaTree";
@@ -108,5 +108,23 @@ describe("SchemaTree", () => {
     expect(screen.getByRole("button", { name: "s.t0" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "s.t499" })).toBeNull();
     expect(screen.getAllByRole("button").length).toBeLessThan(50);
+  });
+
+  it("G7: Enter calls onFocusTable; Space calls toggle", () => {
+    const onFocusTable = vi.fn();
+    render(
+      <SchemaTree
+        tables={[table({ id: "loja.pedido", name: "pedido", schema: "loja" })]}
+        onFocusTable={onFocusTable}
+      />,
+    );
+
+    const row = screen.getByRole("button", { name: "loja.pedido" });
+    row.focus();
+    fireEvent.keyDown(row, { key: "Enter" });
+    expect(onFocusTable).toHaveBeenCalledWith("loja.pedido");
+
+    fireEvent.keyDown(row, { key: " " });
+    expect(useSchemaStore.getState().hiddenTableIds).toEqual(["loja.pedido"]);
   });
 });

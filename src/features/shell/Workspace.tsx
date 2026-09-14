@@ -296,6 +296,7 @@ export function Workspace(props: WorkspaceProps) {
                 setRailItem(next);
               }}
               tables={<SchemaTree tables={treeTables} layerOf={layerOf} />}
+              onFocusTable={focusTableWithPan}
               layers={
                 <LayersPanel
                   embedded
