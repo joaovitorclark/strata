@@ -53,7 +53,8 @@ estender `ParseResult`). É o pivô das conversões.
 - `toDbtProject(model: StrataModel): ProjectFiles` — `ProjectFiles = Record<path, string>`, layout
   exatamente o da 0001 §3, `meta.strata` conforme a tabela de fronteira, `.strata/*.yml` para o visual.
 - `fromDbtProject(files: ProjectFiles): StrataModel`
-- `toDbml(model: StrataModel): string` — a projeção (0001 §4), só para o teste de ida-e-volta.
+- `toDdl(model: StrataModel, dialect: "spark" | "postgres"): string` — a projeção (0001 §4).
+- `fromDbml` existe só como **importador** (migração); não há `toDbml`.
 
 ### 3.4 Edição de YAML que preserva o arquivo
 `src/features/dbt-source/yamlEdit.ts` com operações sobre um `ProjectFiles`:
@@ -85,7 +86,9 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
 - o que se perdeu, se algo se perdeu, e proposta de solução;
 - tempo de `fromDbtProject` e `toDbtProject` num projeto sintético de 200 tabelas / 3000 colunas;
 - evidência de que as decisões 0001 §7.2 (última versão estável, `config:` + `data_tests:`) e §7.3
-  (cabeçalho + `sql_hash` + detecção de drift) funcionam como descritas, ou o que precisa mudar;
+  (tag, `meta` com proveniência, cabeçalho `@generated`, `.gitattributes`, lockfile e drift)
+  funcionam como descritas — incluindo onde cada marcador aparece no `manifest.json` gerado por
+  `dbt parse` —, ou o que precisa mudar;
 - **veredito**: `aprovar 0001`, `aprovar com ajustes (listar)` ou `revisar 0001 (motivos)`.
 
 ### 3.8 Ajustes das decisões complementares (0001 §7)
@@ -94,15 +97,17 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
   `strata:<projeto>` em todo model.
 - `meta` e configs sempre sob `config:`; `data_tests:` em vez de `tests:`.
 - Um projeto **só de sources** (sem models) com PK/FK como testes e linhagem entre sources.
-- Modelos gerenciados com o cabeçalho de 2 linhas e `config.meta.strata.sql_hash`.
+- Modelos gerenciados marcados como na 0001 §7.3: tag `strata:managed`, `config.meta.strata`
+  (`managed`, `generator`, `generator_version`), cabeçalho `@generated`, entrada em `.gitattributes`
+  e hash em `.strata/generated.lock.yml` — **nenhum hash no YAML do model**.
 
-## 4. Gates (15)
+## 4. Gates (16)
 
 1. Vitest: `fromDbml(kitchen-sink)` → `toDbtProject` → `fromDbtProject` → **igual** ao primeiro
    `StrataModel` (comparação estrutural normalizada; diferenças esperadas listadas e justificadas no
    próprio teste, uma por uma).
-2. Vitest: `toDbml(fromDbtProject(toDbtProject(m)))` reparseia com `parseDbml` sem erro e com as mesmas
-   tabelas, colunas, refs e mapeamentos de linhagem.
+2. `validate.sh` + Vitest: `toDdl(fromDbtProject(toDbtProject(m)), "spark" | "postgres")` é aceito
+   pelo `sqlglot` nos dois dialetos, e contém as mesmas tabelas, colunas, tipos, PKs e FKs do modelo.
 3. Vitest: nenhum conteúdo visual (`Colors`, `Pins`, `Views`, posições) aparece fora de `.strata/`;
    nenhum conteúdo semântico aparece dentro de `.strata/` (varre os arquivos gerados).
 4. Vitest: enum preserva o nome via `meta.strata.enum`; índice composto preserva colunas e ordem.
@@ -123,9 +128,13 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
 14. Vitest: `dbt build --select tag:strata:estoque` equivalente — `fromDbtProject` filtrado por tag
     devolve só as tabelas de `estoque`, e o `ref()` para `vendas` resolve (a tabela de `vendas`
     aparece como externa, não como ausente).
-15. Vitest: editar o `.sql` gerenciado fora do Strata (alterar o conteúdo sem atualizar o hash) →
+15. Vitest: editar o `.sql` gerenciado fora do Strata (conteúdo muda, lockfile não) →
     `fromDbtProject` marca o model como `drift` e **não** o trata como gerenciado limpo; regenerar
-    exige confirmação explícita (função pura com flag).
+    exige confirmação explícita (função pura com flag). Remover só a tag à mão → model tratado como
+    manual.
+16. `validate.sh`: no `manifest.json` produzido pelo `dbt parse`, todo model gerenciado tem a tag
+    `strata:managed` e `config.meta.strata.generator == "strata"`; `dbt ls --select tag:strata:managed`
+    lista exatamente os gerenciados — saída salva.
 
 ## 5. Fora de escopo
 
