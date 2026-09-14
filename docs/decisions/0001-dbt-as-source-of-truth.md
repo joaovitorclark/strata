@@ -1,8 +1,9 @@
 # 0001 — O projeto dbt é a fonte da verdade
 
 **Data:** 2026-09-14
-**Status:** proposta — aceita em princípio pelo dono do produto, com as decisões complementares de §7; **vinculante só depois do spike
-S14 passar** (`docs/superpowers/specs/2026-09-14-s14-dbt-source-spike.md`).
+**Status:** **aceita** (2026-09-14), com as decisões complementares de §7. O spike isolado foi
+dispensado; a validação acontece nas fases D1–D6 (`docs/superpowers/specs/dbt/`), começando pelos
+testes de ida e volta da D1 — se eles falharem, a decisão volta para revisão.
 **Substitui:** a fonte da verdade em DBML (`AGENTS.md` north star 4 e 6, `ux-ui-research.md` §5).
 
 ---
@@ -194,7 +195,7 @@ Continua aberto só o que depende de evidência: nada — o spike S14 confirma 2
 
 ## 8. Plano
 
-1. **S14 — spike** (agente): prova ida-e-volta sem perda, `dbt parse` aceita, edição preserva YAML.
-2. Se S14 passar: specs de implementação em fatias — leitura do dbt → escrita no dbt → projeções
-   DDL → IR de transformação e geração de SQL → saída Spark → migração e aposentadoria do DBML.
-3. Se S14 falhar: esta decisão volta para revisão com a lista concreta do que não coube.
+Fases em `docs/superpowers/specs/dbt/`: **D1** ler dbt → **D2** escrever no dbt → **D3** drawer
+dbt/DDL ║ **D4** transformação e SQL ║ **D5** gerenciados e drift → **D6** migração e aposentadoria do
+DBML. Ponto de parada: se os gates de ida e volta da D1 falharem, esta decisão volta para revisão
+com a lista do que não coube.

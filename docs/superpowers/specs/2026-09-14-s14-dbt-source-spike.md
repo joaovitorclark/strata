@@ -2,6 +2,9 @@
 
 **Data:** 2026-09-14
 **Decisão que valida:** [`docs/decisions/0001-dbt-as-source-of-truth.md`](../../decisions/0001-dbt-as-source-of-truth.md) — leia inteira antes de começar.
+**Status: substituída** pelas specs de implementação em `docs/superpowers/specs/dbt/` (o dono do
+produto decidiu não rodar o spike isolado; os gates daqui foram distribuídos em D1–D6).
+
 **Tipo:** spike. **Nenhuma mudança no app.** O resultado é código isolado + um relatório que decide se
 a 0001 vira vinculante.
 
