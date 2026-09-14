@@ -52,10 +52,10 @@ Sources are paths under the frozen LocalDrawDB checkout (`$LDB`).
 | 40 | Canvas | Drag a column handle onto another column creates a `Ref:` block in the DBML | src/help/gestures.ts:11 | ☑ canvas-create.cy.ts |
 | 41 | Canvas | Click a column opens the column panel | src/help/gestures.ts:12 | ☑ canvas-select-sync.cy.ts |
 | 42 | Canvas | Hover ⓘ on a table opens table metadata | src/help/gestures.ts:13 | dropped — superseded by S02 (TableInfoPopover unmounted from canvas chrome; S07 remounts as node-header tooltip). canvas-select-sync.cy.ts records the unmount. |
-| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-select-sync.cy.ts (Cmd/Ctrl+click; rubber-band does not stick — panOnDrag default true disables selectionOnDrag) |
+| 43 | Canvas | Cmd/Ctrl+click or drag selects multiple tables | src/help/gestures.ts:14 | ☑ canvas-rubber-band.cy.ts |
 | 44 | Canvas | Lineage mode: ports on table edges edit lineage entries | src/help/gestures.ts:15 | dropped — superseded by field-only lineage (this spec) |
 | 45 | Canvas | Delete removes the selected ref | src/help/gestures.ts:16 | ☑ canvas-edges.cy.ts |
-| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | dropped — CommandPalette window-capture Escape calls clearCanvasSelection() before Canvas's stacked handler; first press already clears the table. canvas-select-sync.cy.ts records the attempt. |
+| 46 | Canvas | Escape clears selection and closes modals (first press drops column, second clears table) | src/help/gestures.ts:17 | ☑ canvas-rubber-band.cy.ts |
 | 47 | Canvas | `onSelectColumn` selects a table+column (opens ColumnPanel) | src/canvas/actions.ts:23 | ☑ canvas-actions.cy.ts |
 | 48 | Canvas | `onRenameColumn` renames a column across all refs; duplicate names are rejected with a status message | src/canvas/actions.ts:24 | ☑ canvas-actions.cy.ts |
 | 49 | Canvas | `onGoToColumn` opens the DBML editor and jumps to that column | src/canvas/actions.ts:25 | ☑ canvas-actions.cy.ts |
@@ -336,10 +336,10 @@ Live Cypress closed the remaining canvas mutation surface. Specs: `canvas-action
 Dropped this plan (harness/component not rewritten to make a spec pass):
 
 - **42** — ⓘ not restored; hover trigger covers `TableInfoPopover` (`canvas-select-sync.cy.ts`)
-- **46** — CommandPalette capture Escape clears the table on the first press
+- **46** — restored by S03 (`canvas-rubber-band.cy.ts` stacked Escape)
 - **65** — GroupNode `dragHandle` does not latch XYDrag from the harness
 - **68** — `ColumnRow` does not mount `fl:` handles
 
-**Count after Plan 4 Task 54: 254 ☑ · 0 ☐ · 6 dropped.**
+**Count after Plan 4 Task 54: 254 ☑ · 0 ☐ · 6 dropped.** S03 restored row 46 (255 ☑ · 5 dropped among the original six).
 
 
