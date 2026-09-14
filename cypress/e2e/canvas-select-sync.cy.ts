@@ -269,9 +269,7 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
         cy.get(".react-flow__viewport").should(($vp) => {
           const style = $vp.attr("style");
           expect(style, "fit view changed transform").to.not.eq(zoomed);
-          expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(
-            zZoomed + 0.001,
-          );
+          expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(zZoomed + 0.001);
         });
       });
   });
