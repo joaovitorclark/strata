@@ -39,7 +39,10 @@ describe("canvas edges", () => {
     cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {
       expect($path.length, "aggregated lineage path").to.be.at.least(1);
-      expect(animationNameOf($path[0])).to.match(/lineage-flow/);
+      const anim = animationNameOf($path[0]);
+      expect(anim === "none" || anim === "", `S09 rest lineage animation-name was ${anim}`).to.eq(
+        true,
+      );
     });
   });
 

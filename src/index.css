@@ -115,7 +115,7 @@
 
     /* Edge semantics. Lineage MUST NOT read as a foreign key.              */
     --rel-fk: var(--ctp-blue);              /* structural: crow's-foot       */
-    --rel-lineage: var(--ctp-teal);         /* data flow: tapered, animated  */
+    --rel-lineage: var(--ctp-mauve);        /* data flow: mauve (equals --primary); rest has no animation */
     --rel-active: var(--ctp-mauve);         /* the trace you're following    */
     --rel-muted: var(--ctp-overlay0);
 

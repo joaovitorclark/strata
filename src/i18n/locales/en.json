@@ -91,6 +91,10 @@
       "edges": "Edges",
       "relations": "Relations",
       "lineage": "Lineage",
+      "notation": "Notation",
+      "notationIe": "IE",
+      "notationBarker": "Barker",
+      "notationMinimal": "Minimal",
       "zoomPercent": "{{percent}}%",
       "zoomMenu": "Zoom level",
       "zoomFit": "Fit",
@@ -124,6 +128,7 @@
       "removeRelation": "Remove relation",
       "removeLineage": "Remove lineage",
       "derivedFrom": "derived from",
+      "fkLabel": "{{from}} → {{to}}",
       "fieldCount": "{{count}} fields",
       "externalLinks": "{{count}} links → {{label}}"
     },

@@ -1,13 +1,15 @@
+import { useState } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getSmoothStepPath,
+  getBezierPath,
   type Edge,
   type EdgeProps,
 } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 
 import { useFlowZoom } from "@/features/canvas/hooks/useCanvasEdges";
+import { useSchemaStore } from "@/features/schema/store";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -31,6 +33,7 @@ export type LineageEdgeData = {
 type LineageFlowEdge = Edge<LineageEdgeData>;
 
 export function LineageEdge({
+  id,
   sourceX,
   sourceY,
   targetX,
@@ -42,19 +45,23 @@ export function LineageEdge({
 }: EdgeProps<LineageFlowEdge>) {
   useFlowZoom();
   const { t } = useTranslation();
-  const [path, labelX, labelY] = getSmoothStepPath({
+  const [localHover, setLocalHover] = useState(false);
+  const peeked = useSchemaStore((s) => s.peekedEdge);
+  const [path, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     targetX,
     targetY,
     sourcePosition,
     targetPosition,
-    borderRadius: 8,
   });
   const active = !!(selected || data?.highlighted);
   const dimmed = !!data?.dimmed && !selected;
+  const hovered = localHover || peeked === id;
   const count = data?.count ?? 0;
   const mappings = data?.mappings ?? [];
+  const strokeWidth = active ? 2 : hovered ? 2 : 1.5;
+  const dash = active ? "6 4" : "4 3";
 
   const label = (
     <div
@@ -70,12 +77,14 @@ export function LineageEdge({
       <BaseEdge
         path={path}
         markerEnd={lineageMarkerUrl(active)}
-        className="edge-path--lineage animate-lineage-flow"
+        className="edge-path--lineage"
         style={{
-          strokeWidth: active ? 2.8 : 1.8,
+          strokeWidth,
           strokeLinecap: "round",
-          strokeDasharray: "8 4",
+          strokeDasharray: dash,
         }}
+        onMouseEnter={() => setLocalHover(true)}
+        onMouseLeave={() => setLocalHover(false)}
       />
       {!dimmed && (
         <EdgeLabelRenderer>

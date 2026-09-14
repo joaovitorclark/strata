@@ -32,4 +32,8 @@ describe("design tokens", () => {
   it("uses dark/light naming, never Catppuccin flavour names, in app source", () => {
     expect(css.includes(".dark")).toBe(true);
   });
+
+  it("S09: --rel-lineage is mauve / primary in the light token block", () => {
+    expect(css).toMatch(/--rel-lineage:\s*var\(--ctp-mauve\)|--rel-lineage:\s*var\(--primary\)/);
+  });
 });
