@@ -82,13 +82,13 @@ manual com Jinja.
 9. Cypress: arrastar relação → `constraints`/`relationships` gravado na coluna certa.
 10. Cypress: arrastar linhagem (modo linhagem) → `config.meta.strata.lineage` gravado na coluna alvo.
 11. Cypress: mover tabela → só `.strata/<projeto>/canvas.yml` muda; nenhum arquivo em `models/`.
+12. Cypress: desfazer cada uma das ações 7–11 → arquivos voltam byte a byte; e os Cypress D1 gate 11
+    passam a ser invertidos (ações habilitadas) — **único ajuste de asserção permitido, listado**.
 13. Cypress: excluir coluna sem dependências → nenhum diálogo, toast com "Desfazer"; clicar Desfazer →
     arquivo volta byte a byte. Com dependências → diálogo lista cada uma; cancelar → nada muda em disco.
 14. Cypress: "+ coluna" no fim da tabela → digitar nome, Tab, tipo livre `struct<a:int>` → Enter → YAML
     com `data_type: struct<a:int>`.
 15. Cypress: renomear para um nome já existente → erro inline e nenhuma escrita.
-12. Cypress: desfazer cada uma das ações 7–11 → arquivos voltam byte a byte; e os Cypress D1 gate 11
-    passam a ser invertidos (ações habilitadas) — **único ajuste de asserção permitido, listado**.
 
 ## 6. Fora de escopo
 Drawer (D3), SQL de transformação (D4), cabeçalho/lock (D5), remoção do DBML (D6).
