@@ -26,6 +26,13 @@ let pendingWrite: (() => void) | null = null;
 let storeWriteTimer: ReturnType<typeof setTimeout> | undefined;
 let viewportWriteTimer: ReturnType<typeof setTimeout> | undefined;
 
+export function isUrlSyncReady(args: {
+  hydratedProjectId: string | null;
+  currentProjectId: string;
+}): boolean {
+  return args.hydratedProjectId === args.currentProjectId;
+}
+
 export function flushUrlSync(): void {
   if (storeWriteTimer !== undefined) {
     clearTimeout(storeWriteTimer);
@@ -221,20 +228,22 @@ async function applyIncoming(options: UrlSyncOptions): Promise<void> {
 }
 
 export function useUrlSync({ focusTableWithPan, switchProject }: UrlSyncOptions): void {
-  const dbml = useSchemaStore((s) => s.dbml);
   const currentProjectId = useSchemaStore((s) => s.currentProjectId);
+  const hydratedProjectId = useSchemaStore((s) => s.hydratedProjectId);
   const detailLevel = useSchemaStore((s) => s.detailLevel);
   const selectedTable = useSchemaStore((s) => s.selectedTable);
   const selectedColumn = useSchemaStore((s) => s.selectedColumn);
   const hiddenTableIds = useSchemaStore((s) => s.hiddenTableIds);
   const activeViewId = useSchemaStore((s) => s.activeViewId);
-  const [live, setLive] = useState(false);
+  const [applied, setApplied] = useState(false);
   const appliedRef = useRef(false);
   const applyingRef = useRef(false);
+  const ready = isUrlSyncReady({ hydratedProjectId, currentProjectId });
+  const live = ready && applied;
 
   useEffect(() => {
+    if (!ready) return;
     if (appliedRef.current || applyingRef.current) return;
-    if (!dbml) return;
     applyingRef.current = true;
     void applyIncoming({ focusTableWithPan, switchProject })
       .catch(() => {
@@ -243,9 +252,9 @@ export function useUrlSync({ focusTableWithPan, switchProject }: UrlSyncOptions)
       .finally(() => {
         appliedRef.current = true;
         applyingRef.current = false;
-        setLive(true);
+        setApplied(true);
       });
-  }, [dbml, currentProjectId, focusTableWithPan, switchProject]);
+  }, [ready, focusTableWithPan, switchProject]);
 
   useEffect(() => {
     if (!live) return;

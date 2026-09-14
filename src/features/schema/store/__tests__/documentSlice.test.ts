@@ -70,4 +70,15 @@ describe("documentSlice", () => {
     expect(useSchemaStore.getState().dbml).toBe("B");
     expect(useSchemaStore.getState().positions.t).toEqual({ x: 3, y: 4 });
   });
+
+  it("hydratedProjectId starts null", () => {
+    expect(useSchemaStore.getState().hydratedProjectId).toBeNull();
+  });
+
+  it("setHydratedProjectId records the id and clears it at switch start", () => {
+    useSchemaStore.getState().setHydratedProjectId("p1");
+    expect(useSchemaStore.getState().hydratedProjectId).toBe("p1");
+    useSchemaStore.getState().setHydratedProjectId(null);
+    expect(useSchemaStore.getState().hydratedProjectId).toBeNull();
+  });
 });

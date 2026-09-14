@@ -26,6 +26,7 @@ export type DocumentSlice = {
   currentProjectId: string;
   projects: ProjectMeta[];
   pinnedProjectId: string | null;
+  hydratedProjectId: string | null;
   setDbml: (update: string | ((prev: string) => string)) => void;
   setPositions: (update: Positions | ((prev: Positions) => Positions)) => void;
   setSizes: (
@@ -41,6 +42,7 @@ export type DocumentSlice = {
   setCurrentProjectId: (id: string) => void;
   setProjects: (projects: ProjectMeta[]) => void;
   setPinnedProjectId: (id: string | null) => void;
+  setHydratedProjectId: (id: string | null) => void;
   hydrateDocument: (next: {
     dbml: string;
     positions: Positions;
@@ -90,6 +92,7 @@ export const createDocumentSlice: StateCreator<
   currentProjectId: "",
   projects: [],
   pinnedProjectId: null,
+  hydratedProjectId: null,
   setDbml: (update) =>
     set((state) => {
       state.dbml = applyUpdate(state.dbml, update);
@@ -138,6 +141,10 @@ export const createDocumentSlice: StateCreator<
   setPinnedProjectId: (id) =>
     set((state) => {
       state.pinnedProjectId = id;
+    }),
+  setHydratedProjectId: (id) =>
+    set((state) => {
+      state.hydratedProjectId = id;
     }),
   hydrateDocument: (next) =>
     set((state) => {
