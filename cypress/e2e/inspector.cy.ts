@@ -56,6 +56,11 @@ describe("S10 inspector", () => {
     selectCanvasDetailLevel("Colunas");
   });
 
+  afterEach(() => {
+    cy.get("body").type("{esc}", { force: true });
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+  });
+
   it("G1: selecting a table opens Tabela and Colunas", () => {
     selectTable(SMOKE_NODES.pedido);
     cy.get('[data-testid="inspector-section-table"]').should("have.attr", "data-state", "open");
