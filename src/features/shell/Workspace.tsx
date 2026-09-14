@@ -7,7 +7,6 @@ import { CommandPalette } from "@/features/command-palette/CommandPalette";
 import { ShortcutsOverlay } from "@/features/command-palette/ShortcutsOverlay";
 import { GitPanel } from "@/features/domains/GitPanel";
 import {
-  ColumnPanel,
   LayersPanel,
   PageImportWizard,
   ProblemsPanel,
@@ -131,7 +130,6 @@ export function Workspace(props: WorkspaceProps) {
   const [leftTab, setLeftTab] = useState<LeftPanelTab>("tables");
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("dbml");
   const [problemsOpen, setProblemsOpen] = useState(false);
-  const selectedColumn = useSchemaStore((s) => s.selectedColumn);
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
 
   const saveLabel =
@@ -175,30 +173,6 @@ export function Workspace(props: WorkspaceProps) {
     }
     openDrawer(tab);
   };
-
-  const columnPanel = (
-    <ColumnPanel
-      embedded
-      dbml={dbml}
-      tables={activeModel.tables}
-      onApply={(next) => {
-        markCommitted(next);
-        handleDbmlChange(next);
-      }}
-      onRenameColumn={(table, oldName, newName) => actions.onRenameColumn(table, oldName, newName)}
-      onGoToColumn={(table, column) => {
-        setDrawerTab("dbml");
-        goToColumn(table, column);
-      }}
-      mappings={activeModel.lineageFields ?? []}
-      onAddMapping={handleAddFieldLineage}
-      onUpdateMapping={handleUpdateFieldLineage}
-      onRemoveMapping={(st, sc, tc) => {
-        const tt = useSchemaStore.getState().selectedTable;
-        if (tt) handleRemoveFieldLineage(st, sc, tt, tc);
-      }}
-    />
-  );
 
   return (
     <CanvasActionsCtx.Provider
@@ -361,23 +335,36 @@ export function Workspace(props: WorkspaceProps) {
             </div>
           }
           inspector={
-            <div className="flex h-full min-h-0 flex-col">
-              <div className="min-h-0 flex-1 overflow-hidden">
-                <Inspector
-                  tableMeta={actions.tableMeta}
-                  layerOf={layerOf}
-                  colorOf={actions.colorOf}
-                  onSetColor={actions.onSetColor}
-                  layers={layersArr}
-                  tables={activeModel.tables}
-                />
-              </div>
-              {selectedColumn ? (
-                <div className="max-h-[45%] min-h-0 overflow-auto border-t border-sidebar-border">
-                  {columnPanel}
-                </div>
-              ) : null}
-            </div>
+            <Inspector
+              tableMeta={actions.tableMeta}
+              layerOf={layerOf}
+              colorOf={actions.colorOf}
+              onSetColor={actions.onSetColor}
+              layers={layersArr}
+              tables={activeModel.tables}
+              dbml={dbml}
+              onApply={(next) => {
+                markCommitted(next);
+                handleDbmlChange(next);
+              }}
+              lineageFields={activeModel.lineageFields ?? []}
+              problemCount={modelIssues.length}
+              onFocusTable={focusTableWithPan}
+              onSetLayer={actions.onSetLayer}
+              onRenameTable={actions.onRenameTable}
+              onRenameColumn={actions.onRenameColumn}
+              onRemoveTables={handleRemoveTables}
+              onGoToColumn={(table, column) => {
+                setDrawerTab("dbml");
+                goToColumn(table, column);
+              }}
+              onAddMapping={handleAddFieldLineage}
+              onUpdateMapping={handleUpdateFieldLineage}
+              onRemoveMapping={(st, sc, tc) => {
+                const tt = useSchemaStore.getState().selectedTable;
+                if (tt) handleRemoveFieldLineage(st, sc, tt, tc);
+              }}
+            />
           }
           drawer={
             <WorkspaceDrawer
