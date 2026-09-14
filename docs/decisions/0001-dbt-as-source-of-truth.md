@@ -33,6 +33,10 @@ Ao mesmo tempo, o produto vai além de modelar estrutura:
 
 ## 3. Layout do projeto
 
+> Mostrado para **um** projeto Strata. Com vários projetos no domínio, ver §7.5: o `dbt_project.yml`
+> é único e cada projeto vira `models/<projeto>/…`, `seeds/<projeto>/…`, `.strata/<projeto>/…`.
+> Todo `meta` e config ficam sob `config:` (§7.2).
+
 ```
 <projeto>/
   dbt_project.yml
@@ -98,18 +102,20 @@ distinção, o canvas ou apaga trabalho manual ou mostra linhagem falsa.
 
 ### 5.1 IR de transformação (gerenciado)
 
-Guardado em `meta.strata.transform` do model:
+Guardado em `config.meta.strata.transform` do model:
 
 ```yaml
-meta:
-  strata:
-    managed: true
-    transform:
-      from: { ref: stg_pedido, alias: p }
-      joins:
-        - { ref: stg_cliente, alias: c, type: left, on: "p.cliente_id = c.id" }
-      where: "p.status <> 'cancelado'"
-      group_by: []          # vazio = sem agregação
+config:
+  meta:
+    strata:
+      managed: true
+      sql_hash: "sha256:…"
+      transform:
+        from: { ref: stg_pedido, alias: p }
+        joins:
+          - { ref: stg_cliente, alias: c, type: left, on: "p.cliente_id = c.id" }
+        where: "p.status <> 'cancelado'"
+        group_by: []          # vazio = sem agregação
 ```
 
 Cada coluna do model carrega `meta.strata.lineage: [{ from: p.valor_total, expr: "cast(p.valor_total as decimal(12,2))" }]`.
@@ -128,7 +134,7 @@ para modelos gerenciados.
 - **Edição por código mais verbosa** no formato real — mitigada pelas projeções (§4).
 - **Usuários só de banco transacional** passam a ter um projeto dbt mesmo sem transformação. Um
   projeto só de `sources` cobre estrutura, mas **constraints não existem em sources** no dbt —
-  PK/FK ficam como testes. Aceitável? → questão aberta §7.
+  PK/FK ficam como testes — aceito em §7.1.
 - **Enums e índices** dependem de `meta.strata` para não perder informação.
 - **Migração** dos projetos DBML existentes (conversão única, com relatório).
 

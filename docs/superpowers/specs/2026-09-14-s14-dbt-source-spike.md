@@ -84,8 +84,8 @@ Saída salva em `docs/superpowers/spike-s14-output/`.
   tabela de fronteira da 0001;
 - o que se perdeu, se algo se perdeu, e proposta de solução;
 - tempo de `fromDbtProject` e `toDbtProject` num projeto sintético de 200 tabelas / 3000 colunas;
-- resposta, com evidência, às questões abertas 0001 §7.2 (versão mínima de dbt) e §7.3 (cabeçalho
-  `-- managed by Strata`); as demais ficam listadas como não respondidas;
+- evidência de que as decisões 0001 §7.2 (última versão estável, `config:` + `data_tests:`) e §7.3
+  (cabeçalho + `sql_hash` + detecção de drift) funcionam como descritas, ou o que precisa mudar;
 - **veredito**: `aprovar 0001`, `aprovar com ajustes (listar)` ou `revisar 0001 (motivos)`.
 
 ### 3.8 Ajustes das decisões complementares (0001 §7)
