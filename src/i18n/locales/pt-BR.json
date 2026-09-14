@@ -20,6 +20,18 @@
     "backToDomains": "← Domínios",
     "help": "Atalhos e gestos",
     "addTable": "+ Tabela",
+    "empty": {
+      "title": "Comece seu modelo",
+      "paste": "Colar SQL / DBML / schema.rb",
+      "importDbt": "Importar projeto dbt",
+      "dropHint": "ou arraste um arquivo .sql, .dbml, .rb, .yml aqui",
+      "pasteTitle": "Colar esquema",
+      "pasteHint": "Cole SQL, DBML ou o conteúdo de um arquivo. Rails (schema.rb) ainda não tem importador.",
+      "applyPaste": "Colar no modelo",
+      "invalid": "Não foi possível reconhecer o formato. Use DBML (Table x {) ou SQL (CREATE TABLE).",
+      "unsupported": "schema.rb / Rails não tem importador nesta versão. Cole DBML ou SQL, ou importe um projeto dbt.",
+      "emptyPaste": "Cole o conteúdo do esquema antes de aplicar."
+    },
     "addTablePrompt": "Nome da nova tabela (schema.tabela):",
     "addMetadata": "+ Metadados",
     "importInput": "Importar (input/)",
@@ -117,6 +129,7 @@
   },
   "canvas": {
     "toolbar": {
+      "minimap": "Mini-mapa",
       "layout": "Organizar canvas",
       "edges": "Arestas",
       "relations": "Relações",

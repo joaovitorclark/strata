@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CanvasActionsCtx } from "@/features/canvas/actions";
 import { Canvas } from "@/features/canvas";
@@ -16,6 +16,7 @@ import {
 import { ProjectSwitcher } from "@/features/projects/ProjectSwitcher";
 import { useSchemaStore } from "@/features/schema/store";
 import { AppShell, useShellLayout } from "@/features/shell/AppShell";
+import { EmptyState } from "@/features/shell/EmptyState";
 import { IconRail, type RailItem } from "@/features/shell/IconRail";
 import { Inspector } from "@/features/shell/Inspector";
 import { LeftPanel, type LeftPanelTab } from "@/features/shell/LeftPanel";
@@ -127,6 +128,7 @@ export function Workspace(props: WorkspaceProps) {
     migrateTableId,
   } = useWorkspace(props);
   useUrlSync({ focusTableWithPan, switchProject });
+  const layoutAfterEmptyImport = useRef(false);
   const [leftTab, setLeftTab] = useState<LeftPanelTab>("tables");
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("dbml");
   const [problemsOpen, setProblemsOpen] = useState(false);
@@ -158,6 +160,17 @@ export function Workspace(props: WorkspaceProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sync palette flag into the status popover
     setProblemsOpen(true);
   }, [problemsPanelOpen]);
+
+  useEffect(() => {
+    if (!layoutAfterEmptyImport.current) return;
+    if (activeModel.tables.length === 0) return;
+    layoutAfterEmptyImport.current = false;
+    handleAutolayout();
+  }, [activeModel.tables, handleAutolayout]);
+
+  // Store starts at dbml "". Treating that as "empty" unmounts React Flow before hydrate and
+  // drops S06 URL focus. Only replace the canvas after a loaded document has zero tables.
+  const showEmptyState = dbml.trim() !== "" && activeModel.tables.length === 0;
 
   const openDrawer = (tab: DrawerTab) => {
     setDrawerTab(tab);
@@ -289,49 +302,66 @@ export function Workspace(props: WorkspaceProps) {
           }
           canvas={
             <div className="relative h-full min-h-0 w-full">
-              <Canvas
-                parsed={canvasActiveModel}
-                nodeExtras={nodeExtras}
-                positions={positions}
-                sizes={sizes}
-                onPositionsChange={(p) => useSchemaStore.getState().setPositions(p)}
-                onCreateRef={handleCreateRef}
-                onRemoveRef={handleRemoveRef}
-                onRemoveTable={handleRemoveTable}
-                onRemoveTables={handleRemoveTables}
-                staleWarning={!!parsed.error || canvasParsePending}
-                lineageFields={canvasActiveModel.lineageFields ?? []}
-                onRemoveFieldLineage={handleRemoveFieldLineage}
-                onCreateFieldLineage={handleCreateFieldLineage}
-                layerOf={layerOf}
-                collapsedGroups={collapsedGroups}
-                onToggleGroup={handleToggleGroup}
-                focusTableId={focusTableId}
-                focusNonce={focusNonce}
-                onFocusTableDone={clearFocusTable}
-                onTableClick={(id) => {
-                  setDrawerTab("dbml");
-                  focusTableInEditor(id);
-                }}
-                fitViewTrigger={fitViewTrigger}
-                externalStubs={canvasStubs}
-                crossRefs={canvasView.crossRefs}
-                density={density}
-                toolbar={<CanvasToolbar onAutolayout={handleAutolayout} />}
-              />
-              <PageImportWizard
-                open={pageWizardOpen}
-                tableCount={pageWizardTableCount}
-                pages={canvasPages}
-                onConfirm={(pageIds) => {
-                  handleChangeActivePages(pageIds);
-                  setPageWizardOpen(false);
-                }}
-                onDismiss={() => {
-                  useSchemaStore.getState().setActivePageIds([]);
-                  setPageWizardOpen(false);
-                }}
-              />
+              {showEmptyState ? (
+                <EmptyState
+                  onApply={(next) => {
+                    layoutAfterEmptyImport.current = true;
+                    handleDbmlChange(next);
+                    useSchemaStore.getState().setSaveState("dirty");
+                  }}
+                  onImport={() => {
+                    layoutAfterEmptyImport.current = true;
+                    handleImport();
+                  }}
+                  onAddTable={handleAddTable}
+                />
+              ) : (
+                <>
+                  <Canvas
+                    parsed={canvasActiveModel}
+                    nodeExtras={nodeExtras}
+                    positions={positions}
+                    sizes={sizes}
+                    onPositionsChange={(p) => useSchemaStore.getState().setPositions(p)}
+                    onCreateRef={handleCreateRef}
+                    onRemoveRef={handleRemoveRef}
+                    onRemoveTable={handleRemoveTable}
+                    onRemoveTables={handleRemoveTables}
+                    staleWarning={!!parsed.error || canvasParsePending}
+                    lineageFields={canvasActiveModel.lineageFields ?? []}
+                    onRemoveFieldLineage={handleRemoveFieldLineage}
+                    onCreateFieldLineage={handleCreateFieldLineage}
+                    layerOf={layerOf}
+                    collapsedGroups={collapsedGroups}
+                    onToggleGroup={handleToggleGroup}
+                    focusTableId={focusTableId}
+                    focusNonce={focusNonce}
+                    onFocusTableDone={clearFocusTable}
+                    onTableClick={(id) => {
+                      setDrawerTab("dbml");
+                      focusTableInEditor(id);
+                    }}
+                    fitViewTrigger={fitViewTrigger}
+                    externalStubs={canvasStubs}
+                    crossRefs={canvasView.crossRefs}
+                    density={density}
+                    toolbar={<CanvasToolbar onAutolayout={handleAutolayout} />}
+                  />
+                  <PageImportWizard
+                    open={pageWizardOpen}
+                    tableCount={pageWizardTableCount}
+                    pages={canvasPages}
+                    onConfirm={(pageIds) => {
+                      handleChangeActivePages(pageIds);
+                      setPageWizardOpen(false);
+                    }}
+                    onDismiss={() => {
+                      useSchemaStore.getState().setActivePageIds([]);
+                      setPageWizardOpen(false);
+                    }}
+                  />
+                </>
+              )}
             </div>
           }
           inspector={
