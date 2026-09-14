@@ -300,3 +300,64 @@ S07: row 42 de `canvas-select-sync` (popover remonta); stress hub copy `/cols/` 
 
 `0c6bea1` `74c1f61`
 
+---
+
+### Onda 4 — S08 ∥ S09 ∥ S10 — 2026-09-14 — VERDE
+
+Branch `ux/wave-4`. Base: `933067d` (topo verde da onda 3).
+
+Worktrees: `/Users/jvclark/www/strata-ux-s08` (`ux/s08`), `/Users/jvclark/www/strata-ux-s09` (`ux/s09`), `/Users/jvclark/www/strata-ux-s10` (`ux/s10`), `/Users/jvclark/www/strata-ux-wave-4`.
+
+#### Validação independente (README §2)
+
+| Spec | typecheck | lint | format | test | build | cy:run | stress |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| S08 `c2ae86e` | ✓ | ✓ | ✓ | **926 / 926** | 12 253 kB | **128/128** 02:36 (porta 5187) | **10/10** 00:14 |
+| S09 `0e20ad7` | ✓ | ✓ | ✓ | **924 / 924** | 12 246 kB | **132/132** 02:37 (porta 5188) | **9/9** 00:11 |
+| S10 `77ad7bf` `032b94b` | ✓ | ✓ | ✓ | **924 / 924** | 12 267 kB | **130/130** 02:27 (porta 5189); inspector→node-anatomy **14/14 ×2** | n/a |
+| `ux/wave-4` integrado | ✓ | ✓ | ✓ | **940 / 940** | 12 294 kB | **144/144** 02:47 (porta 5192) | **10/10** 00:15 |
+
+Smoke 167s vs onda 3 116s **com 144 testes vs 123**. Por teste: ~1,16s vs ~0,94s. Os 21 testes novos (foco, estilo, precisão, inspector) explicam o wall-clock extra (~26s nesses specs); G10 S07 continua a inflar. Stress pan 200 tabelas 4s vs 3s. Não parar.
+
+#### Gates
+
+- S08 **G1–G11** (11/11). Vitest G1–G5 `focusGraph.test.ts`; Cypress G6–G10 `focus-mode.cy.ts`; G11 `stress-focus-mode.cy.ts`.
+- S09 **G1–G12** (12/12). Vitest G1 `edgeMarkers.test.ts`; Cypress G2–G6 `edges-style.cy.ts`; G7 `canvas-edges` + `handle-connect-smoke`; G8 stress; G9–G12 `edges-precision.cy.ts`.
+- S10 **G1–G9** (9/9). Cypress G1–G7 `inspector.cy.ts`; Vitest G8 `edit.test.ts`; G9 `s10-inspector.test.ts`.
+
+#### Testes removidos / reescritos
+
+S08: nenhum.
+
+S09: `canvas-edges.cy.ts` animação da linhagem agregada `lineage-flow` → `none` em repouso (G3 / decisão mauve). Crow's foot e Delete/DBML intactos.
+
+S10: `Inspector.test.tsx` reescrito para Accordion/resumo/lote. G6 de `node-anatomy.cy.ts` **não** enfraquecido. Integração wave-4: o unit do inspector passa a esperar **Rastrear** (S08 `enterFieldTrace`).
+
+#### Merge
+
+`git merge --no-ff ux/s08` depois `ux/s09` depois `ux/s10`. Auto-merge i18n e `tailwind.config.ts` (S09 `--rel-lineage` + S10 accordion). Sem conflito de produto. `useUrlSync` S06 intocado. S08 classNames (`edge--focus`, `lineage-flow`) + CSS S09 coexistiram. `useCanvasNodes` S04 intocado (opacidade de foco via CSS em `FocusControls`).
+
+#### Desvios / pendências
+
+- S08: opacidade do resto via stylesheet em `FocusControls` (G11 &lt; 300ms). Lista do rastreio na pill.
+- S09: marcadores IE ainda alias `cf-many` / `cf-one` no DOM para G7.
+- S10: "Rastrear" só com `enterFieldTrace`; sessão de rename em capture (`columnRenameSession`) para sobreviver a remount do React Flow após o inspector. `afterEach` de higiene no inspector.cy.ts.
+- ViewTabs stub até **S11**. MiniMap stub até **S12**.
+- Sem push.
+
+#### Commits S08
+
+`c2ae86e`
+
+#### Commits S09
+
+`0e20ad7`
+
+#### Commits S10
+
+`77ad7bf` `032b94b`
+
+#### Integração orquestrador
+
+`bc4d345` — Inspector "Rastrear" após merge S08.
+
