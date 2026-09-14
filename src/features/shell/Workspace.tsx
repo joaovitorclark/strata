@@ -23,6 +23,7 @@ import { LeftPanel, type LeftPanelTab } from "@/features/shell/LeftPanel";
 import { Navbar } from "@/features/shell/Navbar";
 import { SchemaTree } from "@/features/shell/SchemaTree";
 import { StatusBar } from "@/features/shell/StatusBar";
+import { useUrlSync } from "@/features/shell/useUrlSync";
 import { useWorkspace, type RailItemId, type WorkspaceProps } from "@/features/shell/useWorkspace";
 import { SourceDrawer } from "@/features/source/SourceDrawer";
 import { DbmlDiff } from "@/features/source/DbmlDiff";
@@ -126,6 +127,7 @@ export function Workspace(props: WorkspaceProps) {
     clearFocusTable,
     migrateTableId,
   } = useWorkspace(props);
+  useUrlSync({ focusTableWithPan, switchProject });
   const [leftTab, setLeftTab] = useState<LeftPanelTab>("tables");
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("dbml");
   const [problemsOpen, setProblemsOpen] = useState(false);
