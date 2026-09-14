@@ -1,0 +1,78 @@
+version: 2
+sources:
+  - name: catalog
+    schema: catalog
+    tables:
+      - name: categoria
+        description: Categorias de produto
+        config:
+          tags:
+            - strata:catalogo
+          meta:
+            strata:
+              table_id: catalog.categoria
+              schema: catalog
+              pk:
+                - id
+        columns:
+          - name: id
+            data_type: bigint
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: produto
+        config:
+          tags:
+            - strata:catalogo
+          meta:
+            strata:
+              table_id: catalog.produto
+              schema: catalog
+              pk:
+                - id
+        columns:
+          - name: id
+            data_type: bigint
+            data_tests:
+              - unique
+              - not_null
+          - name: sku
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
+            data_tests:
+              - unique
+              - not_null
+          - name: categoria_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  lineage:
+                    - from: catalog.categoria.id
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('catalog', 'categoria')
+                    field: id
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null

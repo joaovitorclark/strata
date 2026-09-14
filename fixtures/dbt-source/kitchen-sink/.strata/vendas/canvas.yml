@@ -1,0 +1,6 @@
+colors:
+  gold.dim_cliente: "#b08d57"
+  gold.fato_pedido: "#d4af37"
+pins:
+  - gold.dim_cliente.email
+  - gold.fato_pedido.id

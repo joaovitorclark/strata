@@ -1,0 +1,11 @@
+name: strata
+version: 1.0.0
+config-version: 2
+profile: strata
+model-paths:
+  - models
+seed-paths:
+  - seeds
+clean-targets:
+  - target
+  - dbt_packages
