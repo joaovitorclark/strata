@@ -12,6 +12,11 @@ import {
   type AggregatedCrossLink,
 } from "../utils/pageFilter";
 import { edgeClassForTier, edgeFocusTier } from "../utils/edgeFocus";
+import {
+  fieldLineageEdgeId,
+  resolveFocusedTables,
+  traceField,
+} from "../utils/focusGraph";
 
 type RefEndpoints = { fromTbl: string; fromCol: string; toTbl: string; toCol: string };
 
@@ -84,6 +89,7 @@ export type EdgeBuildInput = {
     targetTable: string,
     targetColumn: string,
   ) => void;
+  pathEdgeIds?: ReadonlySet<string> | null;
 };
 
 function mergeEdgeState(prev: Edge[], next: Edge[]): Edge[] {
@@ -119,7 +125,9 @@ function fieldEdgeVisible(
   focusSet: Set<string>,
   focusedEdgeId: string | null,
   selectedColumn: SelectedColumn,
+  pathEdgeIds?: ReadonlySet<string> | null,
 ): boolean {
+  if (pathEdgeIds?.has(fieldLineageEdgeId(m))) return true;
   if (lineageMode) return true;
   if (selectedColumn) {
     return m.targetTable === selectedColumn.table || m.sourceTable === selectedColumn.table;
@@ -138,6 +146,7 @@ export function buildLineageCanvasEdges(
     focusedFieldMapping: FocusFieldMapping;
     selectedColumn: SelectedColumn;
     onRemoveFieldLineage: EdgeBuildInput["onRemoveFieldLineage"];
+    pathEdgeIds?: ReadonlySet<string> | null;
   },
 ): Edge[] {
   if (!opts.lineageVisible) return [];
@@ -165,7 +174,14 @@ export function buildLineageCanvasEdges(
     if (bothField) {
       for (const m of group) {
         if (
-          !fieldEdgeVisible(m, opts.lineageMode, focusSet, focusedEdgeId, opts.selectedColumn)
+          !fieldEdgeVisible(
+            m,
+            opts.lineageMode,
+            focusSet,
+            focusedEdgeId,
+            opts.selectedColumn,
+            opts.pathEdgeIds,
+          )
         ) {
           continue;
         }
@@ -317,6 +333,7 @@ function buildStructuralEdges(
     focusedFieldMapping: input.focusedFieldMapping,
     selectedColumn: input.selectedColumn,
     onRemoveFieldLineage,
+    pathEdgeIds: input.pathEdgeIds,
   });
 
   return [...relEdges, ...lineageEdges];
@@ -411,6 +428,7 @@ function highlightPatchEqual(a: Edge, b: Edge): boolean {
   return (
     a.className === b.className &&
     a.animated === b.animated &&
+    a.hidden === b.hidden &&
     (a.data as { highlighted?: boolean })?.highlighted ===
       (b.data as { highlighted?: boolean })?.highlighted &&
     (a.data as { dimmed?: boolean })?.dimmed === (b.data as { dimmed?: boolean })?.dimmed &&
@@ -418,6 +436,35 @@ function highlightPatchEqual(a: Edge, b: Edge): boolean {
     (a.data as { emphasized?: boolean })?.emphasized ===
       (b.data as { emphasized?: boolean })?.emphasized
   );
+}
+
+function applySchemaFocusPatch(
+  e: Edge,
+  tableFocusIds: ReadonlySet<string> | null,
+  pathEdgeIds: ReadonlySet<string> | null,
+): Edge {
+  if (pathEdgeIds) {
+    const onPath = pathEdgeIds.has(e.id);
+    return {
+      ...e,
+      hidden: !onPath,
+      animated: false,
+      className: onPath ? "edge--focus edge--rel-active lineage-flow" : e.className,
+      data: { ...e.data, highlighted: onPath, dimmed: !onPath },
+    };
+  }
+  if (tableFocusIds) {
+    const inFocus = tableFocusIds.has(e.source) && tableFocusIds.has(e.target);
+    return {
+      ...e,
+      hidden: !inFocus,
+      animated: false,
+      className: inFocus ? "edge--focus" : e.className,
+      data: { ...e.data, highlighted: inFocus, dimmed: !inFocus },
+    };
+  }
+  if (e.hidden) return { ...e, hidden: false };
+  return e;
 }
 
 export function useCanvasEdges(
@@ -428,7 +475,40 @@ export function useCanvasEdges(
   const nodeLod = useSchemaStore((s) => s.nodeLod);
   const selectedTableIds = useSchemaStore((s) => s.selectedTableIds);
   const detailLevel = useSchemaStore((s) => s.detailLevel);
-  const lineageVisible = input.lineageVisible ?? input.showLineageEdges ?? false;
+  const schemaFocus = useSchemaStore((s) => s.focus);
+  const hiddenTableIds = useSchemaStore((s) => s.hiddenTableIds);
+  const pillLineageVisible = input.lineageVisible ?? input.showLineageEdges ?? false;
+  const lineageVisible = pillLineageVisible || schemaFocus?.kind === "field";
+
+  const focusedTableIds = useMemo(
+    () =>
+      resolveFocusedTables(schemaFocus, {
+        refs: input.parsed.refs,
+        lineageFields: input.lineageFields,
+        relationsVisible: input.relationsVisible,
+        lineageVisible: pillLineageVisible,
+        hidden: new Set(hiddenTableIds),
+      }),
+    [
+      schemaFocus,
+      input.parsed.refs,
+      input.lineageFields,
+      input.relationsVisible,
+      pillLineageVisible,
+      hiddenTableIds,
+    ],
+  );
+
+  const pathEdgeIds = useMemo(() => {
+    if (schemaFocus?.kind !== "field") return null;
+    return new Set(
+      traceField({
+        table: schemaFocus.table,
+        column: schemaFocus.column,
+        lineageFields: input.lineageFields,
+      }).edges,
+    );
+  }, [schemaFocus, input.lineageFields]);
 
   const lodByTable = useMemo(() => {
     const out: Record<string, LodState> = {};
@@ -439,7 +519,12 @@ export function useCanvasEdges(
       ids.add(m.targetTable);
     }
     const selected = new Set(selectedTableIds);
+    const fieldTables = schemaFocus?.kind === "field" ? focusedTableIds : null;
     for (const id of ids) {
+      if (fieldTables?.has(id)) {
+        out[id] = "full";
+        continue;
+      }
       out[id] = resolveLod(zoom, {
         level: detailLevel,
         pinned: nodeLod[id],
@@ -447,7 +532,16 @@ export function useCanvasEdges(
       }).state;
     }
     return out;
-  }, [input.parsed.tables, input.lineageFields, zoom, nodeLod, selectedTableIds, detailLevel]);
+  }, [
+    input.parsed.tables,
+    input.lineageFields,
+    zoom,
+    nodeLod,
+    selectedTableIds,
+    detailLevel,
+    schemaFocus,
+    focusedTableIds,
+  ]);
 
   const inputRef = useRef(input);
   const lodRef = useRef(lodByTable);
@@ -465,6 +559,7 @@ export function useCanvasEdges(
         input.focusedFieldMapping?.targetColumn ?? "",
         input.selectedColumn?.table ?? "",
         input.selectedColumn?.column ?? "",
+        schemaFocus?.kind === "field" ? `${schemaFocus.table}.${schemaFocus.column}` : "",
       ].join("\u0002")
     : "";
 
@@ -472,6 +567,13 @@ export function useCanvasEdges(
     .sort()
     .map((id) => `${id}:${lodByTable[id] ?? ""}`)
     .join("\u0000");
+
+  const schemaFocusKey =
+    schemaFocus?.kind === "tables"
+      ? `t:${schemaFocus.seeds.join(",")}:${schemaFocus.hops}:${schemaFocus.direction}`
+      : schemaFocus?.kind === "field"
+        ? `f:${schemaFocus.table}.${schemaFocus.column}`
+        : "";
 
   const structureKey = [
     input.parsed.refs,
@@ -484,7 +586,13 @@ export function useCanvasEdges(
     input.lineageMode,
     input.positions,
     fieldFocusKey,
+    schemaFocusKey,
   ].join("\u0001");
+
+  const pathEdgeRef = useRef(pathEdgeIds);
+  useLayoutEffect(() => {
+    pathEdgeRef.current = pathEdgeIds;
+  });
 
   useEffect(() => {
     const cur = inputRef.current;
@@ -492,7 +600,12 @@ export function useCanvasEdges(
       const built = mergeEdgeState(
         prev,
         buildStructuralEdges(
-          { ...cur, lodByTable: lodRef.current, lineageVisible },
+          {
+            ...cur,
+            lodByTable: lodRef.current,
+            lineageVisible,
+            pathEdgeIds: pathEdgeRef.current,
+          },
           cur.onRemoveRef,
           cur.onRemoveFieldLineage,
         ),
@@ -506,28 +619,34 @@ export function useCanvasEdges(
     input.selectedColumn?.table ?? "",
     input.selectedColumn?.column ?? "",
     String(input.lineageMode),
+    schemaFocusKey,
+    [...(focusedTableIds ?? [])].sort().join(","),
+    [...(pathEdgeIds ?? [])].sort().join(","),
   ].join("\u0001");
 
   useEffect(() => {
     const cur = inputRef.current;
     const focusActive = cur.focusTables.length > 0;
+    const tableIds = schemaFocus?.kind === "tables" ? focusedTableIds : null;
+    const pathIds = pathEdgeIds;
     setEdges((prev) => {
       let changed = false;
       const next = prev.map((e) => {
         if (e.type !== "relation" && e.type !== "lineage" && e.type !== "fieldLineage") return e;
         const touches = edgeTouchesFocus(e, cur.focusTables, cur.aggregatedCrossLinks);
-        const patched = applyEdgeHighlight(
+        let patched = applyEdgeHighlight(
           e,
           touches,
           focusActive,
           cur.selectedColumn,
           cur.lineageMode,
         );
+        patched = applySchemaFocusPatch(patched, tableIds, pathIds);
         if (highlightPatchEqual(e, patched)) return e;
         changed = true;
         return patched;
       });
       return changed ? next : prev;
     });
-  }, [highlightKey, structureKey, setEdges, input.aggregatedCrossLinks]);
+  }, [highlightKey, structureKey, setEdges, input.aggregatedCrossLinks, schemaFocus, focusedTableIds, pathEdgeIds]);
 }

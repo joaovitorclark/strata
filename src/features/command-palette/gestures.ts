@@ -25,6 +25,9 @@ export const CANVAS_GESTURES: Gesture[] = [
   },
   { gesture: "Delete", effect: "Remove ref selecionada" },
   { gesture: "Escape", effect: "1º limpa a coluna; 2º limpa a tabela e fecha modais" },
+  { gesture: "F", effect: "Ativa ou sai do modo foco de tabela" },
+  { gesture: "T", effect: "Rastreia a linhagem do campo selecionado" },
+  { gesture: "[ / ]", effect: "Diminui ou aumenta os saltos do foco" },
 ];
 
 export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
@@ -40,6 +43,8 @@ export const FIXED_SHORTCUT_SPECS: { label: string; spec: ShortcutSpec }[] = [
   { label: "Nível de detalhe: Chaves", spec: { key: "2" } },
   { label: "Nível de detalhe: Colunas", spec: { key: "3" } },
   { label: "Nível de detalhe: Documentação", spec: { key: "4" } },
+  { label: "Modo foco de tabela", spec: { key: "F" } },
+  { label: "Rastrear linhagem do campo", spec: { key: "T" } },
 ];
 
 export function formatShortcut(mac: boolean, spec: ShortcutSpec): string {
