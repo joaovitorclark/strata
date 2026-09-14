@@ -4,6 +4,7 @@ import {
   fireWindowKey,
   nodeSel,
   selectCanvasDetailLevel,
+  setEdgeVisibility,
   SMOKE_NODES,
   waitForCanvas,
   zoomUntil,
@@ -108,5 +109,31 @@ describe("S05 canvas detail level", () => {
     fireWindowKey({ key: "k", metaKey: true, ctrlKey: true });
     cy.get('[data-testid="command-palette"] input').should("exist").click().type("3");
     cy.get('[data-testid="detail-level-select"]').should("contain", "Nome");
+  });
+
+  it("S05 hotfix: Documentação aggregates lineage when an endpoint has no note", () => {
+    cy.window().then((win) => {
+      cy.spy(win.console, "warn").as("consoleWarn");
+      cy.spy(win.console, "error").as("consoleError");
+    });
+    setEdgeVisibility("Linhagem", true);
+    clickPane();
+    selectCanvasDetailLevel("Documentação");
+    cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
+    cy.get('[data-testid^="rf__edge-fl:"]').should("not.exist");
+    cy.get("@consoleWarn")
+      .invoke("getCalls")
+      .then((calls: Array<{ args: unknown[] }>) => {
+        expect(calls.map((c) => c.args.map(String).join(" ")).join("\n")).to.not.match(
+          /Couldn't create edge/i,
+        );
+      });
+    cy.get("@consoleError")
+      .invoke("getCalls")
+      .then((calls: Array<{ args: unknown[] }>) => {
+        expect(calls.map((c) => c.args.map(String).join(" ")).join("\n")).to.not.match(
+          /Couldn't create edge/i,
+        );
+      });
   });
 });
