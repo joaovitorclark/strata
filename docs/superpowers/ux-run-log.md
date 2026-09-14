@@ -361,3 +361,54 @@ S10: `Inspector.test.tsx` reescrito para Accordion/resumo/lote. G6 de `node-anat
 
 `bc4d345` — Inspector "Rastrear" após merge S08.
 
+---
+
+### Onda 5 — S11 ∥ S12 — 2026-09-14 — VERDE (hotfixes S03/S05 em curso)
+
+Branch `ux/wave-5`. Base: `8b0dc5f` (topo verde da onda 4).
+
+Worktrees: `/Users/jvclark/www/strata-ux-s11` (`ux/s11`), `/Users/jvclark/www/strata-ux-s12` (`ux/s12`), `/Users/jvclark/www/strata-ux-wave-5`.
+
+#### Validação independente (README §2)
+
+| Spec | typecheck | lint | format | test | build | cy:run | stress |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| S11 `31f308a` | ✓ | ✓ | ✓ | **947 / 947** | 12 306 kB | **150/150** 02:32 (porta 5193) | n/a |
+| S12 `80725ff` | ✓ | ✓ | ✓ | **960 / 960** | 12 301 kB | **151/151** 02:28 (porta 5194) | **10/10** 00:13 |
+| `ux/wave-5` integrado | ✓ | ✓ | ✓ | **967 / 967** | 12 313 kB | **157/157** 02:38 (porta 5195) | **10/10** 00:13 |
+
+Smoke 158s vs onda 4 167s **com 157 testes vs 144**. Por teste: ~1,01s vs ~1,16s. Os 13 testes novos (views 6, minimap 3, empty-state 4) cabem no wall-clock. Stress minimap ligado em 200 tabelas (G2 S12). Não parar.
+
+#### Gates
+
+- S11 **G1–G10** (10/10). Vitest G1–G4 `views.test.ts`; Cypress G5–G10 `views.cy.ts`.
+- S12 **G1–G7** (7/7). Cypress G1–G3 `minimap.cy.ts`; G4–G7 `empty-state.cy.ts`. Stress `stress-large-diagram.cy.ts` reescrito para G2 (minimap presente por padrão).
+
+#### Testes removidos / reescritos
+
+S11: nenhum.
+
+S12: os 2 testes de `stress-large-diagram.cy.ts` que afirmavam minimap ausente em 200 / >200 tabelas (S02) foram reescritos para G2 (minimap presente por padrão, salvo o usuário desligar). Autorizado pela spec S12.
+
+#### Merge
+
+`git merge --no-ff ux/s11` depois `ux/s12`. Auto-merge i18n. Sem conflito de produto. Pill: `ViewTabs` primeiro à esquerda, `MiniMapToggle` no fim. `useUrlSync` S06 + `Inspector` S10 + `EmptyState` S12 no Workspace.
+
+#### Desvios / pendências
+
+- S11: `urlState`/`useUrlSync` ganham `view=`; wrap de `setDbml`/`setPositions`/`setDetailLevel`/`hydrateDocument` em `store/index.ts`. Salvar com view nomeada ativa grava posições dessa view em `canvas.json` (`handleSave` lê `positions`); layout de Tudo fica em `tudoPositions` na sessão (G7).
+- S12: EmptyState só após hidratação (`dbml.trim() !== ""`) para não desmontar o React Flow no flash de load (S06 `?focus=`). MiniMap via `createPortal` no `domNode` do React Flow — `Canvas.tsx` intocado. Workspace: mount + autolayout pós-import. `AGENTS.md` **não** foi commitado.
+- **Revisão externa da onda 2 (ainda aberta nesta linha):** Espaço em `Canvas.tsx` (S03) e linhagem no nível Documentação (S05). Confirmados com Vitest em `8b0dc5f`. Hotfixes `ux/s03-space-fix` e `ux/s05-docs-lineage` em curso; **não** merge em `research/ux-ui-proposal` até esses dois verdes. Sem push.
+
+#### Commits S11
+
+`31f308a`
+
+#### Commits S12
+
+`80725ff`
+
+#### Integração orquestrador
+
+`6ef439b` merge S11 · `7df79ee` merge S12.
+
