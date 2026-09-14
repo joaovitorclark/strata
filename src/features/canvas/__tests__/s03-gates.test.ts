@@ -21,12 +21,38 @@ describe("S03 gates", () => {
     expect(grepLines("zoomPercent", "src/features/shell")).toEqual([]);
   });
 
-  it("G8: Space guard ignores events from input and textarea", () => {
+  it("G8: Space guard pans only on the canvas or body, not on focused chrome", () => {
     const input = document.createElement("input");
     const textarea = document.createElement("textarea");
-    const div = document.createElement("div");
+    const button = document.createElement("button");
+    const menuitem = document.createElement("div");
+    menuitem.setAttribute("role", "menuitemcheckbox");
+    const stray = document.createElement("div");
+
+    const flow = document.createElement("div");
+    flow.className = "react-flow";
+    const renderer = document.createElement("div");
+    renderer.className = "react-flow__renderer";
+    const pane = document.createElement("div");
+    pane.className = "react-flow__pane";
+    renderer.appendChild(pane);
+    flow.appendChild(renderer);
+    const toolbarBtn = document.createElement("button");
+    flow.appendChild(toolbarBtn);
+    document.body.appendChild(flow);
+
     expect(isSpacePanIgnored({ target: input })).toBe(true);
     expect(isSpacePanIgnored({ target: textarea })).toBe(true);
-    expect(isSpacePanIgnored({ target: div })).toBe(false);
+    expect(isSpacePanIgnored({ target: button })).toBe(true);
+    expect(isSpacePanIgnored({ target: menuitem })).toBe(true);
+    // Hotfix rewrite: a div that is NOT inside `.react-flow` must be ignored.
+    expect(isSpacePanIgnored({ target: stray })).toBe(true);
+    // Toolbar is an RF child but not the diagram surface.
+    expect(isSpacePanIgnored({ target: toolbarBtn })).toBe(true);
+    expect(isSpacePanIgnored({ target: pane })).toBe(false);
+    expect(isSpacePanIgnored({ target: flow })).toBe(false);
+    expect(isSpacePanIgnored({ target: document.body })).toBe(false);
+
+    flow.remove();
   });
 });
