@@ -52,4 +52,79 @@ describe("S01 edge builder", () => {
     expect(agg).toHaveLength(1);
     expect((agg[0].data as { count: number }).count).toBe(3);
   });
+
+  it("S05 hotfix: docs + empty notes → 0 fieldLineage, 1 aggregated", () => {
+    const one: ParsedFieldLineage[] = [three[0]];
+    const edges = buildLineageCanvasEdges(
+      one,
+      { "bronze.a": "docs", "silver.b": "docs" },
+      {
+        ...visible,
+        notedColumnsByTable: {
+          "bronze.a": new Set(),
+          "silver.b": new Set(),
+        },
+      },
+    );
+    expect(edges.filter((e) => e.type === "fieldLineage")).toHaveLength(0);
+    const agg = edges.filter((e) => e.type === "lineage");
+    expect(agg).toHaveLength(1);
+    expect((agg[0].data as { count: number }).count).toBe(1);
+  });
+
+  it("S05 hotfix: docs mapping whose target has no note aggregates", () => {
+    const one: ParsedFieldLineage[] = [three[0]];
+    const edges = buildLineageCanvasEdges(
+      one,
+      { "bronze.a": "docs", "silver.b": "docs" },
+      {
+        ...visible,
+        notedColumnsByTable: {
+          "bronze.a": new Set(["x"]),
+          "silver.b": new Set(),
+        },
+      },
+    );
+    expect(edges.filter((e) => e.type === "fieldLineage")).toHaveLength(0);
+    const agg = edges.filter((e) => e.type === "lineage");
+    expect(agg).toHaveLength(1);
+    expect((agg[0].data as { count: number }).count).toBe(1);
+  });
+
+  it("S05 hotfix: docs emits fieldLineage only when both ends are noted", () => {
+    const one: ParsedFieldLineage[] = [three[0]];
+    const edges = buildLineageCanvasEdges(
+      one,
+      { "bronze.a": "docs", "silver.b": "docs" },
+      {
+        ...visible,
+        notedColumnsByTable: {
+          "bronze.a": new Set(["x"]),
+          "silver.b": new Set(["y"]),
+        },
+      },
+    );
+    expect(edges.filter((e) => e.type === "fieldLineage")).toHaveLength(1);
+    expect(edges.filter((e) => e.type === "lineage")).toHaveLength(0);
+  });
+
+  it("S05 hotfix: mixed noted/unnoted mappings → field + aggregated leftover", () => {
+    const edges = buildLineageCanvasEdges(
+      three.slice(0, 2),
+      { "bronze.a": "docs", "silver.b": "docs" },
+      {
+        ...visible,
+        notedColumnsByTable: {
+          "bronze.a": new Set(["x", "z"]),
+          "silver.b": new Set(["y"]),
+        },
+      },
+    );
+    const field = edges.filter((e) => e.type === "fieldLineage");
+    const agg = edges.filter((e) => e.type === "lineage");
+    expect(field).toHaveLength(1);
+    expect(field[0].id).toBe("fl:bronze.a.x->silver.b.y");
+    expect(agg).toHaveLength(1);
+    expect((agg[0].data as { count: number }).count).toBe(1);
+  });
 });

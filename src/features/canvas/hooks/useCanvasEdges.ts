@@ -119,6 +119,32 @@ function lodOf(lodByTable: Record<string, LodState>, tableId: string): LodState 
   return lodByTable[tableId] ?? "keys";
 }
 
+function notedColumnsByTableFromParsed(
+  tables: ParseResult["tables"],
+): Record<string, ReadonlySet<string>> {
+  const out: Record<string, Set<string>> = {};
+  for (const t of tables) {
+    const noted = new Set<string>();
+    for (const c of t.columns) {
+      if (c.note) noted.add(c.name);
+    }
+    out[t.id] = noted;
+  }
+  return out;
+}
+
+/** Column row exists in the node at this LOD (S09 virtualization is out of scope). */
+function columnRenderedAtLod(
+  lod: LodState,
+  tableId: string,
+  column: string,
+  notedColumnsByTable?: Record<string, ReadonlySet<string>>,
+): boolean {
+  if (lod === "sigil") return false;
+  if (lod === "docs") return notedColumnsByTable?.[tableId]?.has(column) === true;
+  return true;
+}
+
 function fieldEdgeVisible(
   m: ParsedFieldLineage,
   lineageMode: boolean,
@@ -135,7 +161,10 @@ function fieldEdgeVisible(
   return focusSet.has(m.targetTable) || focusSet.has(m.sourceTable) || fieldEdgeId(m) === focusedEdgeId;
 }
 
-/** Pure builder: field edges when neither end is `sigil`, else one aggregated edge per pair. */
+/**
+ * Pure builder: field edge only when both endpoint columns are rendered at the
+ * current LOD; leftover mappings of a pair collapse to one aggregated header edge.
+ */
 export function buildLineageCanvasEdges(
   lineageFields: ParsedFieldLineage[],
   lodByTable: Record<string, LodState>,
@@ -147,6 +176,7 @@ export function buildLineageCanvasEdges(
     selectedColumn: SelectedColumn;
     onRemoveFieldLineage: EdgeBuildInput["onRemoveFieldLineage"];
     pathEdgeIds?: ReadonlySet<string> | null;
+    notedColumnsByTable?: Record<string, ReadonlySet<string>>;
   },
 ): Edge[] {
   if (!opts.lineageVisible) return [];
@@ -166,65 +196,70 @@ export function buildLineageCanvasEdges(
 
   const out: Edge[] = [];
   for (const group of groups.values()) {
-    const first = group[0];
-    const bothField =
-      lodOf(lodByTable, first.sourceTable) !== "sigil" &&
-      lodOf(lodByTable, first.targetTable) !== "sigil";
-
-    if (bothField) {
-      for (const m of group) {
-        if (
-          !fieldEdgeVisible(
-            m,
-            opts.lineageMode,
-            focusSet,
-            focusedEdgeId,
-            opts.selectedColumn,
-            opts.pathEdgeIds,
-          )
-        ) {
-          continue;
-        }
-        const id = fieldEdgeId(m);
-        // `fl:` handles exist only in lineage mode (G18). At full LOD the FK
-        // `s:`/`t:` handles are always mounted, so field edges can still attach.
-        const sourceHandle = opts.lineageMode
-          ? `fl:s:${m.sourceColumn}`
-          : `s:${m.sourceColumn}`;
-        const targetHandle = opts.lineageMode
-          ? `fl:t:${m.targetColumn}`
-          : `t:${m.targetColumn}`;
-        out.push({
-          id,
-          source: m.sourceTable,
-          target: m.targetTable,
-          sourceHandle,
-          targetHandle,
-          type: "fieldLineage",
-          selected: id === focusedEdgeId,
-          interactionWidth: 24,
-          reconnectable: false,
-          data: {
-            label: `${m.sourceColumn}→${m.targetColumn}`,
-            mapping: {
-              sourceTable: m.sourceTable,
-              sourceColumn: m.sourceColumn,
-              targetTable: m.targetTable,
-              targetColumn: m.targetColumn,
-            },
-            onRemove: () =>
-              opts.onRemoveFieldLineage(
-                m.sourceTable,
-                m.sourceColumn,
-                m.targetTable,
-                m.targetColumn,
-              ),
-          },
-        });
-      }
-      continue;
+    const fieldMaps: ParsedFieldLineage[] = [];
+    const leftover: ParsedFieldLineage[] = [];
+    for (const m of group) {
+      const bothRendered =
+        columnRenderedAtLod(
+          lodOf(lodByTable, m.sourceTable),
+          m.sourceTable,
+          m.sourceColumn,
+          opts.notedColumnsByTable,
+        ) &&
+        columnRenderedAtLod(
+          lodOf(lodByTable, m.targetTable),
+          m.targetTable,
+          m.targetColumn,
+          opts.notedColumnsByTable,
+        );
+      if (bothRendered) fieldMaps.push(m);
+      else leftover.push(m);
     }
 
+    for (const m of fieldMaps) {
+      if (
+        !fieldEdgeVisible(
+          m,
+          opts.lineageMode,
+          focusSet,
+          focusedEdgeId,
+          opts.selectedColumn,
+          opts.pathEdgeIds,
+        )
+      ) {
+        continue;
+      }
+      const id = fieldEdgeId(m);
+      // `fl:` handles exist only in lineage mode (G18). At full LOD the FK
+      // `s:`/`t:` handles are always mounted, so field edges can still attach.
+      const sourceHandle = opts.lineageMode ? `fl:s:${m.sourceColumn}` : `s:${m.sourceColumn}`;
+      const targetHandle = opts.lineageMode ? `fl:t:${m.targetColumn}` : `t:${m.targetColumn}`;
+      out.push({
+        id,
+        source: m.sourceTable,
+        target: m.targetTable,
+        sourceHandle,
+        targetHandle,
+        type: "fieldLineage",
+        selected: id === focusedEdgeId,
+        interactionWidth: 24,
+        reconnectable: false,
+        data: {
+          label: `${m.sourceColumn}→${m.targetColumn}`,
+          mapping: {
+            sourceTable: m.sourceTable,
+            sourceColumn: m.sourceColumn,
+            targetTable: m.targetTable,
+            targetColumn: m.targetColumn,
+          },
+          onRemove: () =>
+            opts.onRemoveFieldLineage(m.sourceTable, m.sourceColumn, m.targetTable, m.targetColumn),
+        },
+      });
+    }
+
+    if (leftover.length === 0) continue;
+    const first = leftover[0];
     if (first.sourceTable === first.targetTable) continue;
 
     out.push({
@@ -237,8 +272,8 @@ export function buildLineageCanvasEdges(
       interactionWidth: 24,
       reconnectable: false,
       data: {
-        count: group.length,
-        mappings: group.map((m) => ({
+        count: leftover.length,
+        mappings: leftover.map((m) => ({
           sourceTable: m.sourceTable,
           sourceColumn: m.sourceColumn,
           targetTable: m.targetTable,
@@ -334,6 +369,7 @@ function buildStructuralEdges(
     selectedColumn: input.selectedColumn,
     onRemoveFieldLineage,
     pathEdgeIds: input.pathEdgeIds,
+    notedColumnsByTable: notedColumnsByTableFromParsed(parsed.tables),
   });
 
   return [...relEdges, ...lineageEdges];
@@ -568,6 +604,10 @@ export function useCanvasEdges(
     .map((id) => `${id}:${lodByTable[id] ?? ""}`)
     .join("\u0000");
 
+  const notedKey = input.parsed.tables
+    .map((t) => `${t.id}:${t.columns.filter((c) => Boolean(c.note)).map((c) => c.name).join(",")}`)
+    .join("\u0000");
+
   const schemaFocusKey =
     schemaFocus?.kind === "tables"
       ? `t:${schemaFocus.seeds.join(",")}:${schemaFocus.hops}:${schemaFocus.direction}`
@@ -581,6 +621,7 @@ export function useCanvasEdges(
     input.parsed.tables,
     input.lineageFields,
     lodKey,
+    notedKey,
     input.relationsVisible,
     lineageVisible,
     input.lineageMode,
