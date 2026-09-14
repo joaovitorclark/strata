@@ -54,6 +54,8 @@ import {
 import { SKIP_INITIAL_FIT_TABLES, type CanvasDensity } from "../utils/scaleLimits";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 
 const isMacOs = () =>
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.userAgent);
@@ -350,6 +352,7 @@ export function Canvas(props: Props) {
   const lineageVisible = useInteraction((s) => s.lineageVisible);
   const relationsVisible = useInteraction((s) => s.relationsVisible);
   const selectedTable = useInteraction((s) => s.selectedTable);
+  const readOnly = useInteraction((s) => s.readOnly);
   const [connecting, setConnecting] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const mac = isMacOs();
@@ -572,6 +575,10 @@ export function Canvas(props: Props) {
 
   const onConnect = useCallback(
     (c: Connection) => {
+      if (readOnly) {
+        toast.message(i18n.t("shell.dbtReadOnly"));
+        return;
+      }
       if (!c.source || !c.target) return;
       if (lineageMode) {
         if (c.sourceHandle?.startsWith("fl:s:") && c.targetHandle?.startsWith("fl:t:")) {
@@ -586,7 +593,7 @@ export function Canvas(props: Props) {
       }
       onCreateRef(c.source, stripHandle(c.sourceHandle), c.target, stripHandle(c.targetHandle));
     },
-    [lineageMode, onCreateFieldLineage, onCreateRef],
+    [lineageMode, onCreateFieldLineage, onCreateRef, readOnly],
   );
 
   // Mover grupo inteiro: aplica o delta às tabelas-membro.
@@ -720,9 +727,9 @@ export function Canvas(props: Props) {
             isValidConnection={isValidConnection}
             connectionMode={lineageMode ? ConnectionMode.Loose : ConnectionMode.Strict}
             connectionRadius={lineageMode ? 56 : 24}
-            nodesConnectable
+            nodesConnectable={!readOnly}
             connectOnClick={false}
-            edgesReconnectable={!lineageMode}
+            edgesReconnectable={!lineageMode && !readOnly}
             className={cn(
               "strata-canvas",
               lineageMode && "canvas--lineage-mode",
@@ -730,7 +737,7 @@ export function Canvas(props: Props) {
             )}
             onEdgesDelete={onEdgesDelete}
             onReconnect={onReconnect}
-            deleteKeyCode={["Delete", "Backspace"]}
+            deleteKeyCode={readOnly ? null : ["Delete", "Backspace"]}
             onNodeMouseEnter={(_, n) => {
               if (n.type === "table") setHovered(n.id);
             }}

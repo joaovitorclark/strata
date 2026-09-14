@@ -12,6 +12,7 @@ import {
 } from "@xyflow/react";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { useCanvasActions, type TableNodeData } from "@/features/canvas/actions";
 import { TableColumnList } from "@/features/canvas/components/TableColumnList";
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
@@ -125,6 +126,7 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const pinned = useSchemaStore((s) => s.pinnedColumns(data.id));
   const peekedEdgeId = useSchemaStore((s) => s.peekedEdge);
   const lineageMode = useSchemaStore((s) => s.lineageMode);
+  const readOnly = useSchemaStore((s) => s.readOnly);
   const nodeId = useNodeId();
   const updateNodeInternals = useUpdateNodeInternals();
   const edges = useEdges();
@@ -258,9 +260,13 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
             <TooltipTrigger asChild>
               <span
                 className="min-w-0 flex-1 truncate font-mono text-xs text-foreground"
-                title={t("canvas.node.renameTableTitle")}
+                title={readOnly ? t("shell.dbtReadOnly") : t("canvas.node.renameTableTitle")}
                 onDoubleClick={(e) => {
                   e.stopPropagation();
+                  if (readOnly) {
+                    toast.message(t("shell.dbtReadOnly"));
+                    return;
+                  }
                   const nv = prompt("Novo nome da tabela (schema.tabela):", data.id);
                   if (nv && nv.trim()) actions.onRenameTable(data.id, nv.trim());
                 }}
@@ -378,7 +384,13 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive"
+                disabled={readOnly}
+                title={readOnly ? t("shell.dbtReadOnly") : undefined}
                 onSelect={() => {
+                  if (readOnly) {
+                    toast.message(t("shell.dbtReadOnly"));
+                    return;
+                  }
                   if (confirm(`Apagar tabela ${data.id} e refs relacionadas?`)) {
                     actions.onRemoveTable(data.id);
                   }

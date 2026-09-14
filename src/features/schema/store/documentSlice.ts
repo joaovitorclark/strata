@@ -27,6 +27,7 @@ export type DocumentSlice = {
   projects: ProjectMeta[];
   pinnedProjectId: string | null;
   hydratedProjectId: string | null;
+  readOnly: boolean;
   setDbml: (update: string | ((prev: string) => string)) => void;
   setPositions: (update: Positions | ((prev: Positions) => Positions)) => void;
   setSizes: (
@@ -43,6 +44,7 @@ export type DocumentSlice = {
   setProjects: (projects: ProjectMeta[]) => void;
   setPinnedProjectId: (id: string | null) => void;
   setHydratedProjectId: (id: string | null) => void;
+  setReadOnly: (value: boolean) => void;
   hydrateDocument: (next: {
     dbml: string;
     positions: Positions;
@@ -53,6 +55,7 @@ export type DocumentSlice = {
     activePageIds: string[];
     currentProjectId?: string;
     pinnedByTable?: Record<string, string[]>;
+    readOnly?: boolean;
   }) => void;
   applySnapshot: (snapshot: Snapshot) => void;
   undo: () => void;
@@ -93,6 +96,7 @@ export const createDocumentSlice: StateCreator<
   projects: [],
   pinnedProjectId: null,
   hydratedProjectId: null,
+  readOnly: false,
   setDbml: (update) =>
     set((state) => {
       state.dbml = applyUpdate(state.dbml, update);
@@ -146,6 +150,10 @@ export const createDocumentSlice: StateCreator<
     set((state) => {
       state.hydratedProjectId = id;
     }),
+  setReadOnly: (value) =>
+    set((state) => {
+      state.readOnly = value;
+    }),
   hydrateDocument: (next) =>
     set((state) => {
       state.positions = { ...next.positions };
@@ -159,6 +167,7 @@ export const createDocumentSlice: StateCreator<
       syncPinsFromDbml(state);
       state.past = [];
       state.future = [];
+      state.readOnly = next.readOnly ?? false;
     }),
   applySnapshot: (snapshot) =>
     set((state) => {

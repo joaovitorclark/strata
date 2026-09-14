@@ -81,4 +81,31 @@ describe("documentSlice", () => {
     useSchemaStore.getState().setHydratedProjectId(null);
     expect(useSchemaStore.getState().hydratedProjectId).toBeNull();
   });
+
+  it("readOnly defaults false and hydrateDocument sets it", () => {
+    expect(useSchemaStore.getState().readOnly).toBe(false);
+    useSchemaStore.getState().setReadOnly(true);
+    expect(useSchemaStore.getState().readOnly).toBe(true);
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+      readOnly: true,
+    });
+    expect(useSchemaStore.getState().readOnly).toBe(true);
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+    });
+    expect(useSchemaStore.getState().readOnly).toBe(false);
+  });
 });

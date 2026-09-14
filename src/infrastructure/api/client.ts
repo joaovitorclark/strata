@@ -142,10 +142,22 @@ async function del<T>(url: string): Promise<T> {
 }
 
 export async function loadProject(): Promise<Project> {
-  const res = await fetch('/api/project');
-  const j = (await res.json()) as { dbml: string; canvas: CanvasState };
+  const res = await fetch("/api/project");
+  const j = (await res.json()) as {
+    format?: string;
+    dbml?: string;
+    canvas?: CanvasState;
+    files?: Record<string, string>;
+  };
+  if (j.format === "dbt") {
+    return { format: "dbt", files: j.files ?? {} };
+  }
   const canvas = j.canvas ?? {};
-  return { dbml: normalizeDbmlEol(j.dbml ?? ''), canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) } };
+  return {
+    format: "dbml",
+    dbml: normalizeDbmlEol(j.dbml ?? ""),
+    canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) },
+  };
 }
 
 export async function saveProject(dbml: string, canvas: CanvasState): Promise<void> {
@@ -180,9 +192,21 @@ export const activateProject = (id: string): Promise<void> =>
   post<{ ok: boolean; activeId: string }>(`/api/projects/${id}/activate`, {}).then(() => {});
 
 export async function loadProjectById(id: string): Promise<Project> {
-  const j = await get<{ dbml: string; canvas: CanvasState }>(`/api/projects/${id}`);
+  const j = await get<{
+    format?: string;
+    dbml?: string;
+    canvas?: CanvasState;
+    files?: Record<string, string>;
+  }>(`/api/projects/${id}`);
+  if (j.format === "dbt") {
+    return { format: "dbt", files: j.files ?? {} };
+  }
   const canvas = j.canvas ?? {};
-  return { dbml: normalizeDbmlEol(j.dbml ?? ''), canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) } };
+  return {
+    format: "dbml",
+    dbml: normalizeDbmlEol(j.dbml ?? ""),
+    canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) },
+  };
 }
 
 export const saveProjectById = (id: string, dbml: string, canvas: CanvasState): Promise<void> =>

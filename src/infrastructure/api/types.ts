@@ -1,4 +1,6 @@
-export type Project = { dbml: string; canvas: CanvasState };
+export type DbmlProject = { format?: "dbml"; dbml: string; canvas: CanvasState };
+export type DbtProject = { format: "dbt"; files: Record<string, string> };
+export type Project = DbmlProject | DbtProject;
 export type Layer = { id: string; name: string; color: string };
 export type LineageLink = { source: string; target: string };
 
