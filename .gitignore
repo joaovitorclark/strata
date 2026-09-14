@@ -14,3 +14,4 @@ cypress/videos/
 # Negations must come after that rule so the committed fixtures are tracked.
 !cypress/fixtures/data/
 !cypress/fixtures/data/**
+.venv-dbt/
