@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   ReactFlow,
-  Controls,
-  MiniMap,
   ConnectionMode,
   SelectionMode,
   useEdgesState,
@@ -44,11 +50,7 @@ import {
   focusFieldMappingInView,
   focusTableInView,
 } from "../utils/focusTableView";
-import {
-  MINIMAP_MAX_TABLES,
-  SKIP_INITIAL_FIT_TABLES,
-  type CanvasDensity,
-} from "../utils/scaleLimits";
+import { SKIP_INITIAL_FIT_TABLES, type CanvasDensity } from "../utils/scaleLimits";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -64,7 +66,6 @@ const SHELL_CSS = [
 ].join("\n");
 
 const PRIMARY = "hsl(var(--primary))";
-const MINIMAP_FALLBACK = "hsl(var(--card))";
 
 /**
  * Regras CSS por id relacionado — evita `setNodes` em hover/seleção (Fase 2 perf).
@@ -170,6 +171,8 @@ type Props = {
   crossRefs?: CrossPageRef[];
   /** StatusBar density — cozy 25px / compact 21px row height. */
   density?: CanvasDensity;
+  /** Chrome pill mounted inside ReactFlow so children can use useReactFlow(). */
+  toolbar?: ReactNode;
 };
 
 function fitDiagram(
@@ -292,6 +295,7 @@ export function Canvas(props: Props) {
     externalStubs = [],
     crossRefs = [],
     density = "cozy",
+    toolbar,
   } = props;
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -606,7 +610,6 @@ export function Canvas(props: Props) {
   );
 
   const tableCount = parsed.tables.length;
-  const miniMapLite = tableCount > MINIMAP_MAX_TABLES;
 
   return (
     <CanvasDensityContext.Provider value={density}>
@@ -702,23 +705,7 @@ export function Canvas(props: Props) {
               onDone={onFocusTableDone}
             />
             <FocusFieldMappingHelper />
-            <Controls />
-            <MiniMap
-              className={miniMapLite ? "minimap--lite" : undefined}
-              pannable
-              zoomable
-              nodeStrokeWidth={0}
-              bgColor="hsl(var(--card))"
-              maskColor="hsl(var(--background) / 0.65)"
-              nodeColor={
-                miniMapLite
-                  ? () => MINIMAP_FALLBACK
-                  : (n) =>
-                      n.type === "group"
-                        ? "transparent"
-                        : ((n.data as { headerColor?: string })?.headerColor ?? MINIMAP_FALLBACK)
-              }
-            />
+            {toolbar}
           </ReactFlow>
         </TooltipProvider>
       </div>

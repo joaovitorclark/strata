@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CircleAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +18,85 @@ export type ProblemsPanelProps = {
   onGoToLine?: (line: number) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  variant?: "badge" | "content";
 };
+
+function ProblemsList({
+  issues,
+  onFocusTable,
+  onGoToLine,
+  onNavigate,
+}: {
+  issues: ModelIssue[];
+  onFocusTable?: (tableId: string) => void;
+  onGoToLine?: (line: number) => void;
+  onNavigate?: () => void;
+}) {
+  const { t } = useTranslation();
+  if (issues.length === 0) {
+    return (
+      <p data-problems-empty className="px-1 py-1 text-muted-foreground">
+        {t("panels.problems.empty")}
+      </p>
+    );
+  }
+  return (
+    <ul className="problems-pop__list space-y-1">
+      {issues.map((issue, i) => (
+        <li
+          key={i}
+          className={cn(
+            "problems-pop__item rounded-sm px-1 py-0.5",
+            `problems-pop__item--${issue.severity}`,
+            issue.severity === "error" ? "text-destructive" : "text-foreground",
+          )}
+        >
+          <div className="problems-pop__row flex flex-wrap items-center gap-1">
+            {issue.line != null && onGoToLine && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={cn("problems-pop__goto h-6 px-1.5 text-2xs", FOCUS)}
+                    onClick={() => {
+                      onGoToLine(issue.line!);
+                      onNavigate?.();
+                    }}
+                  >
+                    Linha
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Ir à linha no editor</TooltipContent>
+              </Tooltip>
+            )}
+            {issue.tableId && onFocusTable && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={cn("problems-pop__goto h-6 px-1.5 text-2xs", FOCUS)}
+                    onClick={() => {
+                      onFocusTable(issue.tableId!);
+                      onNavigate?.();
+                    }}
+                  >
+                    Tabela
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Ir para tabela no canvas</TooltipContent>
+              </Tooltip>
+            )}
+            <span className="problems-pop__msg">{issue.message}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function ProblemsPanel({
   issues,
@@ -25,6 +104,7 @@ export function ProblemsPanel({
   onGoToLine,
   open,
   onOpenChange,
+  variant = "badge",
 }: ProblemsPanelProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open ?? internalOpen;
@@ -47,6 +127,26 @@ export function ProblemsPanel({
     return () => document.removeEventListener("mousedown", onDown, true);
   }, [isOpen, onOpenChange]);
 
+  const close = () => {
+    setInternalOpen(false);
+    onOpenChange?.(false);
+  };
+
+  if (variant === "content") {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <div className="problems-pop text-xs">
+          <ProblemsList
+            issues={issues}
+            onFocusTable={onFocusTable}
+            onGoToLine={onGoToLine}
+            onNavigate={close}
+          />
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   if (!issues.length) return null;
 
   const severity = errors.length ? "error" : "warn";
@@ -59,11 +159,6 @@ export function ProblemsPanel({
     const next = !isOpen;
     setInternalOpen(next);
     onOpenChange?.(next);
-  };
-
-  const close = () => {
-    setInternalOpen(false);
-    onOpenChange?.(false);
   };
 
   return (
@@ -103,60 +198,12 @@ export function ProblemsPanel({
               right: Math.max(8, window.innerWidth - rect.right),
             }}
           >
-            <ul className="problems-pop__list space-y-1">
-              {issues.map((issue, i) => (
-                <li
-                  key={i}
-                  className={cn(
-                    "problems-pop__item rounded-sm px-1 py-0.5",
-                    `problems-pop__item--${issue.severity}`,
-                    issue.severity === "error" ? "text-destructive" : "text-foreground",
-                  )}
-                >
-                  <div className="problems-pop__row flex flex-wrap items-center gap-1">
-                    {issue.line != null && onGoToLine && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className={cn("problems-pop__goto h-6 px-1.5 text-2xs", FOCUS)}
-                            onClick={() => {
-                              onGoToLine(issue.line!);
-                              close();
-                            }}
-                          >
-                            Linha
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Ir à linha no editor</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {issue.tableId && onFocusTable && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className={cn("problems-pop__goto h-6 px-1.5 text-2xs", FOCUS)}
-                            onClick={() => {
-                              onFocusTable(issue.tableId!);
-                              close();
-                            }}
-                          >
-                            Tabela
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Ir para tabela no canvas</TooltipContent>
-                      </Tooltip>
-                    )}
-                    <span className="problems-pop__msg">{issue.message}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <ProblemsList
+              issues={issues}
+              onFocusTable={onFocusTable}
+              onGoToLine={onGoToLine}
+              onNavigate={close}
+            />
           </div>,
           document.body,
         )}

@@ -26,6 +26,8 @@
     "saved": "Saved",
     "saveError": "Error",
     "diff": "Diff",
+    "more": "More ▾",
+    "records": "Records",
     "rail": {
       "tables": "Tables",
       "layers": "Layers",
@@ -70,6 +72,12 @@
     }
   },
   "canvas": {
+    "toolbar": {
+      "layout": "Organize canvas",
+      "edges": "Edges",
+      "relations": "Relations",
+      "lineage": "Lineage"
+    },
     "edges": {
       "removeRelation": "Remove relation",
       "removeLineage": "Remove lineage",
@@ -109,6 +117,9 @@
       "via": "via {{col}}",
       "goTo": "Go to {{table}}",
       "rows": "{{count}} rows"
+    },
+    "problems": {
+      "empty": "No problems"
     },
     "statusLog": {
       "tooltip": "Status history (last 100)",

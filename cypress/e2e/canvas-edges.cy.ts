@@ -1,8 +1,8 @@
 import {
   animationNameOf,
-  collapseLayersPanel,
   fireWindowKey,
   restoreSmoke,
+  setEdgeVisibility,
   snapshotSmoke,
   waitForCanvas,
   zoomUntil,
@@ -32,15 +32,8 @@ describe("canvas edges", () => {
     });
   });
 
-  it("aggregated lineage edge paints when Mostrar linhagem is checked", () => {
-    cy.get(".layers-panel").then(($p) => {
-      if ($p.hasClass("is-collapsed")) {
-        cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-      }
-    });
-    cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-    cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
-    collapseLayersPanel();
+  it("aggregated lineage edge paints when Linhagem is checked", () => {
+    setEdgeVisibility("Linhagem", true);
     zoomUntil((z) => z < 0.55, "out");
     cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {

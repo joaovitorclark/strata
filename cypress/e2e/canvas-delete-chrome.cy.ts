@@ -1,8 +1,8 @@
 import {
-  collapseLayersPanel,
   fireWindowKey,
   nodeSel,
   saveViaPaletteShortcut,
+  setEdgeVisibility,
   SMOKE_NODES,
   waitForCanvas,
   zoomUntil,
@@ -10,6 +10,10 @@ import {
 
 /** Mirror `lod.ts` — Cypress webpack cannot resolve that file's `@/` imports. */
 const LOD_FULL_ABOVE = 1.1;
+
+Cypress.on("uncaught:exception", (err) => {
+  if (/ResizeObserver loop/.test(err.message)) return false;
+});
 
 /**
  * React Flow `useKeyPress(deleteKeyCode)` listens on `document`.
@@ -45,16 +49,7 @@ function columnNameSpan(tableId: string, name: string) {
 }
 
 function showFieldLineageEdges(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if ($p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-  cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
-  cy.get(".layers-panel__lineage-btn").click();
-  cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
-  collapseLayersPanel();
+  setEdgeVisibility("Linhagem", true);
   zoomUntil((z) => z > LOD_FULL_ABOVE, "in");
   cy.get(".edge-path--field-lineage").should("have.length.at.least", 1);
 }

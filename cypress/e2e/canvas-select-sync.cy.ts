@@ -264,14 +264,13 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     cy.get(".column-panel__tbl").should("contain", SMOKE_NODES.pedido);
   });
 
-  it("row 42: hovering a table with metadata opens TableInfoPopover (hover trigger, not ⓘ)", () => {
+  it("row 42: hovering a table no longer mounts TableInfoPopover (S02; S07 remounts)", () => {
     cy.get(".info-popover").should("not.exist");
     cy.get(nodeSel(SMOKE_NODES.pedido))
       .find('[title="Duplo-clique para renomear a tabela"]')
       .trigger("mouseover", { force: true, eventConstructor: "MouseEvent" });
     hoverNode(SMOKE_NODES.pedido);
-    cy.get(".info-popover").should("be.visible");
-    cy.get(".info-popover").should("contain", "PK:");
+    cy.get(".info-popover").should("not.exist");
   });
 
   it("row 43: Cmd/Ctrl+click selects multiple tables", () => {
@@ -322,17 +321,13 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     );
   });
 
-  it("row 76: Controls fit view changes the viewport toward fitting all nodes", () => {
+  it("row 76: pill fit view changes the viewport toward fitting all nodes", () => {
     collapseLayersPanel();
     cy.get(".react-flow__viewport")
       .invoke("attr", "style")
       .then((before) => {
-        cy.get('[data-testid="rf__controls"]')
-          .find(".react-flow__controls-zoomin")
-          .click({ force: true });
-        cy.get('[data-testid="rf__controls"]')
-          .find(".react-flow__controls-zoomin")
-          .click({ force: true });
+        cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
+        cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
         cy.get(".react-flow__viewport").should(($vp) => {
           expect($vp.attr("style"), "zoomed in").to.not.eq(before);
         });
@@ -340,9 +335,7 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
           .invoke("attr", "style")
           .then((zoomed) => {
             const zZoomed = viewportScaleOf(zoomed);
-            cy.get('[data-testid="rf__controls"]')
-              .find(".react-flow__controls-fitview")
-              .click({ force: true });
+            cy.get('[data-testid="canvas-toolbar"] [data-zoom="fit"]').click({ force: true });
             cy.get(".react-flow__viewport").should(($vp) => {
               const style = $vp.attr("style");
               expect(style, "fit view changed transform").to.not.eq(zoomed);
@@ -352,23 +345,6 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
             });
           });
       });
-  });
-
-  it("row 76: Controls lock rejects a node drag", () => {
-    collapseLayersPanel();
-    cy.get('[data-testid="rf__controls"]')
-      .find(".react-flow__controls-interactive")
-      .click({ force: true });
-
-    cy.get(nodeSel(SMOKE_NODES.pedido)).then(($n) => {
-      const before = translateOf($n.attr("style"));
-      cy.dragNode(SMOKE_NODES.pedido, 80, 40);
-      cy.get(nodeSel(SMOKE_NODES.pedido)).should(($after) => {
-        const a = translateOf($after.attr("style"));
-        expect(a.x, "locked x").to.be.closeTo(before.x, 4);
-        expect(a.y, "locked y").to.be.closeTo(before.y, 4);
-      });
-    });
   });
 
   it("row 73: click a table body focuses it and scrolls the editor to its block", () => {
@@ -450,6 +426,8 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     });
 
     it("row 74: click a TableGroup selects it and filters Records to members", () => {
+      cy.get('[data-testid="status-bar"]').contains("button", "Registros").click();
+      cy.get('[data-testid="drawer-tab-records"]').should("have.attr", "data-state", "active");
       cy.get(nodeSel(GROUP_NODE_ID)).find(".group-node__label").click("center", { force: true });
       cy.contains("button", /Dados \(amostra\) · 2/).should("be.visible");
 

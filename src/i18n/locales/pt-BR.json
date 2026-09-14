@@ -26,6 +26,8 @@
     "saved": "Salvo",
     "saveError": "Erro",
     "diff": "Diff",
+    "more": "Mais ▾",
+    "records": "Registros",
     "rail": {
       "tables": "Tabelas",
       "layers": "Camadas",
@@ -70,6 +72,12 @@
     }
   },
   "canvas": {
+    "toolbar": {
+      "layout": "Organizar canvas",
+      "edges": "Arestas",
+      "relations": "Relações",
+      "lineage": "Linhagem"
+    },
     "edges": {
       "removeRelation": "Remover relação",
       "removeLineage": "Remover linhagem",
@@ -109,6 +117,9 @@
       "via": "via {{col}}",
       "goTo": "Ir para {{table}}",
       "rows": "{{count}} linhas"
+    },
+    "problems": {
+      "empty": "Nenhum problema"
     },
     "statusLog": {
       "tooltip": "Histórico de status (últimos 100)",
