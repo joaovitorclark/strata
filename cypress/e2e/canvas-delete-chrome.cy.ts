@@ -1,6 +1,8 @@
 import {
+  collapseLayersPanel,
   fireWindowKey,
   nodeSel,
+  openLayersTab,
   saveViaPaletteShortcut,
   setEdgeVisibility,
   SMOKE_NODES,
@@ -50,6 +52,9 @@ function columnNameSpan(tableId: string, name: string) {
 
 function showFieldLineageEdges(): void {
   setEdgeVisibility("Linhagem", true);
+  openLayersTab();
+  cy.get(".layers-panel__lineage-btn").click();
+  cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
   zoomUntil((z) => z > LOD_FULL_ABOVE, "in");
   cy.get(".edge-path--field-lineage").should("have.length.at.least", 1);
 }

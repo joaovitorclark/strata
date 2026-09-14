@@ -46,11 +46,9 @@ describe("stress large diagram", () => {
     restoreSmoke();
   });
 
-  it("still shows the minimap at MINIMAP_MAX_TABLES (lite is strictly greater)", () => {
+  it("does not mount the minimap at MINIMAP_MAX_TABLES (S02; S12 remounts)", () => {
     cy.get('[data-testid="rf__wrapper"]').should("exist");
-    // Canvas: MiniMap is always mounted. large has exactly 200 tables, so this
-    // is the full (coloured) minimap. Lite colouring requires 201+.
-    cy.get('[data-testid="rf__minimap"]').should("exist").and("not.have.class", "minimap--lite");
+    cy.get('[data-testid="rf__minimap"]').should("not.exist");
   });
 
   it("still runs the initial fitView at SKIP_INITIAL_FIT_TABLES (skip is strictly greater)", () => {
@@ -86,7 +84,7 @@ describe("stress large diagram", () => {
     cy.get('[data-testid^="rf__node-"]').should("exist");
   });
 
-  it("keeps the minimap in lite mode above MINIMAP_MAX_TABLES", () => {
+  it("does not mount the minimap above MINIMAP_MAX_TABLES (S02; S12 remounts)", () => {
     cy.then(() => {
       if (!largeId || !largeSnap) throw new Error("large fixture snapshot missing");
       cy.request("PUT", `/api/projects/${largeId}`, {
@@ -96,7 +94,7 @@ describe("stress large diagram", () => {
     });
     cy.seedProject("large");
     cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
-    cy.get('[data-testid="rf__minimap"]').should("exist").and("have.class", "minimap--lite");
+    cy.get('[data-testid="rf__minimap"]').should("not.exist");
     cy.then(() => {
       if (!largeId || !largeSnap) return;
       cy.request("PUT", `/api/projects/${largeId}`, {

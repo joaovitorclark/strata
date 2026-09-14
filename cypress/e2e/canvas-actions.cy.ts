@@ -610,7 +610,7 @@ describe("CanvasActions contract", () => {
 
     cy.get(nodeSel(SMOKE_NODES.pedido)).click("top", { force: true });
     cy.get('[data-testid="inspector"]').should("contain", "vendas.pedido");
-    cy.get('[data-testid="inspector"]').should("contain", "Sources (linhagem)");
+    cy.get('[data-testid="inspector"]').should("contain", "Origens (mapeamentos)");
     cy.get('[data-testid="inspector"]').should("contain", "vendas.cliente");
     cy.get('[data-testid="inspector"]').should("contain", "Exemplo de dados");
     cy.get('[data-testid="inspector"]').should("contain", "id");

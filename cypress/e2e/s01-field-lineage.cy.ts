@@ -1,7 +1,9 @@
 import {
   collapseLayersPanel,
   nodeSel,
+  openLayersTab,
   saveViaPaletteShortcut,
+  setEdgeVisibility,
   SMOKE_NODES,
   waitForCanvas,
   zoomUntil,
@@ -19,24 +21,14 @@ function fieldLineCount(dbml: string): number {
   return block[1].split("\n").filter((line) => line.includes("<")).length;
 }
 
-function openLayersPanel(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if ($p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
-  });
-  cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-}
-
 function enableLineageMode(): void {
-  openLayersPanel();
+  openLayersTab();
   cy.get(".layers-panel__lineage-btn").click();
   cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
 }
 
 function showLineage(): void {
-  openLayersPanel();
-  cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
+  setEdgeVisibility("Linhagem", true);
 }
 
 function zoomToFull(): void {
