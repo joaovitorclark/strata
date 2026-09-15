@@ -1,0 +1,97 @@
+version: 2
+models:
+  - name: movimentacao
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - movimentacoes
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - mov_id
+        warn_unsupported: false
+    columns:
+      - name: mov_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.mov_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.deposito_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: tipo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.tipo
+              enum: tipo_movimentacao
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - entrada
+                  - saida
+                  - ajuste
+                  - transferencia
+      - name: quantidade
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.quantidade
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_movimento
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.movimentacoes.dt_movimento
+        constraints:
+          - type: not_null
+            warn_unsupported: false

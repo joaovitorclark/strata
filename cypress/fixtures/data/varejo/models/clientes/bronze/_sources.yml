@@ -1,0 +1,800 @@
+version: 2
+sources:
+  - name: bronze_clientes
+    schema: bronze
+    tables:
+      - name: cadastro
+        description: Tabela de negócio cadastro no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - cliente_id
+            warn_unsupported: false
+        columns:
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: email
+            data_type: string
+            data_tests:
+              - unique
+          - name: cpf
+            data_type: string
+            data_tests:
+              - unique
+          - name: dt_nascimento
+            data_type: date
+          - name: status
+            data_type: string
+      - name: enderecos
+        description: Tabela de negócio enderecos no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - endereco_id
+            warn_unsupported: false
+        columns:
+          - name: endereco_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: tipo
+            data_type: string
+          - name: logradouro
+            data_type: string
+          - name: cidade
+            data_type: string
+          - name: uf
+            data_type: string
+          - name: cep
+            data_type: string
+      - name: consentimentos
+        description: Tabela de negócio consentimentos no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - consentimento_id
+            warn_unsupported: false
+        columns:
+          - name: consentimento_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: finalidade
+            data_type: string
+            data_tests:
+              - not_null
+          - name: aceito
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: dt_consentimento
+            data_type: timestamp
+            data_tests:
+              - not_null
+      - name: app_eventos
+        description: Tabela de negócio app_eventos no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - evento_id
+            warn_unsupported: false
+        columns:
+          - name: evento_id
+            data_type: bigint
+            description: Coluna evento_id.
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            description: Coluna cliente_id.
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: dt_evento
+            data_type: timestamp
+            description: Coluna dt_evento.
+            data_tests:
+              - not_null
+          - name: nome_evento
+            data_type: string
+            description: Coluna nome_evento.
+            data_tests:
+              - not_null
+          - name: plataforma
+            data_type: string
+            description: Coluna plataforma.
+          - name: versao_app
+            data_type: string
+          - name: payload_json
+            data_type: string
+            description: Coluna payload_json.
+          - name: dt_carga
+            data_type: timestamp
+            description: Coluna dt_carga.
+            data_tests:
+              - not_null
+          - name: device_01
+            data_type: string
+            description: Coluna device_01.
+          - name: device_02
+            data_type: string
+            description: Coluna device_02.
+          - name: device_03
+            data_type: string
+            description: Coluna device_03.
+          - name: device_04
+            data_type: string
+            description: Coluna device_04.
+          - name: device_05
+            data_type: string
+            description: Coluna device_05.
+          - name: device_06
+            data_type: string
+            description: Coluna device_06.
+          - name: device_07
+            data_type: bigint
+            description: Coluna device_07.
+          - name: device_08
+            data_type: string
+            description: Coluna device_08.
+          - name: device_09
+            data_type: string
+            description: Coluna device_09.
+          - name: device_10
+            data_type: string
+            description: Coluna device_10.
+          - name: device_11
+            data_type: string
+            description: Coluna device_11.
+          - name: device_12
+            data_type: string
+            description: Coluna device_12.
+          - name: device_13
+            data_type: string
+            description: Coluna device_13.
+          - name: device_14
+            data_type: bigint
+            description: Coluna device_14.
+          - name: device_15
+            data_type: string
+            description: Coluna device_15.
+          - name: device_16
+            data_type: string
+            description: Coluna device_16.
+          - name: device_17
+            data_type: string
+            description: Coluna device_17.
+          - name: device_18
+            data_type: string
+            description: Coluna device_18.
+          - name: device_19
+            data_type: string
+            description: Coluna device_19.
+          - name: device_20
+            data_type: string
+            description: Coluna device_20.
+          - name: device_21
+            data_type: bigint
+            description: Coluna device_21.
+          - name: device_22
+            data_type: string
+            description: Coluna device_22.
+          - name: device_23
+            data_type: string
+            description: Coluna device_23.
+          - name: device_24
+            data_type: string
+            description: Coluna device_24.
+          - name: device_25
+            data_type: string
+            description: Coluna device_25.
+          - name: device_26
+            data_type: string
+            description: Coluna device_26.
+          - name: device_27
+            data_type: string
+            description: Coluna device_27.
+          - name: device_28
+            data_type: bigint
+            description: Coluna device_28.
+          - name: device_29
+            data_type: string
+            description: Coluna device_29.
+          - name: device_30
+            data_type: string
+            description: Coluna device_30.
+          - name: device_31
+            data_type: string
+            description: Coluna device_31.
+          - name: device_32
+            data_type: string
+            description: Coluna device_32.
+          - name: device_33
+            data_type: string
+            description: Coluna device_33.
+          - name: device_34
+            data_type: string
+            description: Coluna device_34.
+          - name: device_35
+            data_type: bigint
+            description: Coluna device_35.
+          - name: device_36
+            data_type: string
+            description: Coluna device_36.
+          - name: device_37
+            data_type: string
+            description: Coluna device_37.
+          - name: device_38
+            data_type: string
+            description: Coluna device_38.
+          - name: device_39
+            data_type: string
+            description: Coluna device_39.
+          - name: device_40
+            data_type: string
+            description: Coluna device_40.
+          - name: device_41
+            data_type: string
+            description: Coluna device_41.
+          - name: device_42
+            data_type: bigint
+            description: Coluna device_42.
+          - name: device_43
+            data_type: string
+            description: Coluna device_43.
+          - name: device_44
+            data_type: string
+            description: Coluna device_44.
+          - name: device_45
+            data_type: string
+            description: Coluna device_45.
+          - name: device_46
+            data_type: string
+            description: Coluna device_46.
+          - name: device_47
+            data_type: string
+            description: Coluna device_47.
+          - name: device_48
+            data_type: string
+            description: Coluna device_48.
+          - name: geo_01
+            data_type: string
+            description: Coluna geo_01.
+          - name: geo_02
+            data_type: string
+            description: Coluna geo_02.
+          - name: geo_03
+            data_type: string
+            description: Coluna geo_03.
+          - name: geo_04
+            data_type: string
+            description: Coluna geo_04.
+          - name: geo_05
+            data_type: string
+            description: Coluna geo_05.
+          - name: geo_06
+            data_type: string
+            description: Coluna geo_06.
+          - name: geo_07
+            data_type: bigint
+            description: Coluna geo_07.
+          - name: geo_08
+            data_type: string
+            description: Coluna geo_08.
+          - name: geo_09
+            data_type: string
+            description: Coluna geo_09.
+          - name: geo_10
+            data_type: string
+            description: Coluna geo_10.
+          - name: geo_11
+            data_type: string
+            description: Coluna geo_11.
+          - name: geo_12
+            data_type: string
+            description: Coluna geo_12.
+          - name: geo_13
+            data_type: string
+            description: Coluna geo_13.
+          - name: geo_14
+            data_type: bigint
+            description: Coluna geo_14.
+          - name: geo_15
+            data_type: string
+            description: Coluna geo_15.
+          - name: geo_16
+            data_type: string
+            description: Coluna geo_16.
+          - name: geo_17
+            data_type: string
+            description: Coluna geo_17.
+          - name: geo_18
+            data_type: string
+            description: Coluna geo_18.
+          - name: geo_19
+            data_type: string
+            description: Coluna geo_19.
+          - name: geo_20
+            data_type: string
+            description: Coluna geo_20.
+          - name: geo_21
+            data_type: bigint
+            description: Coluna geo_21.
+          - name: geo_22
+            data_type: string
+            description: Coluna geo_22.
+          - name: geo_23
+            data_type: string
+            description: Coluna geo_23.
+          - name: geo_24
+            data_type: string
+            description: Coluna geo_24.
+          - name: geo_25
+            data_type: string
+            description: Coluna geo_25.
+          - name: geo_26
+            data_type: string
+            description: Coluna geo_26.
+          - name: geo_27
+            data_type: string
+            description: Coluna geo_27.
+          - name: geo_28
+            data_type: bigint
+            description: Coluna geo_28.
+          - name: geo_29
+            data_type: string
+            description: Coluna geo_29.
+          - name: geo_30
+            data_type: string
+            description: Coluna geo_30.
+          - name: geo_31
+            data_type: string
+            description: Coluna geo_31.
+          - name: geo_32
+            data_type: string
+            description: Coluna geo_32.
+          - name: geo_33
+            data_type: string
+            description: Coluna geo_33.
+          - name: geo_34
+            data_type: string
+            description: Coluna geo_34.
+          - name: geo_35
+            data_type: bigint
+            description: Coluna geo_35.
+          - name: geo_36
+            data_type: string
+            description: Coluna geo_36.
+          - name: geo_37
+            data_type: string
+            description: Coluna geo_37.
+          - name: geo_38
+            data_type: string
+            description: Coluna geo_38.
+          - name: geo_39
+            data_type: string
+            description: Coluna geo_39.
+          - name: geo_40
+            data_type: string
+            description: Coluna geo_40.
+          - name: geo_41
+            data_type: string
+            description: Coluna geo_41.
+          - name: geo_42
+            data_type: bigint
+            description: Coluna geo_42.
+          - name: geo_43
+            data_type: string
+            description: Coluna geo_43.
+          - name: geo_44
+            data_type: string
+            description: Coluna geo_44.
+          - name: utm_01
+            data_type: string
+            description: Coluna utm_01.
+          - name: utm_02
+            data_type: string
+            description: Coluna utm_02.
+          - name: utm_03
+            data_type: string
+            description: Coluna utm_03.
+          - name: utm_04
+            data_type: string
+            description: Coluna utm_04.
+          - name: utm_05
+            data_type: string
+            description: Coluna utm_05.
+          - name: utm_06
+            data_type: string
+            description: Coluna utm_06.
+          - name: utm_07
+            data_type: bigint
+            description: Coluna utm_07.
+          - name: utm_08
+            data_type: string
+            description: Coluna utm_08.
+          - name: utm_09
+            data_type: string
+            description: Coluna utm_09.
+          - name: utm_10
+            data_type: string
+            description: Coluna utm_10.
+          - name: utm_11
+            data_type: string
+            description: Coluna utm_11.
+          - name: utm_12
+            data_type: string
+            description: Coluna utm_12.
+          - name: utm_13
+            data_type: string
+            description: Coluna utm_13.
+          - name: utm_14
+            data_type: bigint
+            description: Coluna utm_14.
+          - name: utm_15
+            data_type: string
+            description: Coluna utm_15.
+          - name: utm_16
+            data_type: string
+            description: Coluna utm_16.
+          - name: utm_17
+            data_type: string
+            description: Coluna utm_17.
+          - name: utm_18
+            data_type: string
+            description: Coluna utm_18.
+          - name: utm_19
+            data_type: string
+            description: Coluna utm_19.
+          - name: utm_20
+            data_type: string
+            description: Coluna utm_20.
+          - name: utm_21
+            data_type: bigint
+            description: Coluna utm_21.
+          - name: utm_22
+            data_type: string
+            description: Coluna utm_22.
+          - name: utm_23
+            data_type: string
+            description: Coluna utm_23.
+          - name: utm_24
+            data_type: string
+            description: Coluna utm_24.
+          - name: utm_25
+            data_type: string
+            description: Coluna utm_25.
+          - name: utm_26
+            data_type: string
+            description: Coluna utm_26.
+          - name: utm_27
+            data_type: string
+            description: Coluna utm_27.
+          - name: utm_28
+            data_type: bigint
+            description: Coluna utm_28.
+          - name: utm_29
+            data_type: string
+          - name: utm_30
+            data_type: string
+          - name: utm_31
+            data_type: string
+          - name: utm_32
+            data_type: string
+          - name: utm_33
+            data_type: string
+          - name: utm_34
+            data_type: string
+          - name: utm_35
+            data_type: bigint
+          - name: utm_36
+            data_type: string
+          - name: utm_37
+            data_type: string
+          - name: utm_38
+            data_type: string
+          - name: utm_39
+            data_type: string
+          - name: utm_40
+            data_type: string
+          - name: utm_41
+            data_type: string
+          - name: utm_42
+            data_type: bigint
+          - name: utm_43
+            data_type: string
+          - name: utm_44
+            data_type: string
+          - name: sessao_01
+            data_type: string
+            description: Coluna sessao_01.
+          - name: sessao_02
+            data_type: string
+            description: Coluna sessao_02.
+          - name: sessao_03
+            data_type: string
+            description: Coluna sessao_03.
+          - name: sessao_04
+            data_type: string
+            description: Coluna sessao_04.
+          - name: sessao_05
+            data_type: string
+            description: Coluna sessao_05.
+          - name: sessao_06
+            data_type: string
+            description: Coluna sessao_06.
+          - name: sessao_07
+            data_type: bigint
+            description: Coluna sessao_07.
+          - name: sessao_08
+            data_type: string
+            description: Coluna sessao_08.
+          - name: sessao_09
+            data_type: string
+            description: Coluna sessao_09.
+          - name: sessao_10
+            data_type: string
+            description: Coluna sessao_10.
+          - name: sessao_11
+            data_type: string
+            description: Coluna sessao_11.
+          - name: sessao_12
+            data_type: string
+            description: Coluna sessao_12.
+          - name: sessao_13
+            data_type: string
+            description: Coluna sessao_13.
+          - name: sessao_14
+            data_type: bigint
+            description: Coluna sessao_14.
+          - name: sessao_15
+            data_type: string
+            description: Coluna sessao_15.
+          - name: sessao_16
+            data_type: string
+            description: Coluna sessao_16.
+          - name: sessao_17
+            data_type: string
+            description: Coluna sessao_17.
+          - name: sessao_18
+            data_type: string
+            description: Coluna sessao_18.
+          - name: sessao_19
+            data_type: string
+            description: Coluna sessao_19.
+          - name: sessao_20
+            data_type: string
+            description: Coluna sessao_20.
+          - name: sessao_21
+            data_type: bigint
+            description: Coluna sessao_21.
+          - name: sessao_22
+            data_type: string
+            description: Coluna sessao_22.
+          - name: sessao_23
+            data_type: string
+            description: Coluna sessao_23.
+          - name: sessao_24
+            data_type: string
+            description: Coluna sessao_24.
+          - name: sessao_25
+            data_type: string
+            description: Coluna sessao_25.
+          - name: sessao_26
+            data_type: string
+            description: Coluna sessao_26.
+          - name: sessao_27
+            data_type: string
+            description: Coluna sessao_27.
+          - name: sessao_28
+            data_type: bigint
+            description: Coluna sessao_28.
+          - name: sessao_29
+            data_type: string
+            description: Coluna sessao_29.
+          - name: sessao_30
+            data_type: string
+            description: Coluna sessao_30.
+          - name: sessao_31
+            data_type: string
+            description: Coluna sessao_31.
+          - name: sessao_32
+            data_type: string
+            description: Coluna sessao_32.
+          - name: sessao_33
+            data_type: string
+            description: Coluna sessao_33.
+          - name: sessao_34
+            data_type: string
+            description: Coluna sessao_34.
+          - name: sessao_35
+            data_type: bigint
+            description: Coluna sessao_35.
+          - name: sessao_36
+            data_type: string
+            description: Coluna sessao_36.
+          - name: sessao_37
+            data_type: string
+            description: Coluna sessao_37.
+          - name: sessao_38
+            data_type: string
+            description: Coluna sessao_38.
+          - name: sessao_39
+            data_type: string
+            description: Coluna sessao_39.
+          - name: sessao_40
+            data_type: string
+            description: Coluna sessao_40.
+          - name: sessao_41
+            data_type: string
+            description: Coluna sessao_41.
+          - name: sessao_42
+            data_type: bigint
+            description: Coluna sessao_42.
+          - name: sessao_43
+            data_type: string
+            description: Coluna sessao_43.
+          - name: sessao_44
+            data_type: string
+            description: Coluna sessao_44.
+      - name: documentos
+        description: Tabela de negócio documentos no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - documento_id
+            warn_unsupported: false
+        columns:
+          - name: documento_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: tipo
+            data_type: string
+            data_tests:
+              - not_null
+          - name: numero
+            data_type: string
+            data_tests:
+              - not_null
+      - name: contatos
+        description: Tabela de negócio contatos no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - contato_id
+            warn_unsupported: false
+        columns:
+          - name: contato_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: tipo
+            data_type: string
+          - name: valor
+            data_type: string
+            data_tests:
+              - not_null
+      - name: preferencias
+        description: Tabela de negócio preferencias no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - preferencia_id
+            warn_unsupported: false
+        columns:
+          - name: preferencia_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: chave
+            data_type: string
+            data_tests:
+              - not_null
+          - name: valor
+            data_type: string
+      - name: optins
+        description: Tabela de negócio optins no domínio varejo.
+        config:
+          tags:
+            - strata:clientes
+        constraints:
+          - type: primary_key
+            columns:
+              - optin_id
+            warn_unsupported: false
+        columns:
+          - name: optin_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_clientes', 'cadastro')
+                    field: cliente_id
+          - name: canal
+            data_type: string
+            data_tests:
+              - not_null
+          - name: aceito
+            data_type: boolean
+            data_tests:
+              - not_null
+          - name: dt_optin
+            data_type: timestamp
+            data_tests:
+              - not_null

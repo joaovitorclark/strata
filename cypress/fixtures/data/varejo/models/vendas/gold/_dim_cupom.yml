@@ -1,0 +1,23 @@
+version: 2
+models:
+  - name: dim_cupom
+    description: Tabela de negócio dim_cupom no domínio varejo.
+    config:
+      tags:
+        - strata:vendas
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cupom_id
+        warn_unsupported: false
+    columns:
+      - name: cupom_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: codigo
+        data_type: string

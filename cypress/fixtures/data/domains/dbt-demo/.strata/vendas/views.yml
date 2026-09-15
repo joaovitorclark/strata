@@ -1,0 +1,18 @@
+views:
+  - id: comercial
+    name: comercial
+    tables:
+      - gold.fato_pedido
+      - gold.dim_cliente
+    positions:
+      gold.fato_pedido:
+        x: 120
+        y: 80
+      gold.dim_cliente:
+        x: 480
+        y: 80
+  - id: operacional
+    name: operacional
+    tables:
+      - silver.stg_pedido
+      - silver.stg_cliente

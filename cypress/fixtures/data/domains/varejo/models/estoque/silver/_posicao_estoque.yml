@@ -1,0 +1,57 @@
+version: 2
+models:
+  - name: posicao_estoque
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: movimentacao
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+          - deposito_id
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.movimentacao.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.movimentacao.deposito_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: quantidade
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.movimentacao.quantidade
+        constraints:
+          - type: not_null
+            warn_unsupported: false

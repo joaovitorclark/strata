@@ -1,0 +1,21 @@
+views:
+  - id: clientes_lgpd
+    name: clientes_lgpd
+    tables:
+      - silver.lgpd_cliente
+      - gold.dim_cliente
+      - gold.dim_cliente_360
+      - bronze.consentimentos
+    positions:
+      silver.lgpd_cliente:
+        x: 520
+        y: 712
+      gold.dim_cliente:
+        x: 1000
+        y: 136
+      gold.dim_cliente_360:
+        x: 1000
+        y: 232
+      bronze.consentimentos:
+        x: 40
+        y: 232

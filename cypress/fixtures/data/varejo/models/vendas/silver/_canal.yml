@@ -1,0 +1,72 @@
+version: 2
+models:
+  - name: canal
+    description: Tabela de negócio canal no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - canais
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - canal_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - codigo
+        warn_unsupported: false
+    columns:
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.canais.canal_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: codigo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.canais.codigo
+              enum: canal_venda
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - loja
+                  - e_commerce
+                  - marketplace
+                  - televendas
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.canais.nome
+        constraints:
+          - type: not_null
+            warn_unsupported: false

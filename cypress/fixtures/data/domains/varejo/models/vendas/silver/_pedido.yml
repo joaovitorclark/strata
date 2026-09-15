@@ -1,0 +1,143 @@
+version: 2
+models:
+  - name: pedido
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - pedidos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.pedido_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.cliente_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.canal_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: loja_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.loja_id
+      - name: vendedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.vendedor_id
+      - name: cupom_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.cupom_id
+      - name: valor_bruto
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.vl_total
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: valor_desconto
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.vl_desconto
+      - name: valor_frete
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.vl_frete
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.status
+              enum: status_pedido
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - pendente
+                  - pago
+                  - enviado
+                  - entregue
+                  - cancelado
+      - name: dt_emissao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.dt_emissao
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_carga
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pedidos.dt_carga
+        constraints:
+          - type: not_null
+            warn_unsupported: false

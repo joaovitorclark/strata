@@ -1,0 +1,55 @@
+version: 2
+models:
+  - name: transferencia
+    config:
+      tags:
+        - strata:estoque
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - transf_id
+        warn_unsupported: false
+    columns:
+      - name: transf_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.transferencias.transf_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_origem_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.transferencias.deposito_origem_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_destino_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.transferencias.deposito_destino_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_transf
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.transferencias.dt_transf
+        constraints:
+          - type: not_null
+            warn_unsupported: false

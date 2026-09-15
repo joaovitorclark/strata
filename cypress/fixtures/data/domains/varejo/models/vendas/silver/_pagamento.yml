@@ -1,0 +1,89 @@
+version: 2
+models:
+  - name: pagamento
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - pagamentos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pagamento_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - nsu
+        warn_unsupported: false
+    columns:
+      - name: pagamento_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.pagamento_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.pedido_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: meio
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.meio
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_pago
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.vl_pago
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_pagamento
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.dt_pagamento
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nsu
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.pagamentos.nsu

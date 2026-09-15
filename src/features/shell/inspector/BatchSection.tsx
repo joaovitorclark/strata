@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import { TABLE_COLORS } from "@/features/canvas/tableColors";
-import { setTableColor, setTableLayer, setTablesHidden } from "@/features/schema/model/edit";
+import { setTableColor, setTableLayer } from "@/features/schema/model/edit";
 import { useSchemaStore } from "@/features/schema/store";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,7 @@ export function BatchSection({
   const { t } = useTranslation();
   const setHiddenTables = useSchemaStore((s) => s.setHiddenTables);
   const hiddenTableIds = useSchemaStore((s) => s.hiddenTableIds);
+  const applyDbt = useSchemaStore((s) => (s.documentFormat === "dbt" ? s.applyDbtOp : null));
   const n = tableIds.length;
 
   const applyAll = (next: string) => {
@@ -37,6 +38,10 @@ export function BatchSection({
   };
 
   const setLayer = (layerId: string | null) => {
+    if (applyDbt) {
+      tableIds.forEach((id) => applyDbt({ op: "setLayer", tableId: id, layer: layerId }));
+      return;
+    }
     const color = layers.find((l) => l.id === layerId)?.color;
     if (dbml && onApply) {
       applyAll(tableIds.reduce((acc, id) => setTableLayer(acc, id, layerId, color), dbml));
@@ -46,6 +51,10 @@ export function BatchSection({
   };
 
   const setColor = (color: string | null) => {
+    if (applyDbt) {
+      tableIds.forEach((id) => applyDbt({ op: "setColor", key: id, color }));
+      return;
+    }
     if (dbml && onApply) {
       applyAll(tableIds.reduce((acc, id) => setTableColor(acc, id, color), dbml));
       return;
@@ -53,8 +62,8 @@ export function BatchSection({
     tableIds.forEach((id) => onSetColor(id, color));
   };
 
+  // Visibility is view state (S04): it never touches the DBML.
   const hide = () => {
-    if (dbml && onApply) applyAll(setTablesHidden(dbml, tableIds, true));
     setHiddenTables([...new Set([...hiddenTableIds, ...tableIds])]);
   };
 

@@ -4,6 +4,7 @@ import { TABLE_COLORS } from "@/features/canvas/tableColors";
 import type { TableMeta } from "@/features/canvas/actions";
 import type { TableView } from "@/features/schema/model/parse";
 import { setTableOrRecordsNote } from "@/features/schema/model/edit";
+import { useSchemaStore } from "@/features/schema/store";
 import { cn } from "@/lib/utils";
 
 import { CommitField } from "./CommitField";
@@ -38,6 +39,7 @@ export function TableSection({
   layers,
 }: TableSectionProps) {
   const { t } = useTranslation();
+  const applyDbt = useSchemaStore((s) => (s.documentFormat === "dbt" ? s.applyDbtOp : null));
   const columnCount = table.columns.length;
   const relationCount = meta.fks.length + meta.refsIn.length;
 
@@ -120,14 +122,20 @@ export function TableSection({
         </button>
       </Field>
 
-      {onApply && dbml != null ? (
+      {(onApply && dbml != null) || applyDbt ? (
         <CommitField
           id="inspector-table-note"
           data-testid="inspector-table-note"
           label={t("shell.inspector.note")}
           value={meta.note ?? ""}
           multiline
-          onCommit={(note) => onApply(setTableOrRecordsNote(dbml, table.id, note))}
+          onCommit={(note) => {
+            if (applyDbt) {
+              applyDbt({ op: "setDescription", tableId: table.id, description: note });
+              return;
+            }
+            if (onApply && dbml != null) onApply(setTableOrRecordsNote(dbml, table.id, note));
+          }}
         />
       ) : meta.note ? (
         <Field id="note" label={t("shell.inspector.note")}>

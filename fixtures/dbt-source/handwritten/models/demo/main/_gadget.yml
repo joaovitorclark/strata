@@ -1,0 +1,22 @@
+# keep-me: gadget header
+version: 2
+models:
+  - name: gadget
+    config:
+      tags:
+        - strata:demo
+      materialized: view
+      contract:
+        enforced: true
+      meta:
+        strata:
+          managed: true
+    columns:
+      - name: id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: main.widget.id
+                  expr: cast(id as bigint)

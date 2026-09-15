@@ -33,9 +33,33 @@ export const createLodSlice: StateCreator<
 > = (set, get) => ({
   pinnedByTable: {},
   pinColumn: (tableId, column) => {
+    const s = get();
+    if (s.documentFormat === "dbt") {
+      const pins: string[] = [];
+      for (const [tid, cols] of Object.entries(s.pinnedByTable)) {
+        for (const c of cols) pins.push(`${tid}.${c}`);
+      }
+      const key = `${tableId}.${column}`;
+      if (!pins.includes(key)) pins.push(key);
+      s.applyDbtOp({ op: "setPins", pins });
+      return;
+    }
     get().setDbml((d) => writePin(d, tableId, column));
   },
   unpinColumn: (tableId, column) => {
+    const s = get();
+    if (s.documentFormat === "dbt") {
+      const key = `${tableId}.${column}`;
+      const pins: string[] = [];
+      for (const [tid, cols] of Object.entries(s.pinnedByTable)) {
+        for (const c of cols) {
+          const p = `${tid}.${c}`;
+          if (p !== key) pins.push(p);
+        }
+      }
+      s.applyDbtOp({ op: "setPins", pins });
+      return;
+    }
     get().setDbml((d) => writeUnpin(d, tableId, column));
   },
   pinnedColumns: (tableId) => get().pinnedByTable[tableId] ?? EMPTY_PINS,

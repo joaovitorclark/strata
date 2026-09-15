@@ -1,0 +1,59 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: cliente
+        description: Clientes crus do ERP
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - id
+            warn_unsupported: false
+        columns:
+          - name: id
+            data_type: bigint
+          - name: email
+            data_type: string
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+      - name: pedido
+        description: Pedidos crus
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - id
+            warn_unsupported: false
+        columns:
+          - name: id
+            data_type: bigint
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('raw', 'cliente')
+                    field: id
+          - name: total
+            data_type: decimal(18,2)
+          - name: descrição
+            data_type: string
+            description: Texto livre do pedido
+          - name: criado_em
+            data_type: timestamp
+            config:
+              meta:
+                strata:
+                  default: now()

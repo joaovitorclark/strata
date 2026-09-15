@@ -18,6 +18,7 @@ import { useSchemaStore } from "@/features/schema/store";
 import { AppShell, useShellLayout } from "@/features/shell/AppShell";
 import { EmptyState } from "@/features/shell/EmptyState";
 import { IconRail, type RailItem } from "@/features/shell/IconRail";
+import { DbtChangeLog } from "@/features/shell/DbtChangeLog";
 import { Inspector } from "@/features/shell/Inspector";
 import { LeftPanel, type LeftPanelTab } from "@/features/shell/LeftPanel";
 import { Navbar } from "@/features/shell/Navbar";
@@ -133,6 +134,9 @@ export function Workspace(props: WorkspaceProps) {
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("dbml");
   const [problemsOpen, setProblemsOpen] = useState(false);
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
+  const documentFormat = useSchemaStore((s) => s.documentFormat);
+  const dbtPastLen = useSchemaStore((s) => s.dbtPast.length);
+  const dbtFutureLen = useSchemaStore((s) => s.dbtFuture.length);
 
   const saveLabel =
     saveState === "saving"
@@ -207,8 +211,8 @@ export function Workspace(props: WorkspaceProps) {
               onExportOption={handleExportOption}
               onBackToDomains={props.onBackToDomains ? handleBackToDomains : undefined}
               history={{
-                canUndo: past.length > 0,
-                canRedo: future.length > 0,
+                canUndo: documentFormat === "dbt" ? dbtPastLen > 0 : past.length > 0,
+                canRedo: documentFormat === "dbt" ? dbtFutureLen > 0 : future.length > 0,
                 onUndo: undo,
                 onRedo: redo,
               }}
@@ -327,6 +331,7 @@ export function Workspace(props: WorkspaceProps) {
                     onRemoveRef={handleRemoveRef}
                     onRemoveTable={handleRemoveTable}
                     onRemoveTables={handleRemoveTables}
+                    onAddTable={handleAddTable}
                     staleWarning={!!parsed.error || canvasParsePending}
                     lineageFields={canvasActiveModel.lineageFields ?? []}
                     onRemoveFieldLineage={handleRemoveFieldLineage}
@@ -347,6 +352,7 @@ export function Workspace(props: WorkspaceProps) {
                     density={density}
                     toolbar={<CanvasToolbar onAutolayout={handleAutolayout} />}
                   />
+                  <DbtChangeLog />
                   <PageImportWizard
                     open={pageWizardOpen}
                     tableCount={pageWizardTableCount}

@@ -1,0 +1,78 @@
+version: 2
+models:
+  - name: consentimento
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_clientes
+                - consentimentos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - consentimento_id
+        warn_unsupported: false
+    columns:
+      - name: consentimento_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.consentimento_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.cliente_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: finalidade
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.finalidade
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: aceito
+        data_type: boolean
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.aceito
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_consentimento
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.dt_consentimento
+        constraints:
+          - type: not_null
+            warn_unsupported: false

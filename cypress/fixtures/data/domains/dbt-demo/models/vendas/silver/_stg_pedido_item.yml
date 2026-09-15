@@ -1,0 +1,39 @@
+version: 2
+models:
+  - name: stg_pedido_item
+    config:
+      tags:
+        - strata:vendas
+      schema: silver
+      materialized: view
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+          - seq
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - pedido_id
+        to: ref('stg_pedido')
+        to_columns:
+          - id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: seq
+        data_type: int
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: sku
+        data_type: string
+        constraints:
+          - type: not_null
+            warn_unsupported: false

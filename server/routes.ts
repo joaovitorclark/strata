@@ -16,6 +16,7 @@ import {
   loadProject,
   loadProjectBySlug,
   saveProjectBySlug,
+  saveDbtChangesBySlug,
   ensureRegistry,
   readImportInputsForSlug,
   getActiveSlug,
@@ -32,7 +33,12 @@ import { getActiveDomainSlug, baseDataDir } from './domainContext.ts';
 import { seedGitIfNeeded } from './domains.ts';
 import { dbmlErrorMessage, errorMessageString, isNotFound } from './unknownError.ts';
 
-type ProjectBody = { dbml?: string; canvas?: unknown };
+type ProjectBody = {
+  dbml?: string;
+  canvas?: unknown;
+  format?: string;
+  changes?: Record<string, string | null>;
+};
 type DbmlBody = { dbml?: string };
 type PngBody = { pngBase64?: string };
 type CreateProjectBody = { name?: string };
@@ -243,7 +249,18 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     if (!(await requirePinMatch(reply, req.params.id))) return;
     try {
       const proj = await getProject(req.params.id);
-      const { dbml = '', canvas = {} } = req.body ?? {};
+      const body = req.body ?? {};
+      if (body.format === 'dbt' && body.changes && typeof body.changes === 'object') {
+        try {
+          const written = await saveDbtChangesBySlug(proj.slug, body.changes);
+          return { ok: true, written };
+        } catch (err: unknown) {
+          const msg = errorMessageString(err) ?? 'dbt write failed';
+          if (msg.includes('unsafe')) return reply.code(400).send({ error: msg });
+          throw err;
+        }
+      }
+      const { dbml = '', canvas = {} } = body;
       await saveProjectBySlug(proj.slug, dbml, canvas);
       return { ok: true };
     } catch (e: unknown) {

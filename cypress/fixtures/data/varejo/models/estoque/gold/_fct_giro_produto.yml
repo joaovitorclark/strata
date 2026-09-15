@@ -1,0 +1,69 @@
+version: 2
+models:
+  - name: fct_giro_produto
+    description: Tabela de negócio fct_giro_produto no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: fct_estoque
+              alias: s0
+            joins:
+              - ref: fct_vendas
+                alias: s1
+                type: left
+                on: "true"
+            where: ""
+            group_by: []
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - produto_id
+        to: ref('dim_produto')
+        to_columns:
+          - produto_id
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_estoque.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: qtd_movimentada
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_estoque.quantidade
+      - name: receita_vendas
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_vendas.receita_bruta
+      - name: giro
+        data_type: decimal(18,4)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_estoque.quantidade

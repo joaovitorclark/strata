@@ -1,0 +1,54 @@
+version: 2
+models:
+  - name: agg_vendas_diarias
+    description: Tabela de negócio agg_vendas_diarias no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: fct_vendas
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - dt_emissao
+        warn_unsupported: false
+    columns:
+      - name: dt_emissao
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_vendas.dt_emissao
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: receita_bruta_dia
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_vendas.receita_bruta
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: qtd_pedidos
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: gold.fct_vendas.pedido_id

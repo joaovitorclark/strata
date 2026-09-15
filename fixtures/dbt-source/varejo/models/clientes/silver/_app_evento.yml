@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: app_evento
+    description: Tabela de negócio app_evento no domínio varejo.
+    config:
+      tags:
+        - strata:clientes
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - evento_id
+        warn_unsupported: false
+    columns:
+      - name: evento_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_evento
+        data_type: timestamp
+      - name: nome_evento
+        data_type: string

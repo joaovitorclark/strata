@@ -1,0 +1,26 @@
+{
+  "activeId": "varejo-vendas-0001",
+  "projects": [
+    {
+      "id": "varejo-vendas-0001",
+      "name": "vendas",
+      "slug": "vendas",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    },
+    {
+      "id": "varejo-estoque-0002",
+      "name": "estoque",
+      "slug": "estoque",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    },
+    {
+      "id": "varejo-clientes-0003",
+      "name": "clientes",
+      "slug": "clientes",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    }
+  ]
+}

@@ -256,3 +256,43 @@ describe("G4: exporters ignore Views {}", () => {
     }
   });
 });
+
+describe("S11 review: block location and transient parse errors", () => {
+  it("R6: a table whose name ends in `views` is never taken for the Views block", async () => {
+    const { replaceViewsBlock } = await import("@/features/schema/model/views");
+    const src = "Table reporting.daily_views {\n  id int [pk]\n}\n\nTable gold.x {\n  id int\n}\n";
+    expect(parseViewsBlock(src)).toEqual([]);
+    const out = replaceViewsBlock(src, [{ id: "a", name: "a", tables: ["gold.x"] }]);
+    expect(out).toContain("Table reporting.daily_views {\n  id int [pk]\n}");
+    expect(out).toContain("Table gold.x {\n  id int\n}");
+    expect(parseViewsBlock(out)).toEqual([{ id: "a", name: "a", tables: ["gold.x"] }]);
+    const again = replaceViewsBlock(out, [{ id: "b", name: "b", tables: ["gold.x"] }]);
+    expect(again).toContain("Table reporting.daily_views {\n  id int [pk]\n}");
+    expect(parseViewsBlock(again).map((v) => v.id)).toEqual(["b"]);
+    expect(replaceViewsBlock(again, [])).not.toMatch(/^Views\s*\{/m);
+  });
+
+  it("R6: replacing keeps blocks after Views and a note that mentions `Views {`", async () => {
+    const { replaceViewsBlock } = await import("@/features/schema/model/views");
+    const src =
+      "Table a.t {\n  id int [note: 'see Views { x }']\n}\n\nViews {\n  v1 {\n    tables: a.t\n  }\n}\n\nTable b.u {\n  id int\n}\n";
+    const out = replaceViewsBlock(src, [{ id: "v2", name: "v2", tables: ["b.u"] }]);
+    expect(out).toContain("[note: 'see Views { x }']");
+    expect(out).toContain("Table b.u {\n  id int\n}");
+    expect(parseViewsBlock(out).map((v) => v.id)).toEqual(["v2"]);
+  });
+
+  it("R7: a transient DBML parse error does not empty the views", async () => {
+    const { useSchemaStore } = await import("@/features/schema/store");
+    const good =
+      "Table gold.x {\n  id int\n}\n\nTable gold.y {\n  id int\n}\n\nViews {\n  negocio {\n    tables: gold.x, gold.y\n  }\n}\n";
+    useSchemaStore.getState().setDbml(good);
+    const broken = good.replace("id int\n}\n\nTable gold.y", "id int\n\nTable gold.y");
+    useSchemaStore.getState().setDbml(broken);
+    // Fix the brace in place, as the editor would — not by restoring the original text.
+    useSchemaStore
+      .getState()
+      .setDbml((d) => d.replace("id int\n\nTable gold.y", "id int\n}\n\nTable gold.y"));
+    expect(parseViewsBlock(useSchemaStore.getState().dbml)[0].tables).toEqual(["gold.x", "gold.y"]);
+  });
+});

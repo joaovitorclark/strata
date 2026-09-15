@@ -1,0 +1,24 @@
+version: 2
+models:
+  - name: lgpd_cliente
+    config:
+      tags:
+        - strata:clientes
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cliente_id
+        warn_unsupported: false
+    columns:
+      - name: cliente_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: finalidade
+        data_type: string
+      - name: aceito
+        data_type: boolean

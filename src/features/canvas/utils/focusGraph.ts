@@ -146,6 +146,18 @@ function adjacency(input: FocusTablesInput): Map<string, string[]> {
 }
 
 export function focusTables(input: FocusTablesInput): Set<string> {
+  // "both" is the union of the upstream and downstream closures. Walking one graph with edges in
+  // both directions would climb to a parent and descend to its other children, which with hops ≥ 2
+  // swallows siblings and, at "all", the whole connected component.
+  if (input.direction === "both") {
+    const up = walkFocus({ ...input, direction: "up" });
+    for (const id of walkFocus({ ...input, direction: "down" })) up.add(id);
+    return up;
+  }
+  return walkFocus(input);
+}
+
+function walkFocus(input: FocusTablesInput): Set<string> {
   const result = new Set<string>();
   const seen = new Set<string>();
   const queue: string[] = [];

@@ -66,6 +66,7 @@ export const useSchemaStore = create<SchemaStore>()(
       ...view,
       ...focus,
       setDbml: (update) => {
+        if (get().documentFormat === "dbt") return;
         const prev = get().dbml;
         const next = applyUpdate(prev, update);
         const views = parseViewsBlock(next);
@@ -73,11 +74,23 @@ export const useSchemaStore = create<SchemaStore>()(
           rawSetDbml(next);
           return;
         }
-        const tableIds = parseDbml(next).tables.map((t) => t.id);
+        const parsedNext = parseDbml(next);
+        // A transient parse error (mid-typing) yields zero tables: pruning then would empty
+        // every view permanently. Only prune against a document that actually parsed.
+        if (parsedNext.error) {
+          rawSetDbml(next);
+          return;
+        }
+        const tableIds = parsedNext.tables.map((t) => t.id);
         const pruned = pruneMissingTablesFromViews(views, tableIds);
         rawSetDbml(viewsPruned(views, pruned) ? replaceViewsBlock(next, pruned) : next);
       },
       setPositions: (update) => {
+        if (get().documentFormat === "dbt") {
+          const next = applyUpdate(get().positions, update);
+          get().applyDbtOp({ op: "setPositions", positions: next });
+          return;
+        }
         rawSetPositions(update);
         const s = get();
         if (s.activeViewId === TUDO_VIEW_ID) {
@@ -101,6 +114,7 @@ export const useSchemaStore = create<SchemaStore>()(
           }
         }
         if (!changed) return;
+        if (s.documentFormat === "dbt") return;
         current.positions = nextPos;
         const nextDbml = replaceViewsBlock(s.dbml, views);
         if (nextDbml !== s.dbml) s.setDbml(nextDbml);
@@ -114,6 +128,7 @@ export const useSchemaStore = create<SchemaStore>()(
         if (s.activeViewId === TUDO_VIEW_ID) return;
         const views = parseViewsBlock(s.dbml);
         const current = views.find((v) => v.id === s.activeViewId);
+        if (s.documentFormat === "dbt") return;
         if (!current || current.detail === level) return;
         current.detail = level;
         const nextDbml = replaceViewsBlock(s.dbml, views);

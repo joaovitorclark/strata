@@ -33,6 +33,7 @@ export type ColumnRowProps = {
   onDraftChange: (value: string) => void;
   onCommitEdit: (oldName: string, cause?: "blur" | "enter") => void;
   onCancelEdit: () => void;
+  onDelete?: (column: string) => void;
 };
 
 function inCompositePk(name: string, groups?: string[][]): boolean {
@@ -67,6 +68,7 @@ function ColumnRowImpl({
   onDraftChange,
   onCommitEdit,
   onCancelEdit,
+  onDelete,
 }: ColumnRowProps) {
   const { t } = useTranslation();
   const isSel = selectedColumn === c.name;
@@ -217,6 +219,25 @@ function ColumnRowImpl({
           >
             <Pencil className="size-3" strokeWidth={1.5} />
           </button>
+          {onDelete ? (
+            <button
+              type="button"
+              data-testid="col-delete"
+              data-col-name={c.name}
+              className="col-action nodrag nopan rounded-sm p-0.5 text-muted-foreground hover:text-destructive"
+              aria-label={t("canvas.node.deleteColumn")}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(c.name);
+              }}
+            >
+              ×
+            </button>
+          ) : null}
           <button
             type="button"
             className="col-action nodrag nopan rounded-sm p-0.5 text-muted-foreground hover:text-foreground"

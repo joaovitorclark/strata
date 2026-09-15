@@ -1,0 +1,140 @@
+positions:
+  bronze.canais:
+    x: 40
+    y: 40
+  bronze.clientes_venda:
+    x: 40
+    y: 136
+  bronze.cupons:
+    x: 40
+    y: 232
+  bronze.devolucoes:
+    x: 40
+    y: 328
+  bronze.itens_pedido:
+    x: 40
+    y: 424
+  bronze.lojas:
+    x: 40
+    y: 520
+  bronze.notas_fiscais:
+    x: 40
+    y: 616
+  bronze.pagamentos:
+    x: 40
+    y: 712
+  bronze.pedidos:
+    x: 40
+    y: 808
+  bronze.produtos_venda:
+    x: 40
+    y: 904
+  bronze.promocoes:
+    x: 40
+    y: 1000
+  bronze.vendedores:
+    x: 40
+    y: 1096
+  silver.canal:
+    x: 520
+    y: 40
+  silver.cliente_venda:
+    x: 520
+    y: 136
+  silver.comissao:
+    x: 520
+    y: 232
+  silver.cupom:
+    x: 520
+    y: 328
+  silver.devolucao:
+    x: 520
+    y: 424
+  silver.frete:
+    x: 520
+    y: 520
+  silver.item_pedido:
+    x: 520
+    y: 616
+  silver.loja:
+    x: 520
+    y: 712
+  silver.nota_fiscal:
+    x: 520
+    y: 808
+  silver.pagamento:
+    x: 520
+    y: 904
+  silver.pedido:
+    x: 520
+    y: 1000
+  silver.produto_venda:
+    x: 520
+    y: 1096
+  silver.promocao:
+    x: 520
+    y: 1192
+  silver.vendedor:
+    x: 520
+    y: 1288
+  gold.agg_vendas_canal:
+    x: 1000
+    y: 40
+  gold.agg_vendas_diarias:
+    x: 1000
+    y: 136
+  gold.dim_canal:
+    x: 1000
+    y: 232
+  gold.dim_cupom:
+    x: 1000
+    y: 328
+  gold.dim_loja:
+    x: 1000
+    y: 424
+  gold.dim_pedido:
+    x: 1000
+    y: 520
+  gold.fct_devolucao:
+    x: 1000
+    y: 616
+  gold.fct_vendas:
+    x: 1000
+    y: 712
+colors:
+  bronze.pedidos: "#8aadf4"
+  bronze.itens_pedido: "#8aadf4"
+  bronze.pagamentos: "#8aadf4"
+  bronze.devolucoes: "#8aadf4"
+  bronze.cupons: "#8aadf4"
+  bronze.canais: "#8aadf4"
+  bronze.vendedores: "#8aadf4"
+  bronze.lojas: "#8aadf4"
+  bronze.produtos_venda: "#8aadf4"
+  bronze.clientes_venda: "#8aadf4"
+  bronze.promocoes: "#8aadf4"
+  bronze.notas_fiscais: "#8aadf4"
+  silver.pedido: "#8aadf4"
+  silver.item_pedido: "#8aadf4"
+  silver.pagamento: "#8aadf4"
+  silver.devolucao: "#8aadf4"
+  silver.cupom: "#8aadf4"
+  silver.canal: "#8aadf4"
+  silver.vendedor: "#8aadf4"
+  silver.loja: "#8aadf4"
+  silver.produto_venda: "#8aadf4"
+  silver.cliente_venda: "#8aadf4"
+  silver.promocao: "#8aadf4"
+  silver.nota_fiscal: "#8aadf4"
+  silver.frete: "#8aadf4"
+  silver.comissao: "#8aadf4"
+  gold.fct_vendas: "#8aadf4"
+  gold.dim_pedido: "#8aadf4"
+  gold.dim_canal: "#8aadf4"
+  gold.dim_loja: "#8aadf4"
+  gold.agg_vendas_diarias: "#8aadf4"
+  gold.agg_vendas_canal: "#8aadf4"
+  gold.fct_devolucao: "#8aadf4"
+  gold.dim_cupom: "#8aadf4"
+pins:
+  - bronze.pedidos.pedido_id

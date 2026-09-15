@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { ROOT, DATA_DIR } from './paths.ts';
 import { getActiveDomainSlug, domainDirFor } from './domainContext.ts';
+import { readDbtProjectFiles, writeDbtChanges } from './dbtSource/io.ts';
 
 export { ROOT, DATA_DIR };
 
@@ -49,6 +50,13 @@ export interface ProjectMeta {
   createdAt: string;
   updatedAt: string;
 }
+
+export type LoadedProject = {
+  format: 'dbml' | 'dbt';
+  dbml?: string;
+  canvas?: unknown;
+  files?: Record<string, string>;
+};
 
 interface Registry {
   activeId: string;
@@ -447,7 +455,23 @@ export async function getActiveInputDir(): Promise<string> {
 // ──────────────────────────────────────────────────────────────
 // I/O por slug
 // ──────────────────────────────────────────────────────────────
-export async function loadProjectBySlug(slug: string): Promise<{ dbml: string; canvas: unknown }> {
+
+/** dbt se existe `.strata/<slug>/project.yml` na raiz do domínio (getDataDir). */
+export async function projectFormat(slug: string): Promise<'dbt' | 'dbml'> {
+  const marker = path.join(getDataDir(), '.strata', slug, 'project.yml');
+  try {
+    await fs.access(marker);
+    return 'dbt';
+  } catch {
+    return 'dbml';
+  }
+}
+
+export async function loadProjectBySlug(slug: string): Promise<LoadedProject> {
+  if ((await projectFormat(slug)) === 'dbt') {
+    const files = await readDbtProjectFiles(getDataDir());
+    return { format: 'dbt', files };
+  }
   const dbmlRaw = await fs.readFile(projectDbmlPath(slug), 'utf8').catch(() => '');
   const canvasRaw = await fs.readFile(projectCanvasPath(slug), 'utf8').catch(() => '{}');
   let canvas: unknown;
@@ -455,14 +479,25 @@ export async function loadProjectBySlug(slug: string): Promise<{ dbml: string; c
   // CRLF-safe (defensivo): normaliza EOL para LF. No Windows o arquivo pode vir com CRLF
   // (git core.autocrlf); manter LF evita bugs de rename nos regexes do cliente.
   const dbml = dbmlRaw.replace(/\r\n?/g, '\n');
-  return { dbml, canvas };
+  return { format: 'dbml', dbml, canvas };
 }
 
 export async function saveProjectBySlug(slug: string, dbml: string, canvas: unknown): Promise<void> {
+  if ((await projectFormat(slug)) === 'dbt') return;
   const dir = projectDir(slug);
   await ensureDir(dir);
   await fs.writeFile(projectDbmlPath(slug), dbml, 'utf8');
   await fs.writeFile(projectCanvasPath(slug), JSON.stringify(canvas ?? {}, null, 2), 'utf8');
+}
+
+export async function saveDbtChangesBySlug(
+  slug: string,
+  changes: Record<string, string | null>,
+): Promise<string[]> {
+  if ((await projectFormat(slug)) !== 'dbt') {
+    throw new Error('not a dbt project');
+  }
+  return writeDbtChanges(getDataDir(), changes);
 }
 
 export async function readInputSqlForSlug(slug: string): Promise<{ file: string; content: string }[]> {
@@ -536,8 +571,8 @@ export async function writeOutput(relPath: string, content: string | Uint8Array)
   return writeOutputForSlug(slug, relPath, content);
 }
 
-/** Carrega DBML + canvas do projeto ativo. */
-export async function loadProject(): Promise<{ dbml: string; canvas: unknown }> {
+/** Carrega o projeto ativo (união dbml | dbt). */
+export async function loadProject(): Promise<LoadedProject> {
   const slug = await getActiveSlug();
   return loadProjectBySlug(slug);
 }

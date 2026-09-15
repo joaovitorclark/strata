@@ -37,6 +37,7 @@ vi.mock("@/infrastructure/api", async (importOriginal) => {
     getMeta: vi.fn(),
     saveProject: vi.fn().mockResolvedValue(undefined),
     saveProjectById: vi.fn().mockResolvedValue(undefined),
+    saveDbtChanges: vi.fn().mockResolvedValue([]),
     exportFormat: vi.fn().mockResolvedValue({ files: ["output/dbt/"] }),
     importFromInput: vi.fn().mockResolvedValue({
       dbml: "",

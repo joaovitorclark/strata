@@ -1,0 +1,23 @@
+version: 2
+models:
+  - name: agg_estoque_diario
+    description: Tabela de negócio agg_estoque_diario no domínio varejo.
+    config:
+      tags:
+        - strata:estoque
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - dt_movimento
+        warn_unsupported: false
+    columns:
+      - name: dt_movimento
+        data_type: date
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: quantidade
+        data_type: decimal(18,3)

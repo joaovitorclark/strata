@@ -146,6 +146,7 @@ export function Navbar({
   const wide = useWideChrome();
   const selectedTable = useSchemaStore((s) => s.selectedTable);
   const hiddenCount = useSchemaStore((s) => s.hiddenTableIds.length);
+  const readOnly = useSchemaStore((s) => s.readOnly);
   const omitHidden = hiddenCount > HIDDEN_URL_LIMIT;
 
   const toggleTheme = () => {
@@ -156,10 +157,12 @@ export function Navbar({
 
   const copyText = async (value: string) => {
     try {
-      await navigator.clipboard?.writeText(value);
+      if (!navigator.clipboard) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(value);
       toast.success(t("shell.linkCopied"));
     } catch {
-      /* clipboard may be unavailable */
+      // Insecure origin or denied permission: say so instead of claiming success.
+      toast.error(t("shell.linkCopyFailed"));
     }
   };
 
@@ -189,7 +192,19 @@ export function Navbar({
 
   const editButtons = editActions ? (
     <>
-      <button type="button" className={BTN} onClick={editActions.onAddTable}>
+      <button
+        type="button"
+        className={BTN}
+        disabled={readOnly}
+        title={readOnly ? t("shell.dbtReadOnly") : undefined}
+        onClick={() => {
+          if (readOnly) {
+            toast.message(t("shell.dbtReadOnly"));
+            return;
+          }
+          editActions.onAddTable();
+        }}
+      >
         {t("shell.addTable")}
       </button>
       <button type="button" className={BTN} onClick={editActions.onAddMetadata}>
@@ -284,7 +299,17 @@ export function Navbar({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem onSelect={editActions.onAddTable}>
+                  <DropdownMenuItem
+                    disabled={readOnly}
+                    title={readOnly ? t("shell.dbtReadOnly") : undefined}
+                    onSelect={() => {
+                      if (readOnly) {
+                        toast.message(t("shell.dbtReadOnly"));
+                        return;
+                      }
+                      editActions.onAddTable();
+                    }}
+                  >
                     {t("shell.addTable")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={editActions.onAddMetadata}>

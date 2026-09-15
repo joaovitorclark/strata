@@ -1,0 +1,21 @@
+Name: dbt-core
+Version: 1.12.4
+Summary: With dbt, data analysts and engineers can build analytics the way engineers build applications.
+Home-page: https://github.com/dbt-labs/dbt-core
+Author: 
+Author-email: dbt Labs <info@dbtlabs.com>
+License-Expression: Apache-2.0
+Location: /Users/jvclark/www/strata-claude/.venv-dbt/lib/python3.13/site-packages
+Requires: agate, click, daff, dbt-adapters, dbt-common, dbt-core-experimental-parser, dbt-extractor, dbt-protos, jinja2, jsonschema, mashumaro, metricflow, networkx, opentelemetry-api, packaging, pathspec, protobuf, pydantic, python-dotenv, pytz, pyyaml, requests, snowplow-tracker, sqlparse, typing-extensions
+Required-by: dbt-duckdb
+---
+Name: dbt-duckdb
+Version: 1.11.0
+Summary: The duckdb adapter plugin for dbt (data build tool)
+Home-page: https://github.com/duckdb/dbt-duckdb
+Author: Josh Wills
+Author-email: joshwills+dbt@gmail.com
+License: Apache-2
+Location: /Users/jvclark/www/strata-claude/.venv-dbt/lib/python3.13/site-packages
+Requires: dbt-adapters, dbt-common, dbt-core, duckdb
+Required-by: 

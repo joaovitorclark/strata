@@ -1,0 +1,51 @@
+version: 2
+models:
+  - name: dim_canal
+    description: Tabela de negócio dim_canal no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: canal
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - canal_id
+        warn_unsupported: false
+    columns:
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.canal.canal_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: codigo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.canal.codigo
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.canal.nome

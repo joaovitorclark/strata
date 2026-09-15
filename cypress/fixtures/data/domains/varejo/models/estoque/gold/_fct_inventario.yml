@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: fct_inventario
+    description: Tabela de negócio fct_inventario no domínio varejo.
+    config:
+      tags:
+        - strata:estoque
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - inventario_id
+        warn_unsupported: false
+    columns:
+      - name: inventario_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_id
+        data_type: bigint
+      - name: dt_contagem
+        data_type: date

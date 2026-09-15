@@ -1,0 +1,96 @@
+version: 2
+models:
+  - name: item_pedido
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - itens_pedido
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+          - item_seq
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - pedido_id
+        to: ref('pedido')
+        to_columns:
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.pedido_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: item_seq
+        data_type: int
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.item_seq
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: qtd
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.qtd
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_unitario
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.vl_unitario
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_total
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.itens_pedido.vl_total
+        constraints:
+          - type: not_null
+            warn_unsupported: false

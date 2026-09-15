@@ -29,6 +29,7 @@ vi.mock("@/infrastructure/api", async (importOriginal) => {
     }),
     saveProject: vi.fn().mockResolvedValue(undefined),
     saveProjectById: vi.fn().mockResolvedValue(undefined),
+    saveDbtChanges: vi.fn().mockResolvedValue([]),
     exportFormat: vi.fn().mockResolvedValue({ files: [] }),
     getGitStatus: vi.fn().mockResolvedValue({
       hasGit: false,

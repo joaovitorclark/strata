@@ -70,4 +70,42 @@ describe("documentSlice", () => {
     expect(useSchemaStore.getState().dbml).toBe("B");
     expect(useSchemaStore.getState().positions.t).toEqual({ x: 3, y: 4 });
   });
+
+  it("hydratedProjectId starts null", () => {
+    expect(useSchemaStore.getState().hydratedProjectId).toBeNull();
+  });
+
+  it("setHydratedProjectId records the id and clears it at switch start", () => {
+    useSchemaStore.getState().setHydratedProjectId("p1");
+    expect(useSchemaStore.getState().hydratedProjectId).toBe("p1");
+    useSchemaStore.getState().setHydratedProjectId(null);
+    expect(useSchemaStore.getState().hydratedProjectId).toBeNull();
+  });
+
+  it("readOnly defaults false and hydrateDocument sets it", () => {
+    expect(useSchemaStore.getState().readOnly).toBe(false);
+    useSchemaStore.getState().setReadOnly(true);
+    expect(useSchemaStore.getState().readOnly).toBe(true);
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+      readOnly: true,
+    });
+    expect(useSchemaStore.getState().readOnly).toBe(true);
+    useSchemaStore.getState().hydrateDocument({
+      dbml: "Table a { id int }",
+      positions: {},
+      sizes: {},
+      colors: {},
+      collapsedGroups: [],
+      canvasPages: [{ id: "__all__", name: "Todas", tableGroups: ["__all__"] }],
+      activePageIds: ["__all__"],
+    });
+    expect(useSchemaStore.getState().readOnly).toBe(false);
+  });
 });

@@ -1,0 +1,27 @@
+version: 2
+models:
+  - name: dim_endereco
+    description: Tabela de negócio dim_endereco no domínio varejo.
+    config:
+      tags:
+        - strata:clientes
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - endereco_id
+        warn_unsupported: false
+    columns:
+      - name: endereco_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+      - name: cidade
+        data_type: string
+      - name: uf
+        data_type: string
