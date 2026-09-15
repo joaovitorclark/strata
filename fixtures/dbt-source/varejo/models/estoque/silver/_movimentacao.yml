@@ -7,11 +7,6 @@ models:
         - strata:estoque
       meta:
         strata:
-          table_id: silver.movimentacao
-          layer: silver
-          schema: silver
-          pk:
-            - mov_id
           managed: true
           transform:
             from:
@@ -22,6 +17,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -37,7 +33,6 @@ models:
             strata:
               lineage:
                 - from: bronze.movimentacoes.mov_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,7 +43,6 @@ models:
             strata:
               lineage:
                 - from: bronze.movimentacoes.produto_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -59,7 +53,6 @@ models:
             strata:
               lineage:
                 - from: bronze.movimentacoes.deposito_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -71,7 +64,6 @@ models:
               lineage:
                 - from: bronze.movimentacoes.tipo
               enum: tipo_movimentacao
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -90,7 +82,6 @@ models:
             strata:
               lineage:
                 - from: bronze.movimentacoes.quantidade
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -101,7 +92,6 @@ models:
             strata:
               lineage:
                 - from: bronze.movimentacoes.dt_movimento
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

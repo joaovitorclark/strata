@@ -35,6 +35,9 @@ function snapshotTree(dir: string): Record<string, { mtimeMs: number; content: s
 }
 
 export default defineConfig({
+  env: {
+    E2E_DATA_DIR: process.env.E2E_DATA_DIR ?? ".e2e-data",
+  },
   e2e: {
     // Strata is not a static SPA: Fastify serves the built app AND the API on one
     // port. `vite preview` would serve the app with no API behind it.

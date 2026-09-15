@@ -1,52 +1,33 @@
 version: 2
 sources:
   - name: bronze_clientes
-    schema: bronze_clientes
+    schema: bronze
     tables:
       - name: cadastro
         description: Tabela de negócio cadastro no domínio varejo.
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.cadastro
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - cliente_id
+        constraints:
+          - type: primary_key
+            columns:
+              - cliente_id
+            warn_unsupported: false
         columns:
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: nome
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: email
             data_type: string
-            config:
-              meta:
-                strata:
-                  unique: true
             data_tests:
               - unique
           - name: cpf
             data_type: string
-            config:
-              meta:
-                strata:
-                  unique: true
             data_tests:
               - unique
           - name: dt_nascimento
@@ -58,29 +39,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.enderecos
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - endereco_id
+        constraints:
+          - type: primary_key
+            columns:
+              - endereco_id
+            warn_unsupported: false
         columns:
           - name: endereco_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -102,29 +72,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.consentimentos
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - consentimento_id
+        constraints:
+          - type: primary_key
+            columns:
+              - consentimento_id
+            warn_unsupported: false
         columns:
           - name: consentimento_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -133,26 +92,14 @@ sources:
                     field: cliente_id
           - name: finalidade
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: aceito
             data_type: boolean
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: dt_consentimento
             data_type: timestamp
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
       - name: app_eventos
@@ -160,31 +107,20 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.app_eventos
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - evento_id
+        constraints:
+          - type: primary_key
+            columns:
+              - evento_id
+            warn_unsupported: false
         columns:
           - name: evento_id
             data_type: bigint
             description: Coluna evento_id.
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
             description: Coluna cliente_id.
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -194,19 +130,11 @@ sources:
           - name: dt_evento
             data_type: timestamp
             description: Coluna dt_evento.
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: nome_evento
             data_type: string
             description: Coluna nome_evento.
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: plataforma
@@ -220,10 +148,6 @@ sources:
           - name: dt_carga
             data_type: timestamp
             description: Coluna dt_carga.
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: device_01
@@ -755,29 +679,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.documentos
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - documento_id
+        constraints:
+          - type: primary_key
+            columns:
+              - documento_id
+            warn_unsupported: false
         columns:
           - name: documento_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -786,18 +699,10 @@ sources:
                     field: cliente_id
           - name: tipo
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: numero
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
       - name: contatos
@@ -805,29 +710,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.contatos
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - contato_id
+        constraints:
+          - type: primary_key
+            columns:
+              - contato_id
+            warn_unsupported: false
         columns:
           - name: contato_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -838,10 +732,6 @@ sources:
             data_type: string
           - name: valor
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
       - name: preferencias
@@ -849,29 +739,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.preferencias
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - preferencia_id
+        constraints:
+          - type: primary_key
+            columns:
+              - preferencia_id
+            warn_unsupported: false
         columns:
           - name: preferencia_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -880,10 +759,6 @@ sources:
                     field: cliente_id
           - name: chave
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: valor
@@ -893,29 +768,18 @@ sources:
         config:
           tags:
             - strata:clientes
-          meta:
-            strata:
-              table_id: bronze.optins
-              layer: bronze
-              schema: bronze_clientes
-              pk:
-                - optin_id
+        constraints:
+          - type: primary_key
+            columns:
+              - optin_id
+            warn_unsupported: false
         columns:
           - name: optin_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
-              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:
@@ -924,25 +788,13 @@ sources:
                     field: cliente_id
           - name: canal
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: aceito
             data_type: boolean
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
           - name: dt_optin
             data_type: timestamp
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null

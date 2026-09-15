@@ -38,6 +38,44 @@ function refJinja(table: StrataTable): string {
   return `ref('${modelNameOf(table)}')`;
 }
 
+function sourceRef(table: StrataTable): { source: [string, string] } | { ref: string } {
+  if (table.kind === "source" || table.resourceType === "source") {
+    return { source: [table.schema ?? "raw", table.name] };
+  }
+  return { ref: table.name };
+}
+
+/** Physical/identity schema = left side of `schema.name`. Source `name:` can differ (bronze_<projeto>). */
+function identitySchemaOf(table: StrataTable): string {
+  const i = table.id.indexOf(".");
+  if (i > 0) return table.id.slice(0, i);
+  return table.layer ?? table.schema ?? "raw";
+}
+
+function managedTransform(
+  table: StrataTable,
+  model: StrataModel,
+  tables: StrataTable[],
+): Record<string, unknown> | undefined {
+  if (!table.tags?.includes("strata:managed")) return undefined;
+  const ups: string[] = [];
+  for (const l of model.lineageFields) {
+    if (l.targetTable === table.id && !ups.includes(l.sourceTable)) ups.push(l.sourceTable);
+  }
+  const first = ups[0] ? findTable(tables, ups[0]) : undefined;
+  if (!first) return undefined;
+  return {
+    from: { ...sourceRef(first), alias: "s0" },
+    joins: ups.slice(1).flatMap((id, i) => {
+      const src = findTable(tables, id);
+      if (!src) return [];
+      return [{ ...sourceRef(src), alias: `s${i + 1}`, type: "left", on: "true" }];
+    }),
+    where: "",
+    group_by: [],
+  };
+}
+
 function lineageFor(table: StrataTable, fields: ParsedFieldLineage[]): ParsedFieldLineage[] {
   return fields.filter((l) => l.targetTable === table.id || l.targetTable === table.name);
 }
@@ -76,7 +114,11 @@ function columnStrata(
   return Object.keys(meta).length ? meta : undefined;
 }
 
-function tableStrata(table: StrataTable): Record<string, unknown> | undefined {
+function tableStrata(
+  table: StrataTable,
+  model: StrataModel,
+  tables: StrataTable[],
+): Record<string, unknown> | undefined {
   const meta: Record<string, unknown> = {};
   if (table.group) meta.group = table.group;
   if (table.indexes?.length) {
@@ -86,6 +128,9 @@ function tableStrata(table: StrataTable): Record<string, unknown> | undefined {
       ...(idx.unique ? { unique: true } : {}),
     }));
   }
+  if (table.tags?.includes("strata:managed")) meta.managed = true;
+  const transform = managedTransform(table, model, tables);
+  if (transform) meta.transform = transform;
   return Object.keys(meta).length ? meta : undefined;
 }
 
@@ -165,11 +210,16 @@ function tagsOf(table: StrataTable, projeto: string): string[] {
   return [...tags];
 }
 
-function tableConfig(table: StrataTable, projeto: string): Record<string, unknown> {
+function tableConfig(
+  table: StrataTable,
+  projeto: string,
+  model: StrataModel,
+  tables: StrataTable[],
+): Record<string, unknown> {
   const config: Record<string, unknown> = {
     tags: tagsOf(table, projeto),
   };
-  const strata = tableStrata(table);
+  const strata = tableStrata(table, model, tables);
   if (strata) config.meta = { strata };
   if (table.kind !== "source") {
     if (table.schema) config.schema = table.schema;
@@ -244,13 +294,13 @@ export function toDbtProject(model: StrataModel, projeto: string): ProjectFiles 
   for (const [file, bySource] of sourcesByFile) {
     const sources = [...bySource.entries()].map(([name, tables]) => ({
       name,
-      schema: name,
+      schema: tables[0] ? identitySchemaOf(tables[0]) : name,
       tables: tables.map((t) => {
         const pks = pkNames(t);
         return {
           name: t.name,
           ...(t.note ? { description: t.note } : {}),
-          config: tableConfig(t, projeto),
+          config: tableConfig(t, projeto, model, all),
           ...(pks.length
             ? {
                 constraints: [{ type: "primary_key", columns: pks, warn_unsupported: false }],
@@ -284,7 +334,7 @@ export function toDbtProject(model: StrataModel, projeto: string): ProjectFiles 
         {
           name,
           ...(t.note ? { description: t.note } : {}),
-          config: tableConfig(t, projeto),
+          config: tableConfig(t, projeto, model, all),
           constraints: modelConstraints(t, model.refs, all),
           columns: t.columns.map((c) => columnEntry(t, c, model, all, false)),
         },

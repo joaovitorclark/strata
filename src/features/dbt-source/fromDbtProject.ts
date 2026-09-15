@@ -235,6 +235,7 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
       const source = asRecord(src);
       if (!source) continue;
       const sourceName = asString(source.name) ?? "raw";
+      const identitySchema = asString(source.schema) ?? sourceName;
       for (const rawTable of asArray(source.tables)) {
         const node = asRecord(rawTable);
         if (!node) continue;
@@ -242,7 +243,7 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
         const strata = strataOf(node);
         const pks = pkSet(node);
         const pk = new Set(pks);
-        const id = tableIdOf(sourceName, name);
+        const id = tableIdOf(identitySchema, name);
         const tags = tagsOf(node);
         const layer = folderLayer;
         if (layer) {
@@ -317,23 +318,24 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
     const doc = asRecord(loadYaml(content));
     if (!doc) continue;
     const folderLayer = layerFromPath(filePath, projeto);
-    const walk: Array<{ node: Record<string, unknown>; sourceName?: string }> = [];
+    const walk: Array<{ node: Record<string, unknown>; identitySchema?: string }> = [];
     for (const src of asArray(doc.sources)) {
       const source = asRecord(src);
       const sourceName = asString(source?.name) ?? "raw";
+      const identitySchema = asString(source?.schema) ?? sourceName;
       for (const raw of asArray(source?.tables)) {
         const node = asRecord(raw);
-        if (node) walk.push({ node, sourceName });
+        if (node) walk.push({ node, identitySchema });
       }
     }
     for (const raw of asArray(doc.models)) {
       const node = asRecord(raw);
       if (node) walk.push({ node });
     }
-    for (const { node, sourceName } of walk) {
+    for (const { node, identitySchema } of walk) {
       const name = asString(node.name) ?? "";
       const config = asRecord(node.config);
-      const schema = sourceName ?? asString(config?.schema) ?? folderLayer;
+      const schema = identitySchema ?? asString(config?.schema) ?? folderLayer;
       const id = tableIdOf(schema, name);
       for (const c of constraintsOf(node)) {
         if (c.type !== "foreign_key") continue;

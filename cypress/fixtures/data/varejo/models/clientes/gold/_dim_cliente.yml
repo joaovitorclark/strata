@@ -8,11 +8,6 @@ models:
         - strata:clientes
       meta:
         strata:
-          table_id: gold.dim_cliente
-          layer: gold
-          schema: gold
-          pk:
-            - cliente_id
           managed: true
           transform:
             from:
@@ -21,6 +16,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: gold
       contract:
         enforced: true
     constraints:
@@ -36,7 +32,6 @@ models:
             strata:
               lineage:
                 - from: silver.cliente.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
