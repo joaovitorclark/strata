@@ -7,12 +7,6 @@ models:
         - strata:vendas
       meta:
         strata:
-          table_id: silver.item_pedido
-          layer: silver
-          schema: silver
-          pk:
-            - pedido_id
-            - item_seq
           managed: true
           transform:
             from:
@@ -23,6 +17,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -46,7 +41,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.pedido_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -57,7 +51,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.item_seq
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -68,7 +61,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.produto_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -79,7 +71,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.qtd
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -90,7 +81,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.vl_unitario
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -101,7 +91,6 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.vl_total
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

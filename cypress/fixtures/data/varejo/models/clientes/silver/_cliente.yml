@@ -7,11 +7,6 @@ models:
         - strata:clientes
       meta:
         strata:
-          table_id: silver.cliente
-          layer: silver
-          schema: silver
-          pk:
-            - cliente_id
           managed: true
           transform:
             from:
@@ -22,6 +17,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -45,7 +41,6 @@ models:
             strata:
               lineage:
                 - from: bronze.cadastro.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -56,7 +51,6 @@ models:
             strata:
               lineage:
                 - from: bronze.cadastro.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -67,7 +61,6 @@ models:
             strata:
               lineage:
                 - from: bronze.cadastro.email
-              unique: true
       - name: cpf
         data_type: string
         config:
@@ -75,7 +68,6 @@ models:
             strata:
               lineage:
                 - from: bronze.cadastro.cpf
-              unique: true
       - name: dt_nascimento
         data_type: date
         config:

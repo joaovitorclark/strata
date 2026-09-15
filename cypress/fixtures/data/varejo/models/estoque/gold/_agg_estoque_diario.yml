@@ -5,13 +5,7 @@ models:
     config:
       tags:
         - strata:estoque
-      meta:
-        strata:
-          table_id: gold.agg_estoque_diario
-          layer: gold
-          schema: gold
-          pk:
-            - dt_movimento
+      schema: gold
       contract:
         enforced: true
     constraints:
@@ -22,10 +16,6 @@ models:
     columns:
       - name: dt_movimento
         data_type: date
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

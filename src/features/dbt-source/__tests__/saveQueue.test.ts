@@ -89,8 +89,11 @@ describe("seed ↔ table mapping (review of D2 + S15)", () => {
       ".strata/p/project.yml": "format_version: 1\nname: p\n",
     };
     const model = fromDbtProject(files, "p");
+    const canais = model.tables.find((t) => t.name === "canais");
+    expect(canais?.id).toBe("bronze.canais");
+    expect(canais?.schema).toBe("bronze_p");
     const byTable = Object.fromEntries(model.records.map((r) => [r.table, r.rows.length]));
-    expect(byTable["bronze_p.canais"]).toBe(2);
+    expect(byTable["bronze.canais"]).toBe(2);
     expect(byTable["orfao"]).toBe(1);
   });
 });

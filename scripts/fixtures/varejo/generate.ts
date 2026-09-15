@@ -40,8 +40,14 @@ function sourceRef(table: StrataTable): { source: [string, string] } | { ref: st
 
 function applyManagedAndTransform(files: ProjectFiles): void {
   const modelsById = new Map<string, StrataTable>();
+  const modelsByName = new Map<string, StrataTable[]>();
   for (const projeto of PROJECTS) {
-    for (const t of strataModelFor(projeto).tables) modelsById.set(t.id, t);
+    for (const t of strataModelFor(projeto).tables) {
+      modelsById.set(t.id, t);
+      const list = modelsByName.get(t.name) ?? [];
+      list.push(t);
+      modelsByName.set(t.name, list);
+    }
   }
   for (const [filePath, content] of Object.entries(files)) {
     if (!filePath.startsWith("models/") || !filePath.endsWith(".yml") || filePath.includes("_sources.yml")) {
@@ -57,14 +63,18 @@ function applyManagedAndTransform(files: ProjectFiles): void {
     const strata = asRecord(meta.strata) ?? {};
     const tags = asArray(config.tags).map(String);
     if (!tags.includes("strata:managed")) continue;
-    const tableId = String(strata.table_id ?? node.name ?? "");
-    const table = modelsById.get(tableId);
+    const nodeName = String(node.name ?? "");
+    const folder = filePath.split("/")[2] ?? "";
+    const table =
+      modelsById.get(String(strata.table_id ?? "")) ??
+      modelsById.get(`${folder}.${nodeName}`) ??
+      (modelsByName.get(nodeName) ?? []).find((t) => t.project === filePath.split("/")[1]);
     const projeto = table?.project as Projeto | undefined;
     const model = projeto ? strataModelFor(projeto) : undefined;
     const ups: string[] = [];
     if (model) {
       for (const l of model.lineageFields) {
-        if (l.targetTable === tableId && !ups.includes(l.sourceTable)) ups.push(l.sourceTable);
+        if (l.targetTable === table?.id && !ups.includes(l.sourceTable)) ups.push(l.sourceTable);
       }
     }
     const first = ups[0] ? modelsById.get(ups[0]) : undefined;

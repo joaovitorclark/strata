@@ -64,9 +64,15 @@ function enableLineageMode(): void {
   cy.get(".layers-panel__lineage-btn").should("have.class", "is-active");
 }
 
+function e2eDataDir(): string {
+  const fromEnv = Cypress.env("E2E_DATA_DIR");
+  return typeof fromEnv === "string" && fromEnv.length > 0 ? fromEnv : ".e2e-data";
+}
+
 function restoreDbtDemo(): void {
+  const root = e2eDataDir();
   cy.exec(
-    "rm -rf .e2e-data-d2/domains/dbt-demo && cp -R cypress/fixtures/data/domains/dbt-demo .e2e-data-d2/domains/dbt-demo",
+    `rm -rf "${root}/domains/dbt-demo" && mkdir -p "${root}/domains" && cp -R cypress/fixtures/data/domains/dbt-demo "${root}/domains/dbt-demo"`,
   );
 }
 
@@ -168,7 +174,7 @@ describe("D2 dbt write", () => {
     });
   });
 
-  it("G12: undo of G7–G11 restores files byte-for-byte", () => {
+  it("G12: undo of + Tabela restores files byte-for-byte", () => {
     cy.window().then((win) => {
       cy.stub(win, "prompt").returns("gold.g12_tabela");
     });
@@ -177,10 +183,79 @@ describe("D2 dbt write", () => {
       waitPut();
       undoOnce();
       dbtFiles().then((after) => {
-        expect(after["models/vendas/gold/_g12_tabela.yml"]).to.eq(undefined);
-        expect(after["models/vendas/gold/_dim_cliente.yml"]).to.eq(
+        expect(after).to.deep.eq(before);
+      });
+    });
+  });
+
+  it("G12 rename: undo of G8 restores files byte-for-byte", () => {
+    selectCanvasDetailLevel("Colunas");
+    dbtFiles().then((before) => {
+      cy.get(nodeSel(DIM))
+        .contains(".col-row span", /^status$/)
+        .parents(".col-row")
+        .find('[data-testid="col-rename"]')
+        .trigger("pointerdown", { force: true, eventConstructor: "PointerEvent" });
+      cy.get(nodeSel(DIM)).find("input.col-edit").clear().type("status_g12{enter}");
+      waitPut();
+      dbtFiles().then((mid) => {
+        expect(mid["models/vendas/gold/_dim_cliente.yml"]).to.not.eq(
           before["models/vendas/gold/_dim_cliente.yml"],
         );
+        undoOnce();
+        dbtFiles().then((after) => {
+          expect(after).to.deep.eq(before);
+        });
+      });
+    });
+  });
+
+  it("G12 relation: undo of G9 restores files byte-for-byte", () => {
+    selectCanvasDetailLevel("Colunas");
+    dbtFiles().then((before) => {
+      cy.connectHandles(FATO, "s:total", DIM, "t:id");
+      waitPut();
+      dbtFiles().then((mid) => {
+        expect(mid["models/vendas/gold/_fato_pedido.yml"]).to.not.eq(
+          before["models/vendas/gold/_fato_pedido.yml"],
+        );
+        undoOnce();
+        dbtFiles().then((after) => {
+          expect(after).to.deep.eq(before);
+        });
+      });
+    });
+  });
+
+  it("G12 lineage: undo of G10 restores files byte-for-byte", () => {
+    selectCanvasDetailLevel("Colunas");
+    setEdgeVisibility("Linhagem", true);
+    enableLineageMode();
+    dbtFiles().then((before) => {
+      cy.connectHandles(FATO, "fl:s:total", DIM, "fl:t:email");
+      waitPut();
+      dbtFiles().then((mid) => {
+        expect(mid["models/vendas/gold/_dim_cliente.yml"]).to.not.eq(
+          before["models/vendas/gold/_dim_cliente.yml"],
+        );
+        undoOnce();
+        dbtFiles().then((after) => {
+          expect(after).to.deep.eq(before);
+        });
+      });
+    });
+  });
+
+  it("G12 move: undo of G11 restores files byte-for-byte", () => {
+    dbtFiles().then((before) => {
+      cy.dragNode(DIM, 80, 40);
+      waitPut();
+      dbtFiles().then((mid) => {
+        expect(mid[".strata/vendas/canvas.yml"]).to.not.eq(before[".strata/vendas/canvas.yml"]);
+        undoOnce();
+        dbtFiles().then((after) => {
+          expect(after).to.deep.eq(before);
+        });
       });
     });
   });

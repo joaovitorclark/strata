@@ -8,11 +8,6 @@ models:
         - strata:clientes
       meta:
         strata:
-          table_id: gold.fct_consentimento
-          layer: gold
-          schema: gold
-          pk:
-            - consentimento_id
           managed: true
           transform:
             from:
@@ -21,6 +16,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: gold
       contract:
         enforced: true
     constraints:
@@ -36,7 +32,6 @@ models:
             strata:
               lineage:
                 - from: silver.consentimento.consentimento_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -47,7 +42,6 @@ models:
             strata:
               lineage:
                 - from: silver.consentimento.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

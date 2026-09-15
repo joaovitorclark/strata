@@ -161,11 +161,12 @@ function scanYml(files: ProjectFiles, project: string, tableId: string): TableLo
     for (const src of asArray(doc.sources)) {
       const source = asRecord(src);
       const sourceName = asString(source?.name) ?? "raw";
+      const identitySchema = asString(source?.schema) ?? sourceName;
       for (const raw of asArray(source?.tables)) {
         const node = asRecord(raw);
         const name = asString(node?.name);
         if (!name) continue;
-        const id = qualifiedTableId(sourceName, name);
+        const id = qualifiedTableId(identitySchema, name);
         if (id === tableId || name === tableId) {
           return {
             id,

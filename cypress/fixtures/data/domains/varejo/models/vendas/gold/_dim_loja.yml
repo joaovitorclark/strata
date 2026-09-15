@@ -8,11 +8,6 @@ models:
         - strata:vendas
       meta:
         strata:
-          table_id: gold.dim_loja
-          layer: gold
-          schema: gold
-          pk:
-            - loja_id
           managed: true
           transform:
             from:
@@ -21,6 +16,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: gold
       contract:
         enforced: true
     constraints:
@@ -36,7 +32,6 @@ models:
             strata:
               lineage:
                 - from: silver.loja.loja_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

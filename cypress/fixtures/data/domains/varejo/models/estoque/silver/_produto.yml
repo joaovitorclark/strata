@@ -7,11 +7,6 @@ models:
         - strata:estoque
       meta:
         strata:
-          table_id: silver.produto
-          layer: silver
-          schema: silver
-          pk:
-            - produto_id
           managed: true
           transform:
             from:
@@ -22,6 +17,7 @@ models:
             joins: []
             where: ""
             group_by: []
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -41,7 +37,6 @@ models:
             strata:
               lineage:
                 - from: bronze.produtos.produto_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -52,8 +47,6 @@ models:
             strata:
               lineage:
                 - from: bronze.produtos.sku
-              not_null: true
-              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -64,7 +57,6 @@ models:
             strata:
               lineage:
                 - from: bronze.produtos.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
