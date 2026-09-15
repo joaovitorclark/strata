@@ -243,6 +243,10 @@ export function exportFormat(
   return post<{ files: string[] }>('/api/export', { dbml, format, dialect });
 }
 
+export function exportSparkSql(project: string, files: Record<string, string>) {
+  return post<{ files: string[] }>('/api/export/spark-sql', { project, files });
+}
+
 export const exportDdl = (dbml: string) => exportFormat(dbml, 'spark-ddl');
 export const exportDbt = (dbml: string) => exportFormat(dbml, 'dbt');
 export const exportErwin = (dbml: string) => exportFormat(dbml, 'erwin');

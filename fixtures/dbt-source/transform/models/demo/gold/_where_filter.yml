@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: where_filter
+    config:
+      schema: gold
+      materialized: view
+      tags: [strata:demo, strata:managed]
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: stg_pedido
+              alias: p
+            where: p.status <> 'cancelado'
+            joins: []
+            group_by: []
+    columns:
+      - name: id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: p.id

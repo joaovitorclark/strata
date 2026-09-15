@@ -2,6 +2,8 @@ import type { SchemaView } from "@/features/schema/model/views";
 import type { ProjectFiles } from "./model";
 import type { EditResult, TableKind } from "./yamlEdit";
 import * as yamlEdit from "./yamlEdit";
+import * as yamlEditTransform from "./yamlEdit.transform";
+import type { TransformIR } from "./transform";
 
 export type DbtAction =
   | { op: "addTable"; tableId: string; kind?: TableKind; position?: { x: number; y: number } }
@@ -45,7 +47,17 @@ export type DbtAction =
       indexes: Array<{ columns: string[]; name?: string; unique?: boolean }>;
     }
   | { op: "setRecords"; tableId: string; columns: string[]; rows: string[][] }
-  | { op: "setRolename"; tableId: string; column: string; rolename: string | null };
+  | { op: "setRolename"; tableId: string; column: string; rolename: string | null }
+  // D4 transform ops
+  | { op: "setTransform"; tableId: string; transform: TransformIR }
+  | { op: "setColumnExpr"; tableId: string; column: string; expr: string }
+  | {
+      op: "addManagedFromSelection";
+      tableId: string;
+      sourceTableIds: string[];
+      transform: TransformIR;
+      position?: { x: number; y: number };
+    };
 
 export function applyDbtAction(
   files: ProjectFiles,
@@ -127,5 +139,18 @@ export function applyDbtAction(
       return yamlEdit.setRecords(files, project, action.tableId, action.columns, action.rows);
     case "setRolename":
       return yamlEdit.setRolename(files, project, action.tableId, action.column, action.rolename);
+    // D4 transform ops
+    case "setTransform":
+      return yamlEditTransform.setTransform(files, project, action.tableId, action.transform);
+    case "setColumnExpr":
+      return yamlEditTransform.setColumnExpr(
+        files,
+        project,
+        action.tableId,
+        action.column,
+        action.expr,
+      );
+    case "addManagedFromSelection":
+      return yamlEditTransform.addManagedFromSelection(files, project, action);
   }
 }
