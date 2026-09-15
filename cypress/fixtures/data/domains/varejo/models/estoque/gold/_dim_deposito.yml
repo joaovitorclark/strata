@@ -1,0 +1,56 @@
+version: 2
+models:
+  - name: dim_deposito
+    description: Tabela de negócio dim_deposito no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: gold.dim_deposito
+          layer: gold
+          schema: gold
+          pk:
+            - deposito_id
+          managed: true
+          transform:
+            from:
+              ref: deposito
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - deposito_id
+        warn_unsupported: false
+    columns:
+      - name: deposito_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.deposito.deposito_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.deposito.nome
+      - name: uf
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.deposito.uf

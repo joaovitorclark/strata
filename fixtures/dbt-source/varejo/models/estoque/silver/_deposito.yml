@@ -1,0 +1,68 @@
+version: 2
+models:
+  - name: deposito
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.deposito
+          layer: silver
+          schema: silver
+          pk:
+            - deposito_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - depositos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - deposito_id
+        warn_unsupported: false
+    columns:
+      - name: deposito_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.depositos.deposito_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.depositos.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: uf
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.depositos.uf
+      - name: tipo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.depositos.tipo

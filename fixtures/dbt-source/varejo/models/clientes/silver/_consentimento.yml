@@ -1,0 +1,87 @@
+version: 2
+models:
+  - name: consentimento
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: silver.consentimento
+          layer: silver
+          schema: silver
+          pk:
+            - consentimento_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_clientes
+                - consentimentos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - consentimento_id
+        warn_unsupported: false
+    columns:
+      - name: consentimento_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.consentimento_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: finalidade
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.finalidade
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: aceito
+        data_type: boolean
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.aceito
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_consentimento
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.consentimentos.dt_consentimento
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

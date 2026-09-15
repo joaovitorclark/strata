@@ -1,0 +1,67 @@
+version: 2
+models:
+  - name: fct_consentimento
+    description: Tabela de negócio fct_consentimento no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: gold.fct_consentimento
+          layer: gold
+          schema: gold
+          pk:
+            - consentimento_id
+          managed: true
+          transform:
+            from:
+              ref: consentimento
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - consentimento_id
+        warn_unsupported: false
+    columns:
+      - name: consentimento_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.consentimento.consentimento_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.consentimento.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: finalidade
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.consentimento.finalidade
+      - name: aceito
+        data_type: boolean
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.consentimento.aceito

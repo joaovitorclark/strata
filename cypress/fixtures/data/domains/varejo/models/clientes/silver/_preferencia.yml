@@ -1,0 +1,61 @@
+version: 2
+models:
+  - name: preferencia
+    config:
+      tags:
+        - strata:clientes
+      meta:
+        strata:
+          table_id: silver.preferencia
+          layer: silver
+          schema: silver
+          pk:
+            - preferencia_id
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - preferencia_id
+        warn_unsupported: false
+    columns:
+      - name: preferencia_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.preferencias.preferencia_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.preferencias.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: chave
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.preferencias.chave
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: valor
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.preferencias.valor

@@ -1,0 +1,103 @@
+positions:
+  bronze.app_eventos:
+    x: 40
+    y: 40
+  bronze.cadastro:
+    x: 40
+    y: 136
+  bronze.consentimentos:
+    x: 40
+    y: 232
+  bronze.contatos:
+    x: 40
+    y: 328
+  bronze.documentos:
+    x: 40
+    y: 424
+  bronze.enderecos:
+    x: 40
+    y: 520
+  bronze.optins:
+    x: 40
+    y: 616
+  bronze.preferencias:
+    x: 40
+    y: 712
+  silver.app_evento:
+    x: 520
+    y: 40
+  silver.cliente:
+    x: 520
+    y: 136
+  silver.cliente_unico:
+    x: 520
+    y: 232
+  silver.consentimento:
+    x: 520
+    y: 328
+  silver.contato:
+    x: 520
+    y: 424
+  silver.documento:
+    x: 520
+    y: 520
+  silver.endereco:
+    x: 520
+    y: 616
+  silver.lgpd_cliente:
+    x: 520
+    y: 712
+  silver.optin:
+    x: 520
+    y: 808
+  silver.preferencia:
+    x: 520
+    y: 904
+  gold.agg_clientes_ativos:
+    x: 1000
+    y: 40
+  gold.dim_cliente:
+    x: 1000
+    y: 136
+  gold.dim_cliente_360:
+    x: 1000
+    y: 232
+  gold.dim_endereco:
+    x: 1000
+    y: 328
+  gold.fct_app_evento:
+    x: 1000
+    y: 424
+  gold.fct_consentimento:
+    x: 1000
+    y: 520
+colors:
+  bronze.cadastro: "#c6a0f6"
+  bronze.enderecos: "#c6a0f6"
+  bronze.consentimentos: "#c6a0f6"
+  bronze.app_eventos: "#c6a0f6"
+  bronze.documentos: "#c6a0f6"
+  bronze.contatos: "#c6a0f6"
+  bronze.preferencias: "#c6a0f6"
+  bronze.optins: "#c6a0f6"
+  silver.cliente: "#c6a0f6"
+  silver.endereco: "#c6a0f6"
+  silver.consentimento: "#c6a0f6"
+  silver.documento: "#c6a0f6"
+  silver.contato: "#c6a0f6"
+  silver.preferencia: "#c6a0f6"
+  silver.optin: "#c6a0f6"
+  silver.app_evento: "#c6a0f6"
+  silver.cliente_unico: "#c6a0f6"
+  silver.lgpd_cliente: "#c6a0f6"
+  gold.dim_cliente: "#c6a0f6"
+  gold.dim_cliente_360: "#c6a0f6"
+  gold.fct_consentimento: "#c6a0f6"
+  gold.agg_clientes_ativos: "#c6a0f6"
+  gold.dim_endereco: "#c6a0f6"
+  gold.fct_app_evento: "#c6a0f6"
+pins:
+  - bronze.app_eventos.evento_id
+  - bronze.app_eventos.cliente_id
+  - bronze.app_eventos.dt_evento
+  - bronze.app_eventos.nome_evento

@@ -1,0 +1,75 @@
+version: 2
+models:
+  - name: promocao
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.promocao
+          layer: silver
+          schema: silver
+          pk:
+            - promocao_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - promocoes
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - promocao_id
+        warn_unsupported: false
+    columns:
+      - name: promocao_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.promocoes.promocao_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.promocoes.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_inicio
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.promocoes.dt_inicio
+      - name: dt_fim
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.promocoes.dt_fim
+      - name: perc_desconto
+        data_type: decimal(5,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.promocoes.perc_desconto

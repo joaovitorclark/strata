@@ -1,0 +1,43 @@
+version: 2
+models:
+  - name: lead_time
+    config:
+      tags:
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.lead_time
+          layer: silver
+          schema: silver
+          pk:
+            - produto_id
+            - fornecedor_id
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+          - fornecedor_id
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: fornecedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dias
+        data_type: int

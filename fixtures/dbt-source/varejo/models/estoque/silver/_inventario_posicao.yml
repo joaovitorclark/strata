@@ -1,0 +1,72 @@
+version: 2
+models:
+  - name: inventario_posicao
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.inventario_posicao
+          layer: silver
+          schema: silver
+          pk:
+            - inventario_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - inventario
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - inventario_id
+        warn_unsupported: false
+    columns:
+      - name: inventario_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.inventario.inventario_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: deposito_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.inventario.deposito_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_contagem
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.inventario.dt_contagem
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.inventario.status

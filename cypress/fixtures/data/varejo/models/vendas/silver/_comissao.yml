@@ -1,0 +1,43 @@
+version: 2
+models:
+  - name: comissao
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.comissao
+          layer: silver
+          schema: silver
+          pk:
+            - vendedor_id
+            - pedido_id
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - vendedor_id
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: vendedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_comissao
+        data_type: decimal(18,2)

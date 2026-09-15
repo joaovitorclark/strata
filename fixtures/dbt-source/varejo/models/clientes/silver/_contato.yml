@@ -1,0 +1,72 @@
+version: 2
+models:
+  - name: contato
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: silver.contato
+          layer: silver
+          schema: silver
+          pk:
+            - contato_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_clientes
+                - contatos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - contato_id
+        warn_unsupported: false
+    columns:
+      - name: contato_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.contatos.contato_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.contatos.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: tipo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.contatos.tipo
+      - name: valor
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.contatos.valor
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

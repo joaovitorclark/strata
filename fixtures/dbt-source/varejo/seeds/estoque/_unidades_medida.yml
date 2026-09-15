@@ -1,0 +1,7 @@
+version: 2
+seeds:
+  - name: unidades_medida
+    config:
+      meta:
+        strata:
+          table_id: bronze.unidades_medida

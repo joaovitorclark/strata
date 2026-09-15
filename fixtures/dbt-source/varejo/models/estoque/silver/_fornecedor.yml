@@ -1,0 +1,66 @@
+version: 2
+models:
+  - name: fornecedor
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.fornecedor
+          layer: silver
+          schema: silver
+          pk:
+            - fornecedor_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - fornecedores
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - fornecedor_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - cnpj
+        warn_unsupported: false
+    columns:
+      - name: fornecedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.fornecedores.fornecedor_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.fornecedores.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cnpj
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.fornecedores.cnpj
+              unique: true

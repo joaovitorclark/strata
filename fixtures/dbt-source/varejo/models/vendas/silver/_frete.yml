@@ -1,0 +1,34 @@
+version: 2
+models:
+  - name: frete
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.frete
+          layer: silver
+          schema: silver
+          pk:
+            - pedido_id
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_frete
+        data_type: decimal(18,2)
+      - name: uf
+        data_type: string

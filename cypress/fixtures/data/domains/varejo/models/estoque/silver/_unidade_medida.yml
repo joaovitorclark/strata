@@ -1,0 +1,70 @@
+version: 2
+models:
+  - name: unidade_medida
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.unidade_medida
+          layer: silver
+          schema: silver
+          pk:
+            - unidade_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - unidades_medida
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - unidade_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - sigla
+        warn_unsupported: false
+    columns:
+      - name: unidade_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.unidades_medida.unidade_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: sigla
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.unidades_medida.sigla
+              not_null: true
+              unique: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.unidades_medida.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

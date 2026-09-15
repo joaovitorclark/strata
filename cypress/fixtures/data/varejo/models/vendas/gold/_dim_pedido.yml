@@ -1,0 +1,66 @@
+version: 2
+models:
+  - name: dim_pedido
+    description: Tabela de negócio dim_pedido no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: gold.dim_pedido
+          layer: gold
+          schema: gold
+          pk:
+            - pedido_id
+          managed: true
+          transform:
+            from:
+              ref: pedido
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.pedido_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.status
+              enum: status_pedido
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - pendente
+                  - pago
+                  - enviado
+                  - entregue
+                  - cancelado
+      - name: dt_emissao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.dt_emissao

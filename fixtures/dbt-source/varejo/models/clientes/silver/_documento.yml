@@ -1,0 +1,76 @@
+version: 2
+models:
+  - name: documento
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: silver.documento
+          layer: silver
+          schema: silver
+          pk:
+            - documento_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_clientes
+                - documentos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - documento_id
+        warn_unsupported: false
+    columns:
+      - name: documento_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.documentos.documento_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.documentos.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: tipo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.documentos.tipo
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: numero
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.documentos.numero
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

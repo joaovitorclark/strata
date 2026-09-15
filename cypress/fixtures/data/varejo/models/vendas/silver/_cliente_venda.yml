@@ -1,0 +1,73 @@
+version: 2
+models:
+  - name: cliente_venda
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.cliente_venda
+          layer: silver
+          schema: silver
+          pk:
+            - cliente_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - clientes_venda
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cliente_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - email
+        warn_unsupported: false
+    columns:
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.clientes_venda.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.clientes_venda.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: email
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.clientes_venda.email
+              unique: true
+      - name: documento
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.clientes_venda.documento
