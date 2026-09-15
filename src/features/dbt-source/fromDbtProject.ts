@@ -390,7 +390,12 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
   for (const [filePath, content] of Object.entries(files)) {
     if (!filePath.startsWith(`seeds/${projeto}/`) || !filePath.endsWith(".csv")) continue;
     const base = filePath.slice(filePath.lastIndexOf("/") + 1).replace(/\.csv$/, "");
-    const matched = tables.find((t) => recordsSeedName(t.id) === base);
+    // A seed is tied to a table by the generated name (records_<id>) or, as dbt itself does, by
+    // being named after the table — accepted only when exactly one table in the project has that name.
+    const byName = tables.filter((t) => !t.external && t.name === base);
+    const matched =
+      tables.find((t) => recordsSeedName(t.id) === base) ??
+      (byName.length === 1 ? byName[0] : undefined);
     const tableId = matched?.id ?? base;
     const parsed = csvToRows(content);
     records.push({ table: tableId, columns: parsed.columns, rows: parsed.rows, raw: content });

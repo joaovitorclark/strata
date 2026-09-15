@@ -108,7 +108,9 @@ function table(opts: {
   const row: StrataTable = {
     id: `${opts.layer}.${opts.name}`,
     name: opts.name,
-    schema: opts.kind === "source" ? `bronze_${opts.project}` : opts.layer,
+    // Table id is schema.name (D2). Sources share the bronze schema so ids stay unique and stable
+    // across the domain; the dbt source name still carries the project (bronze_<project>).
+    schema: opts.layer,
     project: opts.project,
     kind: opts.kind,
     layer: opts.layer,

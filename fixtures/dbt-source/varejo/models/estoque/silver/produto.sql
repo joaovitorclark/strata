@@ -1,1 +1,1 @@
-select * from {{ source('bronze_estoque', 'produtos') }}
+select * from {{ source('bronze', 'produtos') }}

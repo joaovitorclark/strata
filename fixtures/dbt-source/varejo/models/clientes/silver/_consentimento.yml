@@ -5,25 +5,12 @@ models:
       tags:
         - strata:managed
         - strata:clientes
-      meta:
-        strata:
-          table_id: silver.consentimento
-          layer: silver
-          schema: silver
-          pk:
-            - consentimento_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_clientes
-                - consentimentos
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -37,7 +24,6 @@ models:
             strata:
               lineage:
                 - from: bronze.consentimentos.consentimento_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,7 +34,6 @@ models:
             strata:
               lineage:
                 - from: bronze.consentimentos.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -59,7 +44,6 @@ models:
             strata:
               lineage:
                 - from: bronze.consentimentos.finalidade
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -70,7 +54,6 @@ models:
             strata:
               lineage:
                 - from: bronze.consentimentos.aceito
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -81,7 +64,6 @@ models:
             strata:
               lineage:
                 - from: bronze.consentimentos.dt_consentimento
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

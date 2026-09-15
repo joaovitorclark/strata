@@ -5,25 +5,12 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.pedido
-          layer: silver
-          schema: silver
-          pk:
-            - pedido_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_vendas
-                - pedidos
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -37,7 +24,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.pedido_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,7 +34,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -59,7 +44,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.canal_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -91,7 +75,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.vl_total
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -117,7 +100,6 @@ models:
               lineage:
                 - from: bronze.pedidos.status
               enum: status_pedido
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -137,7 +119,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.dt_emissao
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -148,7 +129,6 @@ models:
             strata:
               lineage:
                 - from: bronze.pedidos.dt_carga
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

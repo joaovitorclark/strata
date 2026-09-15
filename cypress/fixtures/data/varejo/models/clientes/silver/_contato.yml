@@ -5,25 +5,12 @@ models:
       tags:
         - strata:managed
         - strata:clientes
-      meta:
-        strata:
-          table_id: silver.contato
-          layer: silver
-          schema: silver
-          pk:
-            - contato_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_clientes
-                - contatos
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -37,7 +24,6 @@ models:
             strata:
               lineage:
                 - from: bronze.contatos.contato_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,7 +34,6 @@ models:
             strata:
               lineage:
                 - from: bronze.contatos.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -66,7 +51,6 @@ models:
             strata:
               lineage:
                 - from: bronze.contatos.valor
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

@@ -43,10 +43,19 @@ export type DbtFs = {
   unlink: typeof fs.unlink;
 };
 
+/**
+ * The client may only write the dbt project and Strata's own metadata. Anything else in the domain
+ * repository — `.git/` (hooks run code), CI config, unrelated files — is refused.
+ */
+const WRITABLE = [/^models\//, /^seeds\//, /^snapshots\//, /^\.strata\//, /^dbt_project\.yml$/, /^\.gitattributes$/];
+
 function assertSafeRel(rel: string): void {
   const normalized = rel.replace(/\\/g, '/');
   if (normalized.startsWith('/') || normalized.includes('..') || path.isAbsolute(rel)) {
     throw new Error(`unsafe dbt path: ${rel}`);
+  }
+  if (!WRITABLE.some((re) => re.test(normalized))) {
+    throw new Error(`dbt path outside the writable project area: ${rel}`);
   }
 }
 
@@ -57,6 +66,8 @@ export async function writeDbtChanges(
   io: DbtFs = fs,
 ): Promise<string[]> {
   const entries = Object.entries(changes);
+  // Validate every path before touching the disk, so a bad path in a batch writes nothing at all.
+  for (const [rel] of entries) assertSafeRel(rel);
   const temps: Array<{ tmp: string; dest: string }> = [];
   try {
     for (const [rel, content] of entries) {
