@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.devolucao
+          layer: silver
+          schema: silver
+          pk:
+            - devolucao_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - devolucoes
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -24,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.devolucoes.devolucao_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -34,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.devolucoes.pedido_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -58,6 +73,7 @@ models:
             strata:
               lineage:
                 - from: bronze.devolucoes.vl_estornado
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -68,6 +84,7 @@ models:
             strata:
               lineage:
                 - from: bronze.devolucoes.dt_devolucao
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

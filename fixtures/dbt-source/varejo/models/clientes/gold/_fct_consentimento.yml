@@ -6,12 +6,23 @@ models:
       tags:
         - strata:managed
         - strata:clientes
-      schema: gold
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: gold.fct_consentimento
+          layer: gold
+          schema: gold
+          pk:
+            - consentimento_id
           managed: true
+          transform:
+            from:
+              ref: consentimento
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -25,6 +36,7 @@ models:
             strata:
               lineage:
                 - from: silver.consentimento.consentimento_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -35,6 +47,7 @@ models:
             strata:
               lineage:
                 - from: silver.consentimento.cliente_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

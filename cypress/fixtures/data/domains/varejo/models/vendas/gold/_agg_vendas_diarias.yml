@@ -6,12 +6,23 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: gold
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: gold.agg_vendas_diarias
+          layer: gold
+          schema: gold
+          pk:
+            - dt_emissao
           managed: true
+          transform:
+            from:
+              ref: fct_vendas
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -25,6 +36,7 @@ models:
             strata:
               lineage:
                 - from: gold.fct_vendas.dt_emissao
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -35,6 +47,7 @@ models:
             strata:
               lineage:
                 - from: gold.fct_vendas.receita_bruta
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

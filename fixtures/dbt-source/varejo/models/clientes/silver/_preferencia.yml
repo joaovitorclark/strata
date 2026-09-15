@@ -4,7 +4,13 @@ models:
     config:
       tags:
         - strata:clientes
-      schema: silver
+      meta:
+        strata:
+          table_id: silver.preferencia
+          layer: silver
+          schema: silver
+          pk:
+            - preferencia_id
       contract:
         enforced: true
     constraints:
@@ -20,6 +26,7 @@ models:
             strata:
               lineage:
                 - from: bronze.preferencias.preferencia_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -30,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.preferencias.cliente_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -40,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.preferencias.chave
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

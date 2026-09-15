@@ -6,12 +6,23 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: gold
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: gold.fct_vendas
+          layer: gold
+          schema: gold
+          pk:
+            - pedido_id
           managed: true
+          transform:
+            from:
+              ref: pedido
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -46,6 +57,7 @@ models:
             strata:
               lineage:
                 - from: silver.pedido.pedido_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -56,6 +68,7 @@ models:
             strata:
               lineage:
                 - from: silver.pedido.cliente_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -80,6 +93,7 @@ models:
             strata:
               lineage:
                 - from: silver.pedido.valor_bruto
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -97,6 +111,7 @@ models:
             strata:
               lineage:
                 - from: silver.pedido.dt_emissao
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

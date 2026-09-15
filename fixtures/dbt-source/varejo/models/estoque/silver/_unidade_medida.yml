@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.unidade_medida
+          layer: silver
+          schema: silver
+          pk:
+            - unidade_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - unidades_medida
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -28,6 +41,7 @@ models:
             strata:
               lineage:
                 - from: bronze.unidades_medida.unidade_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -38,6 +52,8 @@ models:
             strata:
               lineage:
                 - from: bronze.unidades_medida.sigla
+              not_null: true
+              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,6 +64,7 @@ models:
             strata:
               lineage:
                 - from: bronze.unidades_medida.nome
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

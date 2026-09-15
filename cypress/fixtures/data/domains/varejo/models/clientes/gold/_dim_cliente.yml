@@ -6,12 +6,23 @@ models:
       tags:
         - strata:managed
         - strata:clientes
-      schema: gold
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: gold.dim_cliente
+          layer: gold
+          schema: gold
+          pk:
+            - cliente_id
           managed: true
+          transform:
+            from:
+              ref: cliente
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -25,6 +36,7 @@ models:
             strata:
               lineage:
                 - from: silver.cliente.cliente_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

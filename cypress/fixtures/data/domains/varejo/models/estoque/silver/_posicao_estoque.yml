@@ -5,12 +5,24 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.posicao_estoque
+          layer: silver
+          schema: silver
+          pk:
+            - produto_id
+            - deposito_id
           managed: true
+          transform:
+            from:
+              ref: movimentacao
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -25,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: silver.movimentacao.produto_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -35,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: silver.movimentacao.deposito_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -45,6 +59,7 @@ models:
             strata:
               lineage:
                 - from: silver.movimentacao.quantidade
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

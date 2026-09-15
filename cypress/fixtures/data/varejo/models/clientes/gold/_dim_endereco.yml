@@ -5,7 +5,13 @@ models:
     config:
       tags:
         - strata:clientes
-      schema: gold
+      meta:
+        strata:
+          table_id: gold.dim_endereco
+          layer: gold
+          schema: gold
+          pk:
+            - endereco_id
       contract:
         enforced: true
     constraints:
@@ -16,6 +22,10 @@ models:
     columns:
       - name: endereco_id
         data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

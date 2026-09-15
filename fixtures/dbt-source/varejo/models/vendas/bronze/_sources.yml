@@ -1,7 +1,7 @@
 version: 2
 sources:
-  - name: bronze
-    schema: bronze
+  - name: bronze_vendas
+    schema: bronze_vendas
     tables:
       - name: pedidos
         description: Tabela de negócio pedidos no domínio varejo.
@@ -10,60 +10,77 @@ sources:
             - strata:vendas
           meta:
             strata:
+              table_id: bronze.pedidos
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - pedido_id
               indexes:
                 - columns:
                     - cliente_id
                     - dt_emissao
                   name: idx_pedidos_cliente_dt
-        constraints:
-          - type: primary_key
-            columns:
-              - pedido_id
-            warn_unsupported: false
         columns:
           - name: pedido_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: cliente_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'clientes_venda')
+                    to: source('bronze_vendas', 'clientes_venda')
                     field: cliente_id
           - name: canal_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'canais')
+                    to: source('bronze_vendas', 'canais')
                     field: canal_id
           - name: loja_id
             data_type: bigint
             data_tests:
               - relationships:
                   arguments:
-                    to: source('bronze', 'lojas')
+                    to: source('bronze_vendas', 'lojas')
                     field: loja_id
           - name: vendedor_id
             data_type: bigint
             data_tests:
               - relationships:
                   arguments:
-                    to: source('bronze', 'vendedores')
+                    to: source('bronze_vendas', 'vendedores')
                     field: vendedor_id
           - name: cupom_id
             data_type: bigint
             data_tests:
               - relationships:
                   arguments:
-                    to: source('bronze', 'cupons')
+                    to: source('bronze_vendas', 'cupons')
                     field: cupom_id
           - name: vl_total
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: vl_desconto
@@ -76,6 +93,7 @@ sources:
               meta:
                 strata:
                   enum: status_pedido
+                  not_null: true
             data_tests:
               - not_null
               - accepted_values:
@@ -88,10 +106,18 @@ sources:
                       - cancelado
           - name: dt_emissao
             data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: dt_carga
             data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
       - name: itens_pedido
@@ -99,43 +125,69 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - pedido_id
-              - item_seq
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.itens_pedido
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - pedido_id
+                - item_seq
         columns:
           - name: pedido_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'pedidos')
+                    to: source('bronze_vendas', 'pedidos')
                     field: pedido_id
           - name: item_seq
             data_type: int
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: produto_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'produtos_venda')
+                    to: source('bronze_vendas', 'produtos_venda')
                     field: produto_id
           - name: qtd
             data_type: decimal(18,3)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: vl_unitario
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: vl_total
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
       - name: pagamentos
@@ -143,38 +195,65 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - pagamento_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.pagamentos
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - pagamento_id
         columns:
           - name: pagamento_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: pedido_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'pedidos')
+                    to: source('bronze_vendas', 'pedidos')
                     field: pedido_id
           - name: meio
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: vl_pago
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: dt_pagamento
             data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: nsu
             data_type: string
+            config:
+              meta:
+                strata:
+                  unique: true
             data_tests:
               - unique
       - name: devolucoes
@@ -182,23 +261,34 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - devolucao_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.devolucoes
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - devolucao_id
         columns:
           - name: devolucao_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: pedido_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'pedidos')
+                    to: source('bronze_vendas', 'pedidos')
                     field: pedido_id
           - name: item_seq
             data_type: int
@@ -206,10 +296,18 @@ sources:
             data_type: string
           - name: vl_estornado
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: dt_devolucao
             data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
       - name: cupons
@@ -217,18 +315,30 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - cupom_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.cupons
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - cupom_id
         columns:
           - name: cupom_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: codigo
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
             data_tests:
               - unique
               - not_null
@@ -243,15 +353,22 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - canal_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.canais
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - canal_id
         columns:
           - name: canal_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: codigo
             data_type: string
@@ -259,6 +376,8 @@ sources:
               meta:
                 strata:
                   enum: canal_venda
+                  not_null: true
+                  unique: true
             data_tests:
               - unique
               - not_null
@@ -271,6 +390,10 @@ sources:
                       - televendas
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
       - name: vendedores
@@ -278,18 +401,29 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - vendedor_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.vendedores
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - vendedor_id
         columns:
           - name: vendedor_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: loja_id
@@ -297,7 +431,7 @@ sources:
             data_tests:
               - relationships:
                   arguments:
-                    to: source('bronze', 'lojas')
+                    to: source('bronze_vendas', 'lojas')
                     field: loja_id
           - name: ativo
             data_type: boolean
@@ -306,18 +440,29 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - loja_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.lojas
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - loja_id
         columns:
           - name: loja_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: uf
@@ -329,23 +474,39 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - produto_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.produtos_venda
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - produto_id
         columns:
           - name: produto_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: sku
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
             data_tests:
               - unique
               - not_null
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: categoria
@@ -357,22 +518,37 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - cliente_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.clientes_venda
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - cliente_id
         columns:
           - name: cliente_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: email
             data_type: string
+            config:
+              meta:
+                strata:
+                  unique: true
             data_tests:
               - unique
           - name: documento
@@ -382,18 +558,29 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - promocao_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.promocoes
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - promocao_id
         columns:
           - name: promocao_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: nome
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: dt_inicio
@@ -407,34 +594,58 @@ sources:
         config:
           tags:
             - strata:vendas
-        constraints:
-          - type: primary_key
-            columns:
-              - nfe_id
-            warn_unsupported: false
+          meta:
+            strata:
+              table_id: bronze.notas_fiscais
+              layer: bronze
+              schema: bronze_vendas
+              pk:
+                - nfe_id
         columns:
           - name: nfe_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
+              - unique
               - not_null
           - name: pedido_id
             data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
               - relationships:
                   arguments:
-                    to: source('bronze', 'pedidos')
+                    to: source('bronze_vendas', 'pedidos')
                     field: pedido_id
           - name: chave
             data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
             data_tests:
               - unique
               - not_null
           - name: vl_nfe
             data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
           - name: dt_emissao
             data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
             data_tests:
               - not_null
