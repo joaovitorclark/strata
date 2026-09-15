@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.stg_pedido
-          layer: silver
-          schema: silver
-          pk:
-            - id
+      schema: silver
       materialized: view
       contract:
         enforced: true
@@ -34,9 +28,6 @@ models:
             strata:
               lineage:
                 - from: raw.pedido.id
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: cliente_id
         data_type: bigint
         config:
@@ -44,7 +35,6 @@ models:
             strata:
               lineage:
                 - from: raw.pedido.cliente_id
-              not_null: true
               rolename: silver.stg_cliente.id
         constraints:
           - type: not_null

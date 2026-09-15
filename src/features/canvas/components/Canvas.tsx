@@ -176,6 +176,7 @@ type Props = {
   onRemoveRef: (a: string, ac: string, b: string, bc: string) => void;
   onRemoveTable: (tableId: string) => void;
   onRemoveTables?: (tableIds: string[]) => void;
+  onAddTable?: () => void;
   staleWarning?: boolean;
   lineageFields: ParsedFieldLineage[];
   onRemoveFieldLineage: (
@@ -316,6 +317,7 @@ export function Canvas(props: Props) {
     onRemoveRef,
     onRemoveTable,
     onRemoveTables,
+    onAddTable,
     staleWarning,
     lineageFields,
     onRemoveFieldLineage,
@@ -759,8 +761,9 @@ export function Canvas(props: Props) {
             }}
             // Clique/arrasto no pane NÃO desseleciona a coluna: o usuário pode arrastar o
             // canvas para seguir uma ligação. A coluna sai com Esc, outra coluna ou outra seleção.
-            onPaneClick={() => {
+            onPaneClick={(e) => {
               clearCanvasSelection();
+              if (e.detail === 2) onAddTable?.();
             }}
             onSelectionChange={onSelectionChange}
             selectionOnDrag={!spaceHeld}

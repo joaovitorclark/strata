@@ -6,17 +6,13 @@ models:
         - strata:vendas
       meta:
         strata:
-          table_id: gold.dim_cliente
-          layer: gold
-          schema: gold
           group: dimensoes
-          pk:
-            - id
           indexes:
             - columns:
                 - email
                 - nome
               name: idx_cliente_contato
+      schema: gold
       materialized: table
       contract:
         enforced: true
@@ -37,9 +33,6 @@ models:
             strata:
               lineage:
                 - from: silver.stg_cliente.id
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: email
         data_type: string
         config:
@@ -47,8 +40,6 @@ models:
             strata:
               lineage:
                 - from: silver.stg_cliente.email
-              not_null: true
-              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -59,7 +50,6 @@ models:
             strata:
               lineage:
                 - from: silver.stg_cliente.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

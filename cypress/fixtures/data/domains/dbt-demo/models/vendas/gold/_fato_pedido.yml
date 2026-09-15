@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: gold.fato_pedido
-          layer: gold
-          schema: gold
-          pk:
-            - id
+      schema: gold
       materialized: table
       contract:
         enforced: true
@@ -34,9 +28,6 @@ models:
             strata:
               lineage:
                 - from: silver.stg_pedido.id
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: cliente_id
         data_type: bigint
         config:
@@ -44,7 +35,6 @@ models:
             strata:
               lineage:
                 - from: silver.stg_pedido.cliente_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

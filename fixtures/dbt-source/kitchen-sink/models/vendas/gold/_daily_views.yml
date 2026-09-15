@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: reporting.daily_views
-          layer: gold
-          schema: reporting
-          pk:
-            - id
+      schema: reporting
       materialized: table
       contract:
         enforced: true
@@ -29,24 +23,13 @@ models:
     columns:
       - name: id
         data_type: bigint
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: pedido_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: views
         data_type: int
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

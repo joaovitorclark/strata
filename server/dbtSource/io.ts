@@ -1,4 +1,4 @@
-// Lê um domínio no layout dbt da 0001 para ProjectFiles (somente leitura).
+// Lê e grava um domínio no layout dbt da 0001 para ProjectFiles.
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -34,4 +34,54 @@ export async function readDbtProjectFiles(domainDir: string): Promise<Record<str
   };
   await walk(domainDir);
   return files;
+}
+
+export type DbtFs = {
+  mkdir: typeof fs.mkdir;
+  writeFile: typeof fs.writeFile;
+  rename: typeof fs.rename;
+  unlink: typeof fs.unlink;
+};
+
+function assertSafeRel(rel: string): void {
+  const normalized = rel.replace(/\\/g, '/');
+  if (normalized.startsWith('/') || normalized.includes('..') || path.isAbsolute(rel)) {
+    throw new Error(`unsafe dbt path: ${rel}`);
+  }
+}
+
+/** Grava `changes` atomicamente: todos os temporários primeiro; se um write falha, originais intactos. */
+export async function writeDbtChanges(
+  domainDir: string,
+  changes: Record<string, string | null>,
+  io: DbtFs = fs,
+): Promise<string[]> {
+  const entries = Object.entries(changes);
+  const temps: Array<{ tmp: string; dest: string }> = [];
+  try {
+    for (const [rel, content] of entries) {
+      assertSafeRel(rel);
+      if (content === null) continue;
+      const dest = path.join(domainDir, rel);
+      await io.mkdir(path.dirname(dest), { recursive: true });
+      const tmp = `${dest}.strata-tmp`;
+      await io.writeFile(tmp, content, 'utf8');
+      temps.push({ tmp, dest });
+    }
+  } catch (err) {
+    await Promise.all(temps.map((t) => io.unlink(t.tmp).catch(() => undefined)));
+    throw err;
+  }
+  const written: string[] = [];
+  for (const t of temps) {
+    await io.rename(t.tmp, t.dest);
+    written.push(path.relative(domainDir, t.dest).split(path.sep).join('/'));
+  }
+  for (const [rel, content] of entries) {
+    if (content !== null) continue;
+    const dest = path.join(domainDir, rel);
+    await io.unlink(dest).catch(() => undefined);
+    written.push(rel);
+  }
+  return written;
 }

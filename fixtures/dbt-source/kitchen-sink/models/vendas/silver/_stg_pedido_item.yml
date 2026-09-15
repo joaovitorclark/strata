@@ -4,14 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.stg_pedido_item
-          layer: silver
-          schema: silver
-          pk:
-            - pedido_id
-            - seq
+      schema: silver
       materialized: view
       contract:
         enforced: true
@@ -31,28 +24,16 @@ models:
     columns:
       - name: pedido_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: seq
         data_type: int
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: sku
         data_type: string
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

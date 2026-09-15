@@ -63,7 +63,38 @@ export function ColumnDetail({
     (m) => m.sourceTable === tableId && m.sourceColumn === column.name,
   );
 
+  const applyDbt = useSchemaStore((s) => (s.documentFormat === "dbt" ? s.applyDbtOp : null));
   const applyPatch = (patch: Parameters<typeof setColumnSetting>[3]) => {
+    if (applyDbt) {
+      if (patch.pk !== undefined)
+        applyDbt({ op: "setPrimaryKey", tableId, column: column.name, value: !!patch.pk });
+      if (patch.notNull !== undefined)
+        applyDbt({ op: "setNotNull", tableId, column: column.name, value: !!patch.notNull });
+      if (patch.default !== undefined)
+        applyDbt({ op: "setDefault", tableId, column: column.name, value: patch.default ?? "" });
+      if (patch.note !== undefined)
+        applyDbt({
+          op: "setDescription",
+          tableId,
+          column: column.name,
+          description: patch.note ?? "",
+        });
+      if (patch.refTarget !== undefined) {
+        if (!patch.refTarget) {
+          /* inspector FK clear handled via removeRef when target known */
+        } else {
+          const i = patch.refTarget.lastIndexOf(".");
+          applyDbt({
+            op: "addRef",
+            fromTable: tableId,
+            fromCol: column.name,
+            toTable: patch.refTarget.slice(0, i),
+            toCol: patch.refTarget.slice(i + 1),
+          });
+        }
+      }
+      return;
+    }
     if (!dbml || !onApply) return;
     onApply(setColumnSetting(dbml, tableId, column.name, { ...settings, ...patch }));
   };
@@ -83,6 +114,10 @@ export function ColumnDetail({
         label={t("shell.inspector.type")}
         value={column.type}
         onCommit={(type) => {
+          if (applyDbt) {
+            applyDbt({ op: "setColumnType", tableId, column: column.name, dataType: type });
+            return;
+          }
           if (dbml && onApply) onApply(setColumnType(dbml, tableId, column.name, type));
         }}
       />
@@ -108,6 +143,15 @@ export function ColumnDetail({
           type="checkbox"
           checked={unique}
           onChange={(e) => {
+            if (applyDbt) {
+              applyDbt({
+                op: "setUnique",
+                tableId,
+                column: column.name,
+                value: e.target.checked,
+              });
+              return;
+            }
             if (dbml && onApply)
               onApply(setColumnUnique(dbml, tableId, column.name, e.target.checked));
           }}

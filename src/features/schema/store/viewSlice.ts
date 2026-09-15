@@ -29,6 +29,8 @@ type ViewDoc = ViewSlice & {
   dbml: string;
   positions: Positions;
   detailLevel: DetailLevel;
+  documentFormat?: "dbml" | "dbt";
+  applyDbtOp?: (action: { op: "setViews"; views: ReturnType<typeof parseViewsBlock> }) => void;
   setDbml: (update: string | ((prev: string) => string)) => void;
 };
 
@@ -153,7 +155,11 @@ export const createViewSlice: StateCreator<ViewSlice, [["zustand/immer", never]]
       if (pos) view.positions = { ...view.positions, [id]: { x: pos.x, y: pos.y } };
       // Never prune against a document that failed to parse (it reports zero tables).
       const safe = parseDbml(s.dbml).error ? views : pruneMissingTablesFromViews(views, tableIds);
-      s.setDbml(replaceViewsBlock(s.dbml, safe));
+      if (s.documentFormat === "dbt") {
+        s.applyDbtOp?.({ op: "setViews", views: safe });
+      } else {
+        s.setDbml(replaceViewsBlock(s.dbml, safe));
+      }
     }
     set((state) => {
       const i = state.hiddenTableIds.indexOf(id);

@@ -212,6 +212,17 @@ export async function loadProjectById(id: string): Promise<Project> {
 export const saveProjectById = (id: string, dbml: string, canvas: CanvasState): Promise<void> =>
   put<{ ok: boolean }>(`/api/projects/${id}`, { dbml, canvas }).then(() => {});
 
+export async function saveDbtChanges(
+  id: string,
+  changes: Record<string, string | null>,
+): Promise<string[]> {
+  const res = await put<{ ok: boolean; written?: string[] }>(`/api/projects/${id}`, {
+    format: "dbt",
+    changes,
+  });
+  return res.written ?? Object.keys(changes);
+}
+
 export const importFromInputForProject = (id: string, dbml: string) =>
   post<{ dbml: string; imported: string[]; lineageFieldCount?: number; warnings?: string[] }>(
     `/api/projects/${id}/import`,

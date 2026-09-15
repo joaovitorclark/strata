@@ -75,7 +75,12 @@ export function ViewTabs() {
   }, [activeViewId]);
 
   const writeViews = (next: SchemaView[]) => {
-    useSchemaStore.getState().setDbml((d) => replaceViewsBlock(d, next));
+    const s = useSchemaStore.getState();
+    if (s.documentFormat === "dbt") {
+      s.applyDbtOp({ op: "setViews", views: next });
+      return;
+    }
+    s.setDbml((d) => replaceViewsBlock(d, next));
   };
 
   const rememberSelection = () => {

@@ -44,6 +44,12 @@ import {
   retainRenamePointerArm,
   setRenameDraft,
 } from "@/features/canvas/components/columnRenameSession";
+import { ColumnComposer } from "@/features/canvas/components/ColumnComposer";
+import {
+  ColumnDeleteDialog,
+  type ColumnDep,
+} from "@/features/canvas/components/ColumnDeleteDialog";
+import { columnNameError } from "@/features/dbt-source/columnName";
 
 function headerTint(color: string | undefined): string | undefined {
   if (!color || color.startsWith("hsl(")) return undefined;
@@ -137,6 +143,13 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
   const ignoreNextBlur = useRef(Boolean(cachedRename));
   const [settling, setSettling] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [composing, setComposing] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ column: string; deps: ColumnDep[] } | null>(
+    null,
+  );
+  const isDbt = useSchemaStore((s) => s.documentFormat === "dbt");
+  const dbtParsed = useSchemaStore((s) => s.dbtParsed);
 
   useEffect(() => retainRenamePointerArm(), []);
   useEffect(() => {
@@ -155,6 +168,21 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
     const input = root?.querySelector("input.col-edit");
     if (input instanceof HTMLInputElement) input.focus();
   }, [editing, data.id]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "F2") return;
+      if (!selectedColumn || editing) return;
+      const sel = useSchemaStore.getState().selectedColumn;
+      if (sel?.table !== data.id) return;
+      e.preventDefault();
+      ignoreNextBlur.current = true;
+      setRenameDraft(data.id, { column: selectedColumn, draft: selectedColumn });
+      setEditing(selectedColumn);
+      setDraft(selectedColumn);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedColumn, editing, data.id]);
 
   const zoom = useStore((s) => s.transform[2]);
   const { state, simplified } = resolveLod(zoom, {
@@ -188,7 +216,19 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
       return;
     }
     const v = draft.trim();
-    if (v && v !== oldName) actions.onRenameColumn(data.id, oldName, v);
+    if (v && v !== oldName) {
+      const err = columnNameError(
+        v,
+        data.columns.map((c) => c.name),
+        oldName,
+      );
+      if (err) {
+        setRenameError(err);
+        return;
+      }
+      setRenameError(null);
+      actions.onRenameColumn(data.id, oldName, v);
+    }
     setEditing(null);
     clearRenameDraft(data.id);
   };
@@ -206,6 +246,42 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
 
   const tableLabel = data.schema ? `${data.schema}.${data.name}` : data.name;
   const tint = headerTint(data.headerColor);
+
+  const columnDeps = (column: string): ColumnDep[] => {
+    const deps: ColumnDep[] = [];
+    for (const fk of data.meta.fks ?? []) {
+      if (fk.column === column)
+        deps.push({ kind: "fk", label: `${data.id}.${column} → ${fk.ref}` });
+    }
+    const parsed = dbtParsed;
+    for (const l of parsed?.lineageFields ?? []) {
+      if (
+        (l.targetTable === data.id && l.targetColumn === column) ||
+        (l.sourceTable === data.id && l.sourceColumn === column)
+      ) {
+        deps.push({
+          kind: "lineage",
+          label: `${l.targetTable}.${l.targetColumn} < ${l.sourceTable}.${l.sourceColumn}`,
+        });
+      }
+    }
+    return deps;
+  };
+
+  const requestDelete = (column: string) => {
+    const deps = columnDeps(column);
+    if (!deps.length) {
+      actions.onRemoveColumn?.(data.id, column);
+      toast(t("canvas.node.columnDeleted"), {
+        action: {
+          label: t("shell.undo"),
+          onClick: () => useSchemaStore.getState().undo(),
+        },
+      });
+      return;
+    }
+    setPendingDelete({ column, deps });
+  };
 
   return (
     <div
@@ -437,24 +513,60 @@ function TableNodeImpl({ data, selected }: NodeProps<Node<TableNodeData, "table"
           onCommitEdit={commitEdit}
           onCancelEdit={() => {
             setEditing(null);
+            setRenameError(null);
             clearRenameDraft(data.id);
           }}
           onShowMore={() => useSchemaStore.getState().setNodeLod(data.id, "full")}
+          onDeleteColumn={isDbt ? requestDelete : undefined}
         />
+        {renameError ? (
+          <p data-testid="col-rename-error" className="px-2 py-0.5 text-[10px] text-destructive">
+            {renameError === "empty"
+              ? t("canvas.node.columnNameEmpty")
+              : renameError === "invalid"
+                ? t("canvas.node.columnNameInvalid")
+                : t("canvas.node.columnNameDuplicate")}
+          </p>
+        ) : null}
         {state !== "sigil" ? (
-          <button
-            type="button"
-            className="col-add nodrag nopan box-border flex w-full shrink-0 items-center overflow-hidden px-2 text-left font-mono text-2xs leading-none text-muted-foreground hover:bg-surface-hover"
-            style={{ height: TABLE_FOOTER_H }}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.onAddColumn(data.id);
-            }}
-          >
-            + coluna
-          </button>
+          isDbt && composing ? (
+            <ColumnComposer
+              existing={data.columns.map((c) => c.name)}
+              onCommit={(name, dataType) => {
+                actions.onAddColumn(data.id, name, dataType);
+                setComposing(false);
+              }}
+              onCancel={() => setComposing(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              data-testid="col-add"
+              className="col-add nodrag nopan box-border flex w-full shrink-0 items-center overflow-hidden px-2 text-left font-mono text-2xs leading-none text-muted-foreground hover:bg-surface-hover"
+              style={{ height: TABLE_FOOTER_H }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isDbt) setComposing(true);
+                else actions.onAddColumn(data.id);
+              }}
+            >
+              {t("canvas.node.addColumn")}
+            </button>
+          )
         ) : null}
       </div>
+      {pendingDelete ? (
+        <ColumnDeleteDialog
+          open
+          column={pendingDelete.column}
+          deps={pendingDelete.deps}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            actions.onRemoveColumn?.(data.id, pendingDelete.column);
+            setPendingDelete(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

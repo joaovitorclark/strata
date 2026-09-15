@@ -6,12 +6,8 @@ models:
         - strata:vendas
       meta:
         strata:
-          table_id: silver.stg_cliente
-          layer: silver
-          schema: silver
           group: dimensoes
-          pk:
-            - id
+      schema: silver
       materialized: view
       contract:
         enforced: true
@@ -32,9 +28,6 @@ models:
             strata:
               lineage:
                 - from: raw.cliente.id
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: email
         data_type: string
         config:
@@ -42,8 +35,6 @@ models:
             strata:
               lineage:
                 - from: raw.cliente.email
-              not_null: true
-              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -54,7 +45,6 @@ models:
             strata:
               lineage:
                 - from: raw.cliente.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

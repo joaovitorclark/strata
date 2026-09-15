@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { ROOT, DATA_DIR } from './paths.ts';
 import { getActiveDomainSlug, domainDirFor } from './domainContext.ts';
-import { readDbtProjectFiles } from './dbtSource/io.ts';
+import { readDbtProjectFiles, writeDbtChanges } from './dbtSource/io.ts';
 
 export { ROOT, DATA_DIR };
 
@@ -488,6 +488,16 @@ export async function saveProjectBySlug(slug: string, dbml: string, canvas: unkn
   await ensureDir(dir);
   await fs.writeFile(projectDbmlPath(slug), dbml, 'utf8');
   await fs.writeFile(projectCanvasPath(slug), JSON.stringify(canvas ?? {}, null, 2), 'utf8');
+}
+
+export async function saveDbtChangesBySlug(
+  slug: string,
+  changes: Record<string, string | null>,
+): Promise<string[]> {
+  if ((await projectFormat(slug)) !== 'dbt') {
+    throw new Error('not a dbt project');
+  }
+  return writeDbtChanges(getDataDir(), changes);
 }
 
 export async function readInputSqlForSlug(slug: string): Promise<{ file: string; content: string }[]> {

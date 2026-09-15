@@ -8,35 +8,21 @@ sources:
         config:
           tags:
             - strata:vendas
-          meta:
-            strata:
-              table_id: raw.cliente
-              layer: bronze
-              schema: raw
-              pk:
-                - id
+        constraints:
+          - type: primary_key
+            columns:
+              - id
+            warn_unsupported: false
         columns:
           - name: id
             data_type: bigint
-            data_tests:
-              - unique
-              - not_null
           - name: email
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
-                  unique: true
             data_tests:
               - unique
               - not_null
           - name: nome
             data_type: string
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
       - name: pedido
@@ -44,25 +30,16 @@ sources:
         config:
           tags:
             - strata:vendas
-          meta:
-            strata:
-              table_id: raw.pedido
-              layer: bronze
-              schema: raw
-              pk:
-                - id
+        constraints:
+          - type: primary_key
+            columns:
+              - id
+            warn_unsupported: false
         columns:
           - name: id
             data_type: bigint
-            data_tests:
-              - unique
-              - not_null
           - name: cliente_id
             data_type: bigint
-            config:
-              meta:
-                strata:
-                  not_null: true
             data_tests:
               - not_null
               - relationships:

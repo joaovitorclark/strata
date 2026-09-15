@@ -58,6 +58,7 @@ export type TableColumnListProps = {
   onCommitEdit: (oldName: string, cause?: "blur" | "enter") => void;
   onCancelEdit: () => void;
   onShowMore?: () => void;
+  onDeleteColumn?: (column: string) => void;
 };
 
 export function TableColumnList(props: TableColumnListProps): ReactNode {
@@ -77,6 +78,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     onCommitEdit,
     onCancelEdit,
     onShowMore,
+    onDeleteColumn,
   } = props;
   const { t } = useTranslation();
 
@@ -170,6 +172,7 @@ export function TableColumnList(props: TableColumnListProps): ReactNode {
     onCommitEdit,
     onCancelEdit,
     simplified,
+    onDelete: onDeleteColumn,
   };
 
   const renderRow = (

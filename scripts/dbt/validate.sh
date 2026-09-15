@@ -6,7 +6,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 VENV="$ROOT/.venv-dbt"
-FIXTURE="$ROOT/fixtures/dbt-source/kitchen-sink"
+FIXTURE="${1:-$ROOT/fixtures/dbt-source/kitchen-sink}"
 OUT="$ROOT/docs/superpowers/dbt-validate"
 
 if ! command -v python3 >/dev/null 2>&1; then
