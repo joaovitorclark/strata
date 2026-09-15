@@ -5,7 +5,24 @@ import { quoteDbmlNote } from '../src/features/schema/model/dbmlNotes.ts';
 import { resolveMemberTableIds, tableIdsMatch } from '../src/features/schema/model/tableIdMatch.ts';
 import { extractRecords } from './dbmlClean.ts';
 import { parseTypeName, qualifiedName } from './model.ts';
-import type { Column, ColumnTest, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
+import type { Column, ColumnTest, FieldLineageEntry, Model, Ref, Table } from './model.ts';
+
+type DbmlField = {
+  name: string;
+  type: { type_name: string };
+  pk?: boolean;
+  not_null?: boolean;
+  unique?: boolean;
+  note?: string;
+};
+type DbmlIndex = { pk?: boolean; columns?: unknown[] };
+type DbmlTable = { name: string; fields: DbmlField[]; indexes?: DbmlIndex[]; note?: string; group?: { name?: string } };
+type DbmlEndpoint = {
+  relation: string;
+  schemaName?: string;
+  tableName: string;
+  fieldNames: string[];
+};
 
 const REL_TO_KIND: Record<string, '>' | '<' | '-' | '<>'> = {
   '*': '>', // muitos -> um (lado "from")
@@ -27,7 +44,7 @@ function isDegenerateRef(r: Ref): boolean {
 
 /** Faz parse de uma string DBML para o modelo canônico (inclui LayerGroup, Records, PK composta, Dbt). */
 export function dbmlToModel(dbml: string): Model {
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, colors, pins } =
+  const { clean, records, layerGroups, lineageFields, dbtTables, colors, pins } =
     extractRecords(dbml);
   const db = Parser.parse(clean, 'dbml');
   const tables: Table[] = [];
@@ -38,7 +55,7 @@ export function dbmlToModel(dbml: string): Model {
 
     for (const t of schema.tables) {
       const compositePks: string[][] = [];
-      const columns: Column[] = t.fields.map((f: any) => {
+      const columns: Column[] = (t as unknown as DbmlTable).fields.map((f) => {
         const { base, args } = parseTypeName(f.type.type_name);
         return {
           name: f.name,
@@ -51,7 +68,7 @@ export function dbmlToModel(dbml: string): Model {
         };
       });
 
-      for (const idx of (t as any).indexes ?? []) {
+      for (const idx of (t as unknown as DbmlTable).indexes ?? []) {
         const cols = (idx.columns ?? []).map(indexColName).filter(Boolean);
         if (idx.pk && cols.length > 1) {
           compositePks.push(cols);
@@ -79,7 +96,7 @@ export function dbmlToModel(dbml: string): Model {
       const [a, b] = r.endpoints;
       const fromEp = a.relation === '*' ? a : b;
       const toEp = fromEp === a ? b : a;
-      const epName = (ep: any) =>
+      const epName = (ep: DbmlEndpoint) =>
         ep.schemaName && ep.schemaName !== 'public'
           ? `${ep.schemaName}.${ep.tableName}`
           : ep.tableName;
@@ -140,9 +157,6 @@ export function dbmlToModel(dbml: string): Model {
     }
   }
 
-  const modelLineage: LineageEntry[] | undefined = lineage.length
-    ? lineage.map((l) => ({ target: l.target, sources: [...l.sources] }))
-    : undefined;
   const modelLineageFields: FieldLineageEntry[] | undefined = lineageFields.length
     ? lineageFields.map((f) => ({ ...f }))
     : undefined;
@@ -157,7 +171,6 @@ export function dbmlToModel(dbml: string): Model {
   return {
     tables,
     refs,
-    lineage: modelLineage,
     lineageFields: modelLineageFields,
     colors: Object.keys(modelColors).length ? modelColors : undefined,
     layerColors: Object.keys(modelLayerColors).length ? modelLayerColors : undefined,
@@ -202,15 +215,6 @@ export function modelToDbml(model: Model): string {
     out.push(
       `Ref: ${r.from.table}.${r.from.column} ${r.kind} ${r.to.table}.${r.to.column}`,
     );
-  }
-
-  if (model.lineage?.length) {
-    out.push('');
-    out.push('Lineage {');
-    for (const entry of model.lineage) {
-      out.push(`  ${entry.target} < ${entry.sources.join(', ')}`);
-    }
-    out.push('}');
   }
 
   if (model.lineageFields?.length) {

@@ -1,0 +1,25 @@
+version: 2
+models:
+  - name: expr_cast
+    config:
+      schema: gold
+      materialized: view
+      tags: [strata:demo, strata:managed]
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: stg_pedido
+              alias: p
+            joins: []
+            group_by: []
+    columns:
+      - name: valor
+        data_type: decimal(12,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: p.valor
+                  expr: cast(p.valor as decimal(12,2))

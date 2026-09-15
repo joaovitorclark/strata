@@ -5,7 +5,71 @@
 // Inverte a codificação do export (F2) para round-trip semântico.
 import yaml from 'js-yaml';
 import { parseTypeName, qualifiedName } from './model.ts';
-import type { Column, FieldLineageEntry, LineageEntry, Model, Ref, Table } from './model.ts';
+import type { Column, FieldLineageEntry, Model, Ref, Table } from './model.ts';
+import { isRecord } from './unknownError.ts';
+
+type LdbMap = { table?: string; column?: string; note?: string; ref?: string };
+type LdbColumnMeta = { color?: string; map?: LdbMap };
+type LdbTableMeta = {
+  schema?: string;
+  layer?: string;
+  group?: string;
+  color?: string;
+  groupColor?: string;
+  layerColor?: string;
+  pk?: unknown[];
+  records?: { columns?: unknown[]; rows?: unknown[] };
+};
+type YamlColumnEntry = {
+  name: string;
+  data_type?: unknown;
+  description?: unknown;
+  data_tests?: unknown[];
+  tests?: unknown[];
+  meta?: { localdrawdb?: LdbColumnMeta; strata?: { pinned?: unknown[] } };
+};
+
+type YamlTableEntry = {
+  name: string;
+  description?: unknown;
+  config?: { materialized?: string; tags?: string[] };
+  tags?: unknown[];
+  columns?: YamlColumnEntry[];
+  meta?: { localdrawdb?: LdbTableMeta; strata?: { pinned?: unknown[] } };
+};
+
+type YamlSourceEntry = {
+  schema?: string;
+  name?: string;
+  tables?: YamlTableEntry[];
+};
+
+type SchemaYmlDoc = {
+  models?: YamlTableEntry[];
+  sources?: YamlSourceEntry[];
+};
+
+type ManifestColumn = { name?: string; data_type?: string; description?: string };
+type ManifestNode = {
+  resource_type?: string;
+  name?: string;
+  schema?: string;
+  description?: string;
+  config?: { materialized?: string; tags?: unknown[] };
+  columns?: Record<string, ManifestColumn>;
+  column_name?: string;
+  test_metadata?: { name?: string; kwargs?: Record<string, unknown> };
+  depends_on?: { nodes?: string[] };
+};
+
+type ManifestDoc = {
+  nodes?: Record<string, ManifestNode>;
+  sources?: Record<string, ManifestNode>;
+};
+
+function asSchemaYmlDoc(v: unknown): SchemaYmlDoc | null {
+  return isRecord(v) ? (v as SchemaYmlDoc) : null;
+}
 
 /** Acumulador de metadados LocalDrawDB (meta.localdrawdb) coletados dos yml. */
 type LdbAcc = {
@@ -32,7 +96,7 @@ function applyLdbAcc(model: Model, acc: LdbAcc): Model {
  * colunas = composta), records; cores vão para o acumulador. Depois coleta a meta
  * das colunas (cor do nome + mapeamento L2).
  */
-function applyLdbMeta(table: Table, entry: any, acc: LdbAcc): void {
+function applyLdbMeta(table: Table, entry: YamlTableEntry, acc: LdbAcc): void {
   const ldb = entry?.meta?.localdrawdb;
   if (ldb && typeof ldb === 'object') {
     if (!table.schema && typeof ldb.schema === 'string') table.schema = ldb.schema;
@@ -135,11 +199,12 @@ function applyColumnTests(
     if (t === 'unique') hasUnique = true;
     else if (t === 'not_null') hasNotNull = true;
     else if (t && typeof t === 'object') {
-      const o = t as Record<string, any>;
-      if (o.accepted_values) {
-        const values = (o.accepted_values.values ?? []).map(String);
+      const o = t as Record<string, unknown>;
+      if (o.accepted_values && isRecord(o.accepted_values)) {
+        const raw = o.accepted_values.values;
+        const values = (Array.isArray(raw) ? raw : []).map(String);
         (col.tests ??= []).push({ kind: 'accepted_values', values });
-      } else if (o.relationships) {
+      } else if (o.relationships && isRecord(o.relationships)) {
         refs.push({
           from: { table: table.name, column: col.name },
           to: { table: unwrapRef(o.relationships.to), column: String(o.relationships.field ?? '') },
@@ -166,18 +231,18 @@ function finalizeTests(table: Table, rawByCol: Map<string, unknown[]>, refs: Ref
   }
 }
 
-const rawTestsOf = (c: any): unknown[] => c?.data_tests ?? c?.tests ?? [];
+const rawTestsOf = (c: YamlColumnEntry): unknown[] => c.data_tests ?? c.tests ?? [];
 
 // ---------------------------------------------------------------------------
 // 1. schema.yml / properties.yml
 // ---------------------------------------------------------------------------
 
-function parseModelEntry(m: any, defaultSchema: string | undefined, refs: Ref[], acc: LdbAcc): Table {
+function parseModelEntry(m: YamlTableEntry, defaultSchema: string | undefined, refs: Ref[], acc: LdbAcc): Table {
   const table: Table = { name: m.name, columns: [] };
   if (defaultSchema) table.schema = defaultSchema;
   if (m.description) table.note = String(m.description);
   const config = m.config ?? {};
-  if (config.materialized) table.materialization = config.materialized;
+  if (config.materialized) table.materialization = asMaterialization(config.materialized);
   const tags = config.tags ?? m.tags;
   if (Array.isArray(tags) && tags.length) table.tags = tags.map(String);
 
@@ -193,7 +258,7 @@ function parseModelEntry(m: any, defaultSchema: string | undefined, refs: Ref[],
   return table;
 }
 
-function parseSourceTable(st: any, schema: string | undefined, refs: Ref[], acc: LdbAcc): Table {
+function parseSourceTable(st: YamlTableEntry, schema: string | undefined, refs: Ref[], acc: LdbAcc): Table {
   const table: Table = { name: st.name, columns: [], resourceType: 'source' };
   if (schema) table.schema = schema;
   if (st.description) table.note = String(st.description);
@@ -211,12 +276,13 @@ function parseSourceTable(st: any, schema: string | undefined, refs: Ref[], acc:
 
 /** schema.yml/properties.yml avulso → Model. `defaultSchema` aplica-se aos models. */
 export function schemaYmlToModel(content: string, defaultSchema?: string): Model {
-  let doc: any;
+  let raw: unknown;
   try {
-    doc = yaml.load(content);
+    raw = yaml.load(content);
   } catch {
     return { tables: [], refs: [] };
   }
+  const doc = asSchemaYmlDoc(raw);
   const tables: Table[] = [];
   const refs: Ref[] = [];
   const acc = newLdbAcc();
@@ -287,12 +353,13 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
 
   for (const f of files) {
     if (!/\.ya?ml$/i.test(f.file)) continue;
-    let doc: any;
+    let raw: unknown;
     try {
-      doc = yaml.load(f.content);
+      raw = yaml.load(f.content);
     } catch {
       continue;
     }
+    const doc = asSchemaYmlDoc(raw);
     // dbt_project.yml tem `models:` como objeto (config), não array — ignorado.
     if (!doc || (!Array.isArray(doc.models) && !Array.isArray(doc.sources))) continue;
     const m = schemaYmlToModel(f.content, schemaFromPath(f.file));
@@ -304,11 +371,10 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
     if (m.pins?.length) acc.pins.push(...m.pins);
   }
 
-  const lineage: LineageEntry[] = [];
   for (const f of files) {
     if (!/\.sql$/i.test(f.file)) continue;
     const name = (f.file.split('/').pop() ?? f.file).replace(/\.sql$/i, '');
-    const { deps, materialized, tags } = extractSqlDeps(f.content);
+    const { materialized, tags } = extractSqlDeps(f.content);
     let table = [...byKey.values()].find((t) => t.name === name);
     if (!table) {
       table = { name, columns: [] };
@@ -318,21 +384,9 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
     }
     if (!table.materialization) table.materialization = asMaterialization(materialized);
     if (!table.tags && tags?.length) table.tags = tags;
-    if (deps.length) {
-      // Qualifica pelo schema quando a tabela é conhecida (ref()/source() usam nome cru).
-      const byName = (n: string) => [...byKey.values()].find((t) => t.name === n);
-      const sources = deps.map((d) => {
-        const src = byName(d);
-        return src ? qualifiedName(src) : d;
-      });
-      lineage.push({ target: qualifiedName(table), sources });
-    }
   }
 
-  return applyLdbAcc(
-    { tables: [...byKey.values()], refs, ...(lineage.length ? { lineage } : {}) },
-    acc,
-  );
+  return applyLdbAcc({ tables: [...byKey.values()], refs }, acc);
 }
 
 // ---------------------------------------------------------------------------
@@ -341,15 +395,15 @@ export function dbtProjectToModel(files: { file: string; content: string }[]): M
 
 const MODEL_RESOURCE = new Set(['model', 'seed', 'snapshot']);
 
-export function manifestToModel(manifest: any): Model {
-  const nodes: Record<string, any> = manifest?.nodes ?? {};
-  const sources: Record<string, any> = manifest?.sources ?? {};
+export function manifestToModel(manifest: unknown): Model {
+  const doc = isRecord(manifest) ? (manifest as ManifestDoc) : {};
+  const nodes: Record<string, ManifestNode> = doc.nodes ?? {};
+  const sources: Record<string, ManifestNode> = doc.sources ?? {};
   const byId = new Map<string, Table>();
-  const nameById = new Map<string, string>();
   const rawTestsByTable = new Map<string, Map<string, unknown[]>>();
   const refs: Ref[] = [];
 
-  const addColumns = (table: Table, cols: Record<string, any> | undefined) => {
+  const addColumns = (table: Table, cols: Record<string, ManifestColumn> | undefined) => {
     for (const [cname, c] of Object.entries(cols ?? {})) {
       const col: Column = { name: c?.name ?? cname, ...colFromType(c?.data_type) };
       if (c?.description) col.note = String(c.description);
@@ -359,27 +413,29 @@ export function manifestToModel(manifest: any): Model {
 
   // Models / seeds / snapshots
   for (const [id, n] of Object.entries(nodes)) {
-    if (!MODEL_RESOURCE.has(n?.resource_type)) continue;
+    if (!n.resource_type || !MODEL_RESOURCE.has(n.resource_type)) continue;
+    if (!n.name) continue;
     const table: Table = { name: n.name, columns: [] };
     if (n.schema) table.schema = n.schema;
     if (n.description) table.note = String(n.description);
-    if (n.resource_type !== 'model') table.resourceType = n.resource_type;
+    if (n.resource_type !== 'model') {
+      table.resourceType = n.resource_type as Table['resourceType'];
+    }
     const config = n.config ?? {};
-    if (config.materialized) table.materialization = config.materialized;
+    if (config.materialized) table.materialization = asMaterialization(config.materialized);
     if (Array.isArray(config.tags) && config.tags.length) table.tags = config.tags.map(String);
     addColumns(table, n.columns);
     byId.set(id, table);
-    nameById.set(id, n.name);
   }
 
   // Sources
   for (const [id, s] of Object.entries(sources)) {
+    if (!s.name) continue;
     const table: Table = { name: s.name, columns: [], resourceType: 'source' };
     if (s.schema) table.schema = s.schema;
     if (s.description) table.note = String(s.description);
     addColumns(table, s.columns);
     byId.set(id, table);
-    nameById.set(id, s.name);
   }
 
   // Tests → coleta crua por (tabela, coluna)
@@ -389,8 +445,8 @@ export function manifestToModel(manifest: any): Model {
     const kind = meta.name;
     const kwargs = meta.kwargs ?? {};
     const colName = n.column_name ?? kwargs.column_name;
-    const modelId = (n.depends_on?.nodes ?? []).find((d: string) => byId.has(d));
-    if (!modelId || !colName || !kind) continue;
+    const modelId = (n.depends_on?.nodes ?? []).find((d) => byId.has(d));
+    if (!modelId || typeof colName !== 'string' || !kind) continue;
     const perCol = rawTestsByTable.get(modelId) ?? new Map<string, unknown[]>();
     const list = perCol.get(colName) ?? [];
     if (kind === 'unique' || kind === 'not_null') list.push(kind);
@@ -400,22 +456,13 @@ export function manifestToModel(manifest: any): Model {
     rawTestsByTable.set(modelId, perCol);
   }
 
-  // Aplica tests + monta lineage
-  const lineage: LineageEntry[] = [];
+  // Aplica tests (linhagem de tabela a partir de depends_on foi removida — só meta de campo).
   for (const [id, table] of byId) {
     const perCol = rawTestsByTable.get(id) ?? new Map();
     finalizeTests(table, perCol, refs);
   }
-  for (const [id, n] of Object.entries(nodes)) {
-    if (!MODEL_RESOURCE.has(n?.resource_type)) continue;
-    const sourcesOf = (n.depends_on?.nodes ?? [])
-      .filter((d: string) => byId.has(d))
-      .map((d: string) => nameById.get(d)!)
-      .filter(Boolean);
-    if (sourcesOf.length) lineage.push({ target: n.name, sources: [...new Set<string>(sourcesOf)] });
-  }
 
-  return { tables: [...byId.values()], refs, ...(lineage.length ? { lineage } : {}) };
+  return { tables: [...byId.values()], refs };
 }
 
 // ---------------------------------------------------------------------------

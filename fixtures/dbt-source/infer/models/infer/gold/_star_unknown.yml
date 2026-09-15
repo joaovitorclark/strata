@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: star_unknown
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: nome
+        data_type: string

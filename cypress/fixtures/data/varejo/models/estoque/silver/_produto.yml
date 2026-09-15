@@ -1,0 +1,76 @@
+version: 2
+models:
+  - name: produto
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - produtos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - sku
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: sku
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos.sku
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos.nome
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: categoria
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos.categoria
+      - name: marca
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos.marca

@@ -1,0 +1,32 @@
+version: 2
+models:
+  - name: group_agg
+    config:
+      schema: gold
+      materialized: view
+      tags: [strata:demo, strata:managed]
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: stg_pedido
+              alias: p
+            group_by: [p.cliente_id]
+            joins: []
+    columns:
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: p.cliente_id
+      - name: total
+        data_type: decimal(12,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: p.valor
+                  expr: sum(p.valor)

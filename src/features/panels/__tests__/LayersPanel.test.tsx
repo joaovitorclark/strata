@@ -131,16 +131,6 @@ describe("LayersPanel", () => {
     expect(useSchemaStore.getState().layerDimMode).toBe(!initial);
   });
 
-  it("toggles lineage, relations, and field-lineage visibility", () => {
-    renderPanel();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar linhagem" }));
-    expect(useSchemaStore.getState().lineageVisible).toBe(true);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar relacionamentos" }));
-    expect(useSchemaStore.getState().relationsVisible).toBe(false);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar linhagem de campos" }));
-    expect(useSchemaStore.getState().fieldLineageVisible).toBe(true);
-  });
-
   it("toggles Modo linhagem", () => {
     renderPanel();
     fireEvent.click(screen.getByRole("button", { name: /Modo linhagem/ }));

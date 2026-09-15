@@ -1,0 +1,440 @@
+version: 2
+sources:
+  - name: bronze_vendas
+    schema: bronze
+    tables:
+      - name: pedidos
+        description: Tabela de negócio pedidos no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+          meta:
+            strata:
+              indexes:
+                - columns:
+                    - cliente_id
+                    - dt_emissao
+                  name: idx_pedidos_cliente_dt
+        constraints:
+          - type: primary_key
+            columns:
+              - pedido_id
+            warn_unsupported: false
+        columns:
+          - name: pedido_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'clientes_venda')
+                    field: cliente_id
+          - name: canal_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'canais')
+                    field: canal_id
+          - name: loja_id
+            data_type: bigint
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'lojas')
+                    field: loja_id
+          - name: vendedor_id
+            data_type: bigint
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'vendedores')
+                    field: vendedor_id
+          - name: cupom_id
+            data_type: bigint
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'cupons')
+                    field: cupom_id
+          - name: vl_total
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+          - name: vl_desconto
+            data_type: decimal(18,2)
+          - name: vl_frete
+            data_type: decimal(18,2)
+          - name: status
+            data_type: string
+            config:
+              meta:
+                strata:
+                  enum: status_pedido
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values:
+                      - pendente
+                      - pago
+                      - enviado
+                      - entregue
+                      - cancelado
+          - name: dt_emissao
+            data_type: timestamp
+            data_tests:
+              - not_null
+          - name: dt_carga
+            data_type: timestamp
+            data_tests:
+              - not_null
+      - name: itens_pedido
+        description: Tabela de negócio itens_pedido no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - pedido_id
+              - item_seq
+            warn_unsupported: false
+        columns:
+          - name: pedido_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'pedidos')
+                    field: pedido_id
+          - name: item_seq
+            data_type: int
+            data_tests:
+              - not_null
+          - name: produto_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'produtos_venda')
+                    field: produto_id
+          - name: qtd
+            data_type: decimal(18,3)
+            data_tests:
+              - not_null
+          - name: vl_unitario
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+          - name: vl_total
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+      - name: pagamentos
+        description: Tabela de negócio pagamentos no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - pagamento_id
+            warn_unsupported: false
+        columns:
+          - name: pagamento_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: pedido_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'pedidos')
+                    field: pedido_id
+          - name: meio
+            data_type: string
+            data_tests:
+              - not_null
+          - name: vl_pago
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+          - name: dt_pagamento
+            data_type: timestamp
+            data_tests:
+              - not_null
+          - name: nsu
+            data_type: string
+            data_tests:
+              - unique
+      - name: devolucoes
+        description: Tabela de negócio devolucoes no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - devolucao_id
+            warn_unsupported: false
+        columns:
+          - name: devolucao_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: pedido_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'pedidos')
+                    field: pedido_id
+          - name: item_seq
+            data_type: int
+          - name: motivo
+            data_type: string
+          - name: vl_estornado
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+          - name: dt_devolucao
+            data_type: timestamp
+            data_tests:
+              - not_null
+      - name: cupons
+        description: Tabela de negócio cupons no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - cupom_id
+            warn_unsupported: false
+        columns:
+          - name: cupom_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: codigo
+            data_type: string
+            data_tests:
+              - unique
+              - not_null
+          - name: tipo
+            data_type: string
+          - name: vl_desconto
+            data_type: decimal(18,2)
+          - name: dt_validade
+            data_type: date
+      - name: canais
+        description: Tabela de negócio canais no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - canal_id
+            warn_unsupported: false
+        columns:
+          - name: canal_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: codigo
+            data_type: string
+            config:
+              meta:
+                strata:
+                  enum: canal_venda
+            data_tests:
+              - unique
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values:
+                      - loja
+                      - e_commerce
+                      - marketplace
+                      - televendas
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+      - name: vendedores
+        description: Tabela de negócio vendedores no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - vendedor_id
+            warn_unsupported: false
+        columns:
+          - name: vendedor_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: loja_id
+            data_type: bigint
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'lojas')
+                    field: loja_id
+          - name: ativo
+            data_type: boolean
+      - name: lojas
+        description: Tabela de negócio lojas no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - loja_id
+            warn_unsupported: false
+        columns:
+          - name: loja_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: uf
+            data_type: string
+          - name: cidade
+            data_type: string
+      - name: produtos_venda
+        description: Tabela de negócio produtos_venda no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - produto_id
+            warn_unsupported: false
+        columns:
+          - name: produto_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: sku
+            data_type: string
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: categoria
+            data_type: string
+          - name: vl_tabela
+            data_type: decimal(18,2)
+      - name: clientes_venda
+        description: Tabela de negócio clientes_venda no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - cliente_id
+            warn_unsupported: false
+        columns:
+          - name: cliente_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: email
+            data_type: string
+            data_tests:
+              - unique
+          - name: documento
+            data_type: string
+      - name: promocoes
+        description: Tabela de negócio promocoes no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - promocao_id
+            warn_unsupported: false
+        columns:
+          - name: promocao_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: nome
+            data_type: string
+            data_tests:
+              - not_null
+          - name: dt_inicio
+            data_type: date
+          - name: dt_fim
+            data_type: date
+          - name: perc_desconto
+            data_type: decimal(5,2)
+      - name: notas_fiscais
+        description: Tabela de negócio notas_fiscais no domínio varejo.
+        config:
+          tags:
+            - strata:vendas
+        constraints:
+          - type: primary_key
+            columns:
+              - nfe_id
+            warn_unsupported: false
+        columns:
+          - name: nfe_id
+            data_type: bigint
+            data_tests:
+              - not_null
+          - name: pedido_id
+            data_type: bigint
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_vendas', 'pedidos')
+                    field: pedido_id
+          - name: chave
+            data_type: string
+            data_tests:
+              - unique
+              - not_null
+          - name: vl_nfe
+            data_type: decimal(18,2)
+            data_tests:
+              - not_null
+          - name: dt_emissao
+            data_type: timestamp
+            data_tests:
+              - not_null

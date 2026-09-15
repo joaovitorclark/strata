@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   ReactFlow,
-  Controls,
-  MiniMap,
   ConnectionMode,
   SelectionMode,
   useEdgesState,
@@ -31,6 +37,7 @@ import {
 } from "../utils/pageFilter";
 import { useCanvasEdges } from "../hooks/useCanvasEdges";
 import {
+  filterEdgesByVisibleIds,
   useCanvasNodes,
   type NodeExtras,
   type NodeOpts,
@@ -38,43 +45,63 @@ import {
 } from "../hooks/useCanvasNodes";
 import { useSchemaStore as useInteraction } from "@/features/schema/store";
 import type { ParseResult, ParsedFieldLineage } from "@/features/schema/model/parse";
-import type { LineageLink, TableSize } from "@/infrastructure/api";
-import {
-  DEFAULT_LINEAGE_SOURCE,
-  DEFAULT_LINEAGE_TARGET,
-  isLineageHandle,
-  pickLineageHandles,
-} from "../utils/lineageHandles";
+import type { TableSize } from "@/infrastructure/api";
 import {
   diagramOverviewBounds,
   focusFieldMappingInView,
   focusTableInView,
 } from "../utils/focusTableView";
-import {
-  MINIMAP_MAX_TABLES,
-  SKIP_INITIAL_FIT_TABLES,
-  type CanvasDensity,
-} from "../utils/scaleLimits";
+import { SKIP_INITIAL_FIT_TABLES, type CanvasDensity } from "../utils/scaleLimits";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { toast } from "sonner";
+import i18n from "@/i18n";
 
 const isMacOs = () =>
   typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.userAgent);
+
+/**
+ * G8 / Space-to-pan: only arm pan when focus is on the canvas surface or
+ * `document.body`. The React Flow root (`.react-flow`) and the diagram
+ * (`.react-flow__renderer` / `.react-flow__pane`) count; overlay chrome
+ * rendered as RF children (toolbar, etc.) does not. Typing surfaces and
+ * the source drawer keep native Space.
+ */
+export function isSpacePanIgnored(event: { target: EventTarget | null }): boolean {
+  const target = event.target;
+  if (!(target instanceof Element)) return true;
+  if (target instanceof HTMLElement) {
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+      return true;
+    }
+  }
+  if (target.closest(".cm-editor") || target.closest('[data-testid="source-drawer"]')) {
+    return true;
+  }
+  if (target === document.body) return false;
+  if (target.classList.contains("react-flow")) return false;
+  return !target.closest(".react-flow__renderer, .react-flow__pane");
+}
+
+function panOnDragForCanvas(spaceHeld: boolean): boolean | number[] {
+  if (typeof window !== "undefined") {
+    const w = window as Window & { __STRATA_FORCE_PAN_ON_DRAG?: boolean };
+    if (w.__STRATA_FORCE_PAN_ON_DRAG) return true;
+  }
+  return spaceHeld ? true : [1, 2];
+}
 
 const SHELL_CSS = [
   ".canvas-wrap .react-flow { width: 100%; height: 100%; }",
   ".react-flow__node-group-shell { pointer-events: none !important; }",
   ".canvas-wrap--focus .react-flow__node-table { opacity: 0.45; transition: opacity 0.12s ease; }",
   ".canvas--lineage-mode .react-flow__pane { cursor: default; }",
+  ".canvas-wrap--space-pan .react-flow__pane { cursor: grab; }",
+  ".canvas-wrap--space-pan .react-flow__pane:active { cursor: grabbing; }",
   ".table-node-shell { position: relative; }",
-  ".table-node-shell--lineage-ports .lineage-port-handle { opacity: 0.85; }",
-  ".table-node-shell--lineage:hover .lineage-port-handle,",
-  ".table-node-shell--lineage-ports:hover .lineage-port-handle,",
-  ".canvas--lineage-connecting .lineage-port-handle { opacity: 1; }",
 ].join("\n");
 
 const PRIMARY = "hsl(var(--primary))";
-const MINIMAP_FALLBACK = "hsl(var(--card))";
 
 /**
  * Regras CSS por id relacionado — evita `setNodes` em hover/seleção (Fase 2 perf).
@@ -149,11 +176,9 @@ type Props = {
   onRemoveRef: (a: string, ac: string, b: string, bc: string) => void;
   onRemoveTable: (tableId: string) => void;
   onRemoveTables?: (tableIds: string[]) => void;
+  onAddTable?: () => void;
   staleWarning?: boolean;
-  lineage: LineageLink[];
   lineageFields: ParsedFieldLineage[];
-  onCreateLineage: (source: string, target: string) => void;
-  onRemoveLineage: (source: string, target: string) => void;
   onRemoveFieldLineage: (
     sourceTable: string,
     sourceColumn: string,
@@ -183,6 +208,8 @@ type Props = {
   crossRefs?: CrossPageRef[];
   /** StatusBar density — cozy 25px / compact 21px row height. */
   density?: CanvasDensity;
+  /** Chrome pill mounted inside ReactFlow so children can use useReactFlow(). */
+  toolbar?: ReactNode;
 };
 
 function fitDiagram(
@@ -290,11 +317,9 @@ export function Canvas(props: Props) {
     onRemoveRef,
     onRemoveTable,
     onRemoveTables,
+    onAddTable,
     staleWarning,
-    lineage,
     lineageFields,
-    onCreateLineage,
-    onRemoveLineage,
     onRemoveFieldLineage,
     onCreateFieldLineage,
     layerOf,
@@ -308,6 +333,7 @@ export function Canvas(props: Props) {
     externalStubs = [],
     crossRefs = [],
     density = "cozy",
+    toolbar,
   } = props;
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -315,7 +341,6 @@ export function Canvas(props: Props) {
   const selectedTableIds = useInteraction((s) => s.selectedTableIds);
   const setSelectedTableIds = useInteraction((s) => s.setSelectedTableIds);
   const clearCanvasSelection = useInteraction((s) => s.clearCanvasSelection);
-  const fieldLineageVisible = useInteraction((s) => s.fieldLineageVisible);
   const focusedFieldMapping = useInteraction((s) => s.focusedFieldMapping);
   const selectFieldLineageMapping = useInteraction((s) => s.selectFieldLineageMapping);
   const setFocusedFieldMapping = useInteraction((s) => s.setFocusedFieldMapping);
@@ -329,9 +354,10 @@ export function Canvas(props: Props) {
   const lineageVisible = useInteraction((s) => s.lineageVisible);
   const relationsVisible = useInteraction((s) => s.relationsVisible);
   const selectedTable = useInteraction((s) => s.selectedTable);
-  /** L1 no canvas: só o toggle "Mostrar linhagem" (modo linhagem ≠ mostrar arestas). */
-  const showLineageEdges = lineageVisible;
+  const readOnly = useInteraction((s) => s.readOnly);
   const [connecting, setConnecting] = useState(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
+  const mac = isMacOs();
 
   // Esc desseleciona em pilha: 1º só a coluna (tabela continua selecionada),
   // 2º também a tabela. O editor de nome de coluna trata o próprio Escape.
@@ -355,6 +381,29 @@ export function Canvas(props: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectColumn, clearCanvasSelection]);
 
+  useEffect(() => {
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code !== "Space" && e.key !== " ") return;
+      if (e.repeat) return;
+      if (isSpacePanIgnored(e)) return;
+      e.preventDefault();
+      setSpaceHeld(true);
+    };
+    const onUp = (e: KeyboardEvent) => {
+      if (e.code !== "Space" && e.key !== " ") return;
+      setSpaceHeld(false);
+    };
+    const clear = () => setSpaceHeld(false);
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
+      window.removeEventListener("blur", clear);
+    };
+  }, []);
+
   const focusTables = useMemo(() => {
     if (selectedTableIds.length) return selectedTableIds;
     if (selectedColumn) return [selectedColumn.table];
@@ -363,14 +412,14 @@ export function Canvas(props: Props) {
         ? [focusedFieldMapping.sourceTable]
         : [focusedFieldMapping.sourceTable, focusedFieldMapping.targetTable];
     }
-    if (fieldLineageVisible && selectedTable) return [selectedTable];
+    if (lineageVisible && selectedTable) return [selectedTable];
     if (hovered) return [hovered];
     return [];
   }, [
     selectedTableIds,
     selectedColumn,
     focusedFieldMapping,
-    fieldLineageVisible,
+    lineageVisible,
     selectedTable,
     hovered,
   ]);
@@ -393,12 +442,6 @@ export function Canvas(props: Props) {
         }
       }
       if (lineageVisible) {
-        for (const l of lineage) {
-          if (l.source === ft) set.add(l.target);
-          if (l.target === ft) set.add(l.source);
-        }
-      }
-      if (fieldLineageVisible) {
         for (const m of lineageFields) {
           if (m.targetTable === ft || m.sourceTable === ft) {
             set.add(m.targetTable);
@@ -411,17 +454,7 @@ export function Canvas(props: Props) {
       }
     }
     return set;
-  }, [
-    focusTables,
-    parsed.refs,
-    lineage,
-    lineageFields,
-    lineageMode,
-    lineageVisible,
-    fieldLineageVisible,
-    crossRefs,
-    aggregatedCrossLinks,
-  ]);
+  }, [focusTables, parsed.refs, lineageFields, lineageMode, lineageVisible, aggregatedCrossLinks]);
 
   // Visibilidade por camada + colapso → hidden/dim.
   const opts = useMemo<NodeOpts>(() => {
@@ -457,7 +490,7 @@ export function Canvas(props: Props) {
     density,
   ]);
 
-  useCanvasNodes(
+  const visibleTableIds = useCanvasNodes(
     parsed,
     positions,
     setNodes,
@@ -471,20 +504,27 @@ export function Canvas(props: Props) {
   useCanvasEdges(setEdges, {
     parsed,
     aggregatedCrossLinks,
-    lineage,
     lineageFields,
     positions,
     relationsVisible,
-    showLineageEdges,
-    fieldLineageVisible,
+    lineageVisible,
     lineageMode,
     focusTables,
     focusedFieldMapping,
     selectedColumn,
     onRemoveRef,
-    onRemoveLineage,
     onRemoveFieldLineage,
   });
+
+  const visibleEdges = useMemo(() => {
+    const tableIds = new Set(parsed.tables.map((t) => t.id));
+    const allowed = new Set(visibleTableIds);
+    for (const edge of edges) {
+      if (!tableIds.has(edge.source)) allowed.add(edge.source);
+      if (!tableIds.has(edge.target)) allowed.add(edge.target);
+    }
+    return filterEdgesByVisibleIds(edges, allowed);
+  }, [edges, visibleTableIds, parsed.tables]);
 
   const onSelectionChange = useCallback(
     ({ nodes: selNodes, edges: selEdges }: OnSelectionChangeParams) => {
@@ -528,10 +568,7 @@ export function Canvas(props: Props) {
     (c) => {
       if (!c.source || !c.target || c.source === c.target) return false;
       if (lineageMode) {
-        const portToPort = isLineageHandle(c.sourceHandle) && isLineageHandle(c.targetHandle);
-        const fieldToField =
-          !!c.sourceHandle?.startsWith("fl:s:") && !!c.targetHandle?.startsWith("fl:t:");
-        return portToPort || fieldToField;
+        return !!c.sourceHandle?.startsWith("fl:s:") && !!c.targetHandle?.startsWith("fl:t:");
       }
       return !!c.sourceHandle?.startsWith("s:") && !!c.targetHandle?.startsWith("t:");
     },
@@ -540,9 +577,12 @@ export function Canvas(props: Props) {
 
   const onConnect = useCallback(
     (c: Connection) => {
+      if (readOnly) {
+        toast.message(i18n.t("shell.dbtReadOnly"));
+        return;
+      }
       if (!c.source || !c.target) return;
       if (lineageMode) {
-        // Puxar entre handles de coluna (fl:) cria mapeamento campo→campo.
         if (c.sourceHandle?.startsWith("fl:s:") && c.targetHandle?.startsWith("fl:t:")) {
           onCreateFieldLineage(
             c.source,
@@ -550,63 +590,12 @@ export function Canvas(props: Props) {
             c.target,
             c.targetHandle.slice(5),
           );
-          return;
         }
-        onCreateLineage(c.source, c.target);
-        const id = `lin:${c.source}->${c.target}`;
-        const sourceHandle =
-          c.sourceHandle && isLineageHandle(c.sourceHandle)
-            ? c.sourceHandle
-            : (() => {
-                const sp = positions[c.source];
-                const tp = positions[c.target];
-                const srcTable = parsed.tables.find((t) => t.id === c.source);
-                const tgtTable = parsed.tables.find((t) => t.id === c.target);
-                return sp && tp
-                  ? pickLineageHandles(sp, tp, srcTable, tgtTable).sourceHandle
-                  : DEFAULT_LINEAGE_SOURCE;
-              })();
-        const targetHandle =
-          c.targetHandle && isLineageHandle(c.targetHandle)
-            ? c.targetHandle
-            : (() => {
-                const sp = positions[c.source];
-                const tp = positions[c.target];
-                const srcTable = parsed.tables.find((t) => t.id === c.source);
-                const tgtTable = parsed.tables.find((t) => t.id === c.target);
-                return sp && tp
-                  ? pickLineageHandles(sp, tp, srcTable, tgtTable).targetHandle
-                  : DEFAULT_LINEAGE_TARGET;
-              })();
-        setEdges((prev) => {
-          const rest = prev.filter((e) => e.id !== id);
-          return [
-            ...rest,
-            {
-              id,
-              source: c.source!,
-              target: c.target!,
-              type: "lineage",
-              sourceHandle,
-              targetHandle,
-              data: { onRemove: () => onRemoveLineage(c.source!, c.target!) },
-            },
-          ];
-        });
         return;
       }
       onCreateRef(c.source, stripHandle(c.sourceHandle), c.target, stripHandle(c.targetHandle));
     },
-    [
-      lineageMode,
-      onCreateLineage,
-      onCreateFieldLineage,
-      onCreateRef,
-      onRemoveLineage,
-      parsed.tables,
-      positions,
-      setEdges,
-    ],
+    [lineageMode, onCreateFieldLineage, onCreateRef, readOnly],
   );
 
   // Mover grupo inteiro: aplica o delta às tabelas-membro.
@@ -674,15 +663,14 @@ export function Canvas(props: Props) {
   const onEdgesDelete = useCallback(
     (deleted: Edge[]) => {
       for (const e of deleted) {
-        if (e.type === "lineage") onRemoveLineage(e.source, e.target);
-        else if (e.type === "fieldLineage") (e.data as { onRemove?: () => void })?.onRemove?.();
-        else {
+        if (e.type === "fieldLineage") (e.data as { onRemove?: () => void })?.onRemove?.();
+        else if (e.type !== "lineage") {
           const ep = (e.data as { endpoints?: RefEndpoints } | undefined)?.endpoints;
           if (ep) onRemoveRef(ep.fromTbl, ep.fromCol, ep.toTbl, ep.toCol);
         }
       }
     },
-    [onRemoveLineage, onRemoveRef],
+    [onRemoveRef],
   );
 
   const onReconnect = useCallback(
@@ -700,7 +688,6 @@ export function Canvas(props: Props) {
   );
 
   const tableCount = parsed.tables.length;
-  const miniMapLite = tableCount > MINIMAP_MAX_TABLES;
 
   return (
     <CanvasDensityContext.Provider value={density}>
@@ -708,6 +695,7 @@ export function Canvas(props: Props) {
         className={cn(
           "canvas-wrap relative h-full w-full",
           related?.size ? "canvas-wrap--focus" : undefined,
+          spaceHeld && "canvas-wrap--space-pan",
         )}
         style={{ "--row-h": `var(--row-${density})` } as CSSProperties}
       >
@@ -726,7 +714,7 @@ export function Canvas(props: Props) {
         <TooltipProvider delayDuration={300}>
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={visibleEdges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
@@ -741,9 +729,9 @@ export function Canvas(props: Props) {
             isValidConnection={isValidConnection}
             connectionMode={lineageMode ? ConnectionMode.Loose : ConnectionMode.Strict}
             connectionRadius={lineageMode ? 56 : 24}
-            nodesConnectable
+            nodesConnectable={!readOnly}
             connectOnClick={false}
-            edgesReconnectable={!lineageMode}
+            edgesReconnectable={!lineageMode && !readOnly}
             className={cn(
               "strata-canvas",
               lineageMode && "canvas--lineage-mode",
@@ -751,7 +739,7 @@ export function Canvas(props: Props) {
             )}
             onEdgesDelete={onEdgesDelete}
             onReconnect={onReconnect}
-            deleteKeyCode={["Delete", "Backspace"]}
+            deleteKeyCode={readOnly ? null : ["Delete", "Backspace"]}
             onNodeMouseEnter={(_, n) => {
               if (n.type === "table") setHovered(n.id);
             }}
@@ -773,13 +761,19 @@ export function Canvas(props: Props) {
             }}
             // Clique/arrasto no pane NÃO desseleciona a coluna: o usuário pode arrastar o
             // canvas para seguir uma ligação. A coluna sai com Esc, outra coluna ou outra seleção.
-            onPaneClick={() => {
+            onPaneClick={(e) => {
               clearCanvasSelection();
+              if (e.detail === 2) onAddTable?.();
             }}
             onSelectionChange={onSelectionChange}
-            selectionOnDrag
+            selectionOnDrag={!spaceHeld}
+            panOnDrag={panOnDragForCanvas(spaceHeld)}
+            panActivationKeyCode={null}
+            panOnScroll={mac}
+            zoomOnScroll={!mac}
+            zoomOnPinch
             selectionMode={SelectionMode.Partial}
-            multiSelectionKeyCode={isMacOs() ? "Meta" : "Control"}
+            multiSelectionKeyCode={mac ? "Meta" : "Control"}
             elementsSelectable
             edgesFocusable
             // Tolerância de jitter do mouse (Windows): até 4px de movimento ainda é clique
@@ -796,23 +790,7 @@ export function Canvas(props: Props) {
               onDone={onFocusTableDone}
             />
             <FocusFieldMappingHelper />
-            <Controls />
-            <MiniMap
-              className={miniMapLite ? "minimap--lite" : undefined}
-              pannable
-              zoomable
-              nodeStrokeWidth={0}
-              bgColor="hsl(var(--card))"
-              maskColor="hsl(var(--background) / 0.65)"
-              nodeColor={
-                miniMapLite
-                  ? () => MINIMAP_FALLBACK
-                  : (n) =>
-                      n.type === "group"
-                        ? "transparent"
-                        : ((n.data as { headerColor?: string })?.headerColor ?? MINIMAP_FALLBACK)
-              }
-            />
+            {toolbar}
           </ReactFlow>
         </TooltipProvider>
       </div>

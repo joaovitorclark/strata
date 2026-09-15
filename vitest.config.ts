@@ -14,7 +14,11 @@ export default defineConfig({
           name: "app",
           environment: "jsdom",
           setupFiles: ["./src/test/setup.ts"],
-          include: ["src/**/*.test.{ts,tsx}", "server/**/*.test.ts"],
+          include: [
+            "src/**/*.test.{ts,tsx}",
+            "server/**/*.test.ts",
+            "scripts/fixtures/varejo/**/*.test.ts",
+          ],
           globals: true,
         },
       },

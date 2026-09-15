@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: yaml_absent
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: ghost
+        data_type: string

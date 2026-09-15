@@ -44,7 +44,8 @@ export function useColumnEdgeCoords(
   _sourcePosition: Position,
   _targetPosition: Position,
 ): ColumnEdgeCoords {
-  const version = useTableScrollStore((s) => s.version);
+  void _sourcePosition;
+  void _targetPosition;
   const scrollFor = useTableScrollStore((s) => s.byNode);
   const rowH = useCanvasRowH();
 
@@ -86,7 +87,6 @@ export function useColumnEdgeCoords(
     sourceNode,
     targetNode,
     scrollFor,
-    version,
     rowH,
   ]);
 }

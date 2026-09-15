@@ -3,6 +3,7 @@ import yaml from 'js-yaml';
 import { dbmlToModel, modelToDbml } from '../dbmlIo.ts';
 import { modelToDbtFiles } from '../dbtExport.ts';
 import { dbtFilesToModel, schemaYmlToModel } from '../dbtImport.ts';
+import type { YamlColumn, YamlDoc, YamlModel } from './yamlDoc.ts';
 
 const DBML = `Table silver.dim_cliente {
   cliente_key bigint [pk]
@@ -30,10 +31,6 @@ LayerGroup prata [color: #c0c0c0] {
   silver.fato_venda
 }
 
-Lineage {
-  silver.fato_venda < silver.dim_cliente
-}
-
 LineageFields {
   silver.fato_venda.cliente_key < silver.dim_cliente.cliente_key [note: 'lookup']
 }
@@ -49,22 +46,22 @@ Colors {
 }
 `;
 
-function findSchemaYml(files: { path: string; content: string }[]): any {
+function findSchemaYml(files: { path: string; content: string }[]): YamlDoc {
   const f = files.find((x) => x.path.endsWith('schema.yml'));
   expect(f, 'schema.yml presente no export').toBeTruthy();
-  return yaml.load(f!.content);
+  return yaml.load(f!.content) as YamlDoc;
 }
 
 describe('export dbt — data_type e meta.localdrawdb', () => {
   const files = modelToDbtFiles(dbmlToModel(DBML));
   const doc = findSchemaYml(files);
-  const dim = doc.models.find((m: any) => m.name === 'dim_cliente');
-  const fato = doc.models.find((m: any) => m.name === 'fato_venda');
+  const dim = doc.models!.find((m: YamlModel) => m.name === 'dim_cliente')!;
+  const fato = doc.models!.find((m: YamlModel) => m.name === 'fato_venda')!;
 
   it('emite data_type em toda coluna (com args quando houver)', () => {
-    const nome = dim.columns.find((c: any) => c.name === 'nome');
+    const nome = dim.columns!.find((c: YamlColumn) => c.name === 'nome')!;
     expect(nome.data_type).toBe('string');
-    const valor = fato.columns.find((c: any) => c.name === 'valor');
+    const valor = fato.columns!.find((c: YamlColumn) => c.name === 'valor')!;
     expect(valor.data_type).toBe('decimal(18,2)');
   });
 
@@ -79,14 +76,14 @@ describe('export dbt — data_type e meta.localdrawdb', () => {
       color: '#b08d57',
       pk: ['cliente_key'],
     });
-    expect(meta.records).toEqual({ columns: ['cliente_key', 'nome'], rows: [['1', 'Ana']] });
+    expect(meta!.records).toEqual({ columns: ['cliente_key', 'nome'], rows: [['1', 'Ana']] });
   });
 
   it('emite PK composta e meta de coluna (color e map)', () => {
     expect(fato.meta?.localdrawdb?.pk).toEqual(['venda_key', 'cliente_key']);
-    const vk = fato.columns.find((c: any) => c.name === 'venda_key');
+    const vk = fato.columns!.find((c: YamlColumn) => c.name === 'venda_key')!;
     expect(vk.meta?.localdrawdb?.color).toBe('#ff0000');
-    const ck = fato.columns.find((c: any) => c.name === 'cliente_key');
+    const ck = fato.columns!.find((c: YamlColumn) => c.name === 'cliente_key')!;
     expect(ck.meta?.localdrawdb?.map).toEqual({
       table: 'silver.dim_cliente',
       column: 'cliente_key',
@@ -96,15 +93,15 @@ describe('export dbt — data_type e meta.localdrawdb', () => {
 
   it('omite meta.localdrawdb e strata.pinned quando o modelo não tem nenhum', () => {
     const doc2 = findSchemaYml(modelToDbtFiles(dbmlToModel('Table t {\n  id int\n}\n')));
-    expect(doc2.models[0].meta?.localdrawdb).toBeUndefined();
-    expect(doc2.models[0].meta?.strata).toBeUndefined();
-    expect(doc2.models[0].columns[0].meta).toBeUndefined();
+    expect(doc2.models![0].meta?.localdrawdb).toBeUndefined();
+    expect(doc2.models![0].meta?.strata).toBeUndefined();
+    expect(doc2.models![0].columns![0].meta).toBeUndefined();
   });
 
   it('preserva meta.localdrawdb sem emitir strata.pinned vazio', () => {
-    const dim = findSchemaYml(files).models.find((m: any) => m.name === 'dim_cliente');
-    expect(dim.meta.localdrawdb).toMatchObject({ schema: 'silver', pk: ['cliente_key'] });
-    expect(dim.meta.strata).toBeUndefined();
+    const dim = findSchemaYml(files).models!.find((m: YamlModel) => m.name === 'dim_cliente')!;
+    expect(dim.meta!.localdrawdb).toMatchObject({ schema: 'silver', pk: ['cliente_key'] });
+    expect(dim.meta!.strata).toBeUndefined();
   });
 
   it('emite as colunas pinadas do modelo parseado em meta.strata.pinned', () => {
@@ -113,9 +110,9 @@ Pins {
   silver.dim_cliente.nome
 }
 `);
-    const dim = findSchemaYml(modelToDbtFiles(model)).models.find((m: any) => m.name === 'dim_cliente');
-    expect(dim.meta.strata.pinned).toEqual(['nome']);
-    expect(dim.meta.localdrawdb.schema).toBe('silver');
+    const dim = findSchemaYml(modelToDbtFiles(model)).models!.find((m: YamlModel) => m.name === 'dim_cliente')!;
+    expect(dim.meta!.strata!.pinned).toEqual(['nome']);
+    expect(dim.meta!.localdrawdb!.schema).toBe('silver');
   });
 });
 
@@ -212,8 +209,7 @@ describe('round-trip completo DBML → dbt → Model → DBML', () => {
     expect(dbml).toMatch(/\(venda_key, cliente_key\) \[pk\]/);
     expect(dbml).toMatch(/Records silver\.dim_cliente/);
     expect(dbml).toMatch(/LineageFields\s*\{[^}]*silver\.fato_venda\.cliente_key < silver\.dim_cliente\.cliente_key/);
-    // L1 via ref()/source() dos models .sql, com nomes qualificados pelo schema
-    expect(dbml).toMatch(/Lineage\s*\{[^}]*silver\.fato_venda < silver\.dim_cliente/);
+    expect(dbml).not.toContain('Lineage {');
   });
 
   it('preserva Pins no round-trip model → dbt → model', () => {

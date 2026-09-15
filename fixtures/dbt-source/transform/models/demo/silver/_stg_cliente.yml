@@ -1,0 +1,12 @@
+version: 2
+models:
+  - name: stg_cliente
+    config:
+      schema: silver
+      materialized: view
+      tags: [strata:demo]
+    columns:
+      - name: id
+        data_type: bigint
+      - name: nome
+        data_type: string

@@ -14,6 +14,22 @@ Table lake.t201 {
 }
 `;
 
+function visitLarge(): void {
+  cy.request("GET", "/api/projects").then((res) => {
+    const body = res.body as { projects: Array<{ id: string; slug: string }> };
+    const proj = body.projects.find((p) => p.slug === "large");
+    if (!proj) throw new Error('fixture project "large" not found');
+    cy.request("POST", `/api/projects/${proj.id}/activate`);
+  });
+  cy.visit("/", {
+    onBeforeLoad(win) {
+      win.localStorage.removeItem("strata.detailLevel");
+      win.localStorage.removeItem("strata.minimap");
+    },
+  });
+  cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
+}
+
 describe("stress large diagram", () => {
   let largeId: string | undefined;
   let largeSnap: ProjectBody | undefined;
@@ -21,8 +37,7 @@ describe("stress large diagram", () => {
   before(() => {
     expect(MINIMAP_MAX_TABLES, "fixture is exactly the minimap threshold").to.eq(200);
     expect(SKIP_INITIAL_FIT_TABLES, "fixture is exactly the skip-fit threshold").to.eq(200);
-    cy.seedProject("large");
-    cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
+    visitLarge();
     // InitialFitHelper retries up to 40 rAF frames when enabled.
     cy.wait(1000);
     cy.request("GET", "/api/projects").then((res) => {
@@ -46,11 +61,9 @@ describe("stress large diagram", () => {
     restoreSmoke();
   });
 
-  it("still shows the minimap at MINIMAP_MAX_TABLES (lite is strictly greater)", () => {
+  it("mounts the minimap at MINIMAP_MAX_TABLES (S12 G2: >40 tables → on by default)", () => {
     cy.get('[data-testid="rf__wrapper"]').should("exist");
-    // Canvas: MiniMap is always mounted. large has exactly 200 tables, so this
-    // is the full (coloured) minimap. Lite colouring requires 201+.
-    cy.get('[data-testid="rf__minimap"]').should("exist").and("not.have.class", "minimap--lite");
+    cy.get(".react-flow__minimap").should("exist");
   });
 
   it("still runs the initial fitView at SKIP_INITIAL_FIT_TABLES (skip is strictly greater)", () => {
@@ -75,7 +88,7 @@ describe("stress large diagram", () => {
     });
     cy.get(".react-flow__viewport").then(($vp) => {
       const z0 = readScale($vp[0] as HTMLElement);
-      cy.get('[data-testid="rf__controls"] .react-flow__controls-zoomin').click({ force: true });
+      cy.get('[data-testid="canvas-toolbar"] [data-zoom="in"]').click({ force: true });
       cy.get(".react-flow__viewport").should(($after) => {
         const z1 = readScale($after[0] as HTMLElement);
         expect(z1, "zoom in moved scale").to.not.eq(z0);
@@ -86,7 +99,7 @@ describe("stress large diagram", () => {
     cy.get('[data-testid^="rf__node-"]').should("exist");
   });
 
-  it("keeps the minimap in lite mode above MINIMAP_MAX_TABLES", () => {
+  it("mounts the minimap above MINIMAP_MAX_TABLES unless the user turned it off", () => {
     cy.then(() => {
       if (!largeId || !largeSnap) throw new Error("large fixture snapshot missing");
       cy.request("PUT", `/api/projects/${largeId}`, {
@@ -94,9 +107,8 @@ describe("stress large diagram", () => {
         canvas: largeSnap.canvas ?? {},
       });
     });
-    cy.seedProject("large");
-    cy.get('[data-testid^="rf__node-"]', { timeout: 60000 }).should("exist");
-    cy.get('[data-testid="rf__minimap"]').should("exist").and("have.class", "minimap--lite");
+    visitLarge();
+    cy.get(".react-flow__minimap").should("exist");
     cy.then(() => {
       if (!largeId || !largeSnap) return;
       cy.request("PUT", `/api/projects/${largeId}`, {

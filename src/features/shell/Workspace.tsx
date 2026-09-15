@@ -1,109 +1,278 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CanvasActionsCtx } from "@/features/canvas/actions";
 import { Canvas } from "@/features/canvas";
+import { CanvasToolbar } from "@/features/canvas/toolbar";
 import { CommandPalette } from "@/features/command-palette/CommandPalette";
 import { ShortcutsOverlay } from "@/features/command-palette/ShortcutsOverlay";
 import { GitPanel } from "@/features/domains/GitPanel";
 import {
-  ColumnPanel,
   LayersPanel,
   PageImportWizard,
   ProblemsPanel,
   RecordsPanel,
   StatusLog,
-  TableInfoPopover,
-  useDraggablePanel,
 } from "@/features/panels";
 import { ProjectSwitcher } from "@/features/projects/ProjectSwitcher";
 import { useSchemaStore } from "@/features/schema/store";
 import { AppShell, useShellLayout } from "@/features/shell/AppShell";
+import { EmptyState } from "@/features/shell/EmptyState";
 import { IconRail, type RailItem } from "@/features/shell/IconRail";
+import { DbtChangeLog } from "@/features/shell/DbtChangeLog";
 import { Inspector } from "@/features/shell/Inspector";
+import { LeftPanel, type LeftPanelTab } from "@/features/shell/LeftPanel";
 import { Navbar } from "@/features/shell/Navbar";
 import { SchemaTree } from "@/features/shell/SchemaTree";
 import { StatusBar } from "@/features/shell/StatusBar";
+import { useUrlSync } from "@/features/shell/useUrlSync";
 import { useWorkspace, type RailItemId, type WorkspaceProps } from "@/features/shell/useWorkspace";
 import { SourceDrawer } from "@/features/source/SourceDrawer";
 import { DbmlDiff } from "@/features/source/DbmlDiff";
-import { cn } from "@/lib/utils";
+import { DbtCodePanel } from "@/features/source/DbtCodePanel";
+import { DdlEditor } from "@/features/source/DdlEditor";
+import { DbtFileDiff } from "@/features/source/DbtFileDiff";
+import {
+  isTabForFormat,
+  readStoredDrawerTab,
+  writeStoredDrawerTab,
+  type DrawerTab,
+} from "@/features/source/dbtDrawerTab";
+import { noteDbtBaseline } from "@/features/source/dbtBaseline";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type { WorkspaceProps };
 
-function DraggableOverlay({
-  storageKey,
-  className,
-  children,
-}: {
-  storageKey: string;
-  className?: string;
-  children: ReactNode;
-}) {
-  const { panelRef, dragStyle, onDragStart } = useDraggablePanel(storageKey);
-  return (
-    <div
-      ref={panelRef}
-      className={cn("absolute z-20", className)}
-      style={dragStyle ?? { left: 8, top: 8 }}
-    >
-      <div
-        className="mb-0.5 h-3 cursor-grab rounded-t-md bg-border/50"
-        onPointerDown={onDragStart}
-      />
-      {children}
-    </div>
-  );
-}
-
 export function Workspace(props: WorkspaceProps) {
   const { t } = useTranslation();
-  const ws = useWorkspace(props);
-  const [diffOpen, setDiffOpen] = useState(false);
-  const hoveredTableId = useSchemaStore((s) => s.hoveredTableId);
+  const {
+    domain,
+    onRepoChanged,
+    dbml,
+    positions,
+    sizes,
+    collapsedGroups,
+    canvasPages,
+    activePageIds,
+    past,
+    future,
+    saveState,
+    autoSave,
+    currentProjectId,
+    projects,
+    pinnedProjectId,
+    currentProject,
+    status,
+    logs,
+    paletteOpen,
+    setPaletteOpen,
+    helpOpen,
+    setHelpOpen,
+    sourceDrawerOpen,
+    setSourceDrawerOpen,
+    setRenameModalOpen,
+    setLayersPanelCollapsed,
+    recordsPanelOpen,
+    setRecordsPanelOpen,
+    problemsPanelOpen,
+    setProblemsPanelOpen,
+    focusTableId,
+    focusNonce,
+    fitViewTrigger,
+    pageWizardOpen,
+    setPageWizardOpen,
+    pageWizardTableCount,
+    railItem,
+    setRailItem,
+    density,
+    setDensity,
+    committedDbml,
+    savedDbml,
+    markCommitted,
+    parsed,
+    activeModel,
+    canvasActiveModel,
+    canvasStubs,
+    canvasView,
+    canvasParsePending,
+    modelIssues,
+    nodeExtras,
+    actions,
+    layerOf,
+    layersArr,
+    assignEditorRef,
+    commandContext,
+    treeTables,
+    undo,
+    redo,
+    handleSave,
+    handleAutolayout,
+    handleImport,
+    handleOrganize,
+    handleAddTable,
+    handleAddMetadata,
+    handleExportOption,
+    handleDbmlChange,
+    handleCreateRef,
+    handleRemoveRef,
+    handleRemoveTable,
+    handleRemoveTables,
+    handleCreateFieldLineage,
+    handleRemoveFieldLineage,
+    handleAddFieldLineage,
+    handleUpdateFieldLineage,
+    handleToggleGroup,
+    handleChangeActivePages,
+    handleBackToDomains,
+    switchProject,
+    handleCreateProject,
+    handleRenameProject,
+    handleDuplicateProject,
+    handleDeleteProject,
+    focusTableWithPan,
+    focusTableInEditor,
+    handleEditorCursorLine,
+    goToLine,
+    goToColumn,
+    clearFocusTable,
+    migrateTableId,
+  } = useWorkspace(props);
+  useUrlSync({ focusTableWithPan, switchProject });
+  const layoutAfterEmptyImport = useRef(false);
+  const [leftTab, setLeftTab] = useState<LeftPanelTab>("tables");
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>(() => readStoredDrawerTab("dbml"));
+  const [problemsOpen, setProblemsOpen] = useState(false);
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
-  const hoveredMeta = hoveredTableId ? ws.actions.tableMeta(hoveredTableId) : null;
+  const documentFormat = useSchemaStore((s) => s.documentFormat);
+  const dbtPastLen = useSchemaStore((s) => s.dbtPast.length);
+  const dbtFutureLen = useSchemaStore((s) => s.dbtFuture.length);
+  const hydratedProjectId = useSchemaStore((s) => s.hydratedProjectId);
+  const dbtFiles = useSchemaStore((s) => s.files);
+  const codeTab: DrawerTab = documentFormat === "dbt" ? "dbt" : "dbml";
+  const activeDrawerTab: DrawerTab = isTabForFormat(drawerTab, documentFormat)
+    ? drawerTab
+    : readStoredDrawerTab(documentFormat);
+
+  useEffect(() => {
+    if (documentFormat !== "dbt" || !hydratedProjectId) return;
+    if (Object.keys(dbtFiles).length === 0) return;
+    noteDbtBaseline(hydratedProjectId, dbtFiles);
+  }, [documentFormat, hydratedProjectId, dbtFiles]);
+
+  const selectDrawerTab = (tab: DrawerTab) => {
+    setDrawerTab(tab);
+    writeStoredDrawerTab(tab);
+  };
 
   const saveLabel =
-    ws.saveState === "saving"
+    saveState === "saving"
       ? t("shell.saving")
-      : ws.saveState === "saved"
+      : saveState === "saved"
         ? t("shell.saved")
-        : ws.saveState === "error"
+        : saveState === "error"
           ? t("shell.saveError")
           : t("shell.save");
 
-  const pinnedLabel = ws.pinnedProjectId
-    ? ws.projects.find((p) => p.id === ws.pinnedProjectId)?.name
+  const pinnedLabel = pinnedProjectId
+    ? projects.find((p) => p.id === pinnedProjectId)?.name
     : undefined;
 
+  useEffect(() => {
+    if (!recordsPanelOpen) return;
+    // Palette "abrir painel Dados" still flips recordsPanelOpen in useWorkspace.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync palette flag into the drawer tab
+    setDrawerTab("records");
+    setSourceDrawerOpen(true);
+  }, [recordsPanelOpen, setSourceDrawerOpen]);
+
+  useEffect(() => {
+    if (!problemsPanelOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync palette flag into the status popover
+    setProblemsOpen(true);
+  }, [problemsPanelOpen]);
+
+  useEffect(() => {
+    if (!layoutAfterEmptyImport.current) return;
+    if (activeModel.tables.length === 0) return;
+    layoutAfterEmptyImport.current = false;
+    handleAutolayout();
+  }, [activeModel.tables, handleAutolayout]);
+
+  // Store starts at dbml "". Treating that as "empty" unmounts React Flow before hydrate and
+  // drops S06 URL focus. Only replace the canvas after a loaded document has zero tables.
+  const showEmptyState = dbml.trim() !== "" && activeModel.tables.length === 0;
+
+  const openDrawer = (tab: DrawerTab) => {
+    selectDrawerTab(tab);
+    setSourceDrawerOpen(true);
+    setRecordsPanelOpen(tab === "records");
+  };
+
+  const toggleDrawer = (tab: DrawerTab) => {
+    if (sourceDrawerOpen && activeDrawerTab === tab) {
+      setSourceDrawerOpen(false);
+      setRecordsPanelOpen(false);
+      return;
+    }
+    openDrawer(tab);
+  };
+
   return (
-    <CanvasActionsCtx.Provider value={ws.actions}>
+    <CanvasActionsCtx.Provider
+      value={{
+        ...actions,
+        onGoToColumn: (table, column) => {
+          selectDrawerTab(codeTab);
+          actions.onGoToColumn?.(table, column);
+        },
+      }}
+    >
       <div data-canvas-actions="ready" className="contents">
         <AppShell
           navbar={
             <Navbar
-              domain={ws.domain?.name}
-              project={ws.currentProject?.name}
-              onSearch={() => ws.setPaletteOpen(true)}
-              onExportOption={ws.handleExportOption}
-              onBackToDomains={props.onBackToDomains ? ws.handleBackToDomains : undefined}
+              domain={domain?.name}
+              project={currentProject?.name}
+              onSearch={() => setPaletteOpen(true)}
+              onExportOption={handleExportOption}
+              onBackToDomains={props.onBackToDomains ? handleBackToDomains : undefined}
+              history={{
+                canUndo: documentFormat === "dbt" ? dbtPastLen > 0 : past.length > 0,
+                canRedo: documentFormat === "dbt" ? dbtFutureLen > 0 : future.length > 0,
+                onUndo: undo,
+                onRedo: redo,
+              }}
+              editActions={{
+                onAddTable: handleAddTable,
+                onAddMetadata: handleAddMetadata,
+                onImport: handleImport,
+                onOrganize: handleOrganize,
+              }}
+              save={{
+                label: saveLabel,
+                state: saveState,
+                autoSave,
+                onSave: () => handleSave(),
+                onToggleAutoSave: () => useSchemaStore.getState().setAutoSave(!autoSave),
+                onDiff: () => openDrawer("diff"),
+              }}
+              onHelp={() => setHelpOpen(true)}
               leading={
                 <>
-                  {ws.projects.length > 0 ? (
+                  {projects.length > 0 ? (
                     <ProjectSwitcher
-                      projects={ws.projects}
-                      currentProjectId={ws.currentProjectId}
-                      saveState={ws.saveState}
-                      onSwitch={ws.switchProject}
-                      onCreate={ws.handleCreateProject}
-                      onRename={ws.handleRenameProject}
-                      onDuplicate={ws.handleDuplicateProject}
-                      onDelete={ws.handleDeleteProject}
+                      projects={projects}
+                      currentProjectId={currentProjectId}
+                      saveState={saveState}
+                      onSwitch={switchProject}
+                      onCreate={handleCreateProject}
+                      onRename={handleRenameProject}
+                      onDuplicate={handleDuplicateProject}
+                      onDelete={handleDeleteProject}
                       pinnedLabel={pinnedLabel}
                     />
                   ) : null}
-                  {ws.domain?.hasGit ? (
-                    <GitPanel domain={ws.domain} onRepoChanged={ws.onRepoChanged} />
+                  {domain?.hasGit ? (
+                    <GitPanel domain={domain} onRepoChanged={onRepoChanged} />
                   ) : null}
                 </>
               }
@@ -111,253 +280,342 @@ export function Workspace(props: WorkspaceProps) {
           }
           rail={
             <WorkspaceShellRail
-              railItem={ws.railItem}
-              onTables={() => ws.setRailItem("tables")}
+              railItem={railItem}
+              onTables={() => {
+                setLeftTab("tables");
+                setRailItem("tables");
+              }}
               onLayers={() => {
-                ws.setLayersPanelCollapsed(false);
-                ws.setRailItem("layers");
+                setLeftTab("layers");
+                setLayersPanelCollapsed(false);
+                setRailItem("layers");
               }}
               onLineage={() => {
                 toggleLineageMode();
-                ws.setRailItem("lineage");
+                setRailItem("lineage");
               }}
               onCode={() => {
-                ws.setSourceDrawerOpen(!ws.sourceDrawerOpen);
-                ws.setRailItem("code");
+                toggleDrawer(codeTab);
+                setRailItem("code");
               }}
               onSearch={() => {
-                ws.setPaletteOpen(true);
-                ws.setRailItem("search");
+                setPaletteOpen(true);
+                setRailItem("search");
               }}
-              onSettings={() => ws.setRailItem("settings")}
+              onSettings={() => setRailItem("settings")}
             />
           }
-          tree={<SchemaTree tables={ws.treeTables} layerOf={ws.layerOf} />}
+          tree={
+            <LeftPanel
+              tab={leftTab}
+              onTab={(next) => {
+                setLeftTab(next);
+                setRailItem(next);
+              }}
+              tables={<SchemaTree tables={treeTables} layerOf={layerOf} />}
+              onFocusTable={focusTableWithPan}
+              layers={
+                <LayersPanel
+                  embedded
+                  layers={layersArr}
+                  tables={activeModel.tables.map((tbl) => ({ id: tbl.id }))}
+                  onAddLayer={actions.onAddLayer}
+                  onFocusTable={focusTableWithPan}
+                  onAutolayout={handleAutolayout}
+                  pages={canvasPages}
+                  activePageIds={activePageIds}
+                  onChangeActivePages={handleChangeActivePages}
+                />
+              }
+            />
+          }
           canvas={
             <div className="relative h-full min-h-0 w-full">
-              <Canvas
-                parsed={ws.canvasActiveModel}
-                nodeExtras={ws.nodeExtras}
-                positions={ws.positions}
-                sizes={ws.sizes}
-                onPositionsChange={(p) => useSchemaStore.getState().setPositions(p)}
-                onCreateRef={ws.handleCreateRef}
-                onRemoveRef={ws.handleRemoveRef}
-                onRemoveTable={ws.handleRemoveTable}
-                onRemoveTables={ws.handleRemoveTables}
-                staleWarning={!!ws.parsed.error || ws.canvasParsePending}
-                lineage={ws.canvasLineage}
-                lineageFields={ws.canvasActiveModel.lineageFields ?? []}
-                onCreateLineage={ws.handleCreateLineage}
-                onRemoveLineage={ws.handleRemoveLineage}
-                onRemoveFieldLineage={ws.handleRemoveFieldLineage}
-                onCreateFieldLineage={ws.handleCreateFieldLineage}
-                layerOf={ws.layerOf}
-                collapsedGroups={ws.collapsedGroups}
-                onToggleGroup={ws.handleToggleGroup}
-                focusTableId={ws.focusTableId}
-                focusNonce={ws.focusNonce}
-                onFocusTableDone={ws.clearFocusTable}
-                onTableClick={ws.focusTableInEditor}
-                fitViewTrigger={ws.fitViewTrigger}
-                externalStubs={ws.canvasStubs}
-                crossRefs={ws.canvasView.crossRefs}
-                density={ws.density}
-              />
-              <EditorChrome
-                past={ws.past.length}
-                future={ws.future.length}
-                saveState={ws.saveState}
-                autoSave={ws.autoSave}
-                saveLabel={saveLabel}
-                onUndo={ws.undo}
-                onRedo={ws.redo}
-                onOrganize={ws.handleOrganize}
-                onAddTable={ws.handleAddTable}
-                onAddMetadata={ws.handleAddMetadata}
-                onImport={ws.handleImport}
-                onDiff={() => setDiffOpen((open) => !open)}
-                onSave={() => ws.handleSave()}
-                onAutoSave={() => useSchemaStore.getState().setAutoSave(!ws.autoSave)}
-              />
-              <button
-                type="button"
-                className={cn(
-                  "absolute right-3 top-3 z-20 inline-flex size-8 items-center justify-center",
-                  "rounded-md border border-border bg-card text-sm text-foreground shadow-md",
-                  "hover:bg-accent",
-                )}
-                title={t("shell.help")}
-                aria-label={t("shell.help")}
-                onClick={() => ws.setHelpOpen(true)}
-              >
-                ?
-              </button>
-              <div className="absolute right-3 top-12 z-20">
-                <StatusLog status={ws.status} saveState={ws.saveState} logs={ws.logs} />
-              </div>
-              {hoveredMeta?.has ? (
-                <div className="pointer-events-none absolute right-3 top-24 z-20">
-                  <TableInfoPopover meta={hoveredMeta} />
-                </div>
-              ) : null}
-              <DraggableOverlay storageKey="ldb.panel.layers.pos" className="top-10">
-                <LayersPanel
-                  layers={ws.layersArr}
-                  tables={ws.activeModel.tables.map((tbl) => ({ id: tbl.id }))}
-                  onAddLayer={ws.actions.onAddLayer}
-                  onFocusTable={ws.focusTableWithPan}
-                  onAutolayout={ws.handleAutolayout}
-                  pages={ws.canvasPages}
-                  activePageIds={ws.activePageIds}
-                  onChangeActivePages={ws.handleChangeActivePages}
-                  collapsed={ws.layersPanelCollapsed}
-                  onCollapsedChange={ws.setLayersPanelCollapsed}
-                />
-              </DraggableOverlay>
-              <DraggableOverlay storageKey="ldb.panel.column.pos" className="left-64 top-10">
-                <ColumnPanel
-                  dbml={ws.dbml}
-                  tables={ws.activeModel.tables}
+              {showEmptyState ? (
+                <EmptyState
                   onApply={(next) => {
-                    ws.markCommitted(next);
-                    ws.handleDbmlChange(next);
-                  }}
-                  onRenameColumn={(table, oldName, newName) =>
-                    ws.actions.onRenameColumn(table, oldName, newName)
-                  }
-                  onGoToColumn={ws.goToColumn}
-                  mappings={ws.activeModel.lineageFields ?? []}
-                  onAddMapping={ws.handleAddFieldLineage}
-                  onUpdateMapping={ws.handleUpdateFieldLineage}
-                  onRemoveMapping={(st, sc, tc) => {
-                    const tt = useSchemaStore.getState().selectedTable;
-                    if (tt) ws.handleRemoveFieldLineage(st, sc, tt, tc);
-                  }}
-                />
-              </DraggableOverlay>
-              <div className="absolute bottom-0 left-0 right-0 z-20">
-                <RecordsPanel
-                  records={ws.activeModel.records}
-                  tables={ws.activeModel.tables}
-                  refs={ws.activeModel.refs}
-                  lineageFields={ws.activeModel.lineageFields}
-                  dbml={ws.dbml}
-                  onApply={(next) => {
-                    ws.markCommitted(next);
-                    ws.handleDbmlChange(next);
+                    layoutAfterEmptyImport.current = true;
+                    handleDbmlChange(next);
                     useSchemaStore.getState().setSaveState("dirty");
                   }}
-                  onFocusTable={ws.focusTableWithPan}
-                  open={ws.recordsPanelOpen}
-                  onOpenChange={ws.setRecordsPanelOpen}
+                  onImport={() => {
+                    layoutAfterEmptyImport.current = true;
+                    handleImport();
+                  }}
+                  onAddTable={handleAddTable}
                 />
-              </div>
-              <div className="absolute bottom-10 right-3 z-20">
-                <ProblemsPanel
-                  issues={ws.modelIssues}
-                  onFocusTable={ws.focusTableWithPan}
-                  onGoToLine={ws.goToLine}
-                  open={ws.problemsPanelOpen}
-                  onOpenChange={ws.setProblemsPanelOpen}
-                />
-              </div>
-              {ws.railItem === "settings" ? (
-                <div className="absolute bottom-12 right-3 z-20 w-72 rounded-md border border-border bg-card p-2 shadow-md">
-                  {ws.projects.length > 0 ? (
-                    <ProjectSwitcher
-                      projects={ws.projects}
-                      currentProjectId={ws.currentProjectId}
-                      saveState={ws.saveState}
-                      onSwitch={ws.switchProject}
-                      onCreate={ws.handleCreateProject}
-                      onRename={ws.handleRenameProject}
-                      onDuplicate={ws.handleDuplicateProject}
-                      onDelete={ws.handleDeleteProject}
-                      pinnedLabel={pinnedLabel}
-                    />
-                  ) : (
-                    <p className="px-2 py-1 text-xs text-muted-foreground">
-                      {t("shell.rail.settings")}
-                    </p>
-                  )}
-                </div>
-              ) : null}
-              <PageImportWizard
-                open={ws.pageWizardOpen}
-                tableCount={ws.pageWizardTableCount}
-                pages={ws.canvasPages}
-                onConfirm={(pageIds) => {
-                  ws.handleChangeActivePages(pageIds);
-                  ws.setPageWizardOpen(false);
-                }}
-                onDismiss={() => {
-                  useSchemaStore.getState().setActivePageIds([]);
-                  ws.setPageWizardOpen(false);
-                }}
-              />
+              ) : (
+                <>
+                  <Canvas
+                    parsed={canvasActiveModel}
+                    nodeExtras={nodeExtras}
+                    positions={positions}
+                    sizes={sizes}
+                    onPositionsChange={(p) => useSchemaStore.getState().setPositions(p)}
+                    onCreateRef={handleCreateRef}
+                    onRemoveRef={handleRemoveRef}
+                    onRemoveTable={handleRemoveTable}
+                    onRemoveTables={handleRemoveTables}
+                    onAddTable={handleAddTable}
+                    staleWarning={!!parsed.error || canvasParsePending}
+                    lineageFields={canvasActiveModel.lineageFields ?? []}
+                    onRemoveFieldLineage={handleRemoveFieldLineage}
+                    onCreateFieldLineage={handleCreateFieldLineage}
+                    layerOf={layerOf}
+                    collapsedGroups={collapsedGroups}
+                    onToggleGroup={handleToggleGroup}
+                    focusTableId={focusTableId}
+                    focusNonce={focusNonce}
+                    onFocusTableDone={clearFocusTable}
+                    onTableClick={(id) => {
+                      selectDrawerTab(codeTab);
+                      focusTableInEditor(id);
+                    }}
+                    fitViewTrigger={fitViewTrigger}
+                    externalStubs={canvasStubs}
+                    crossRefs={canvasView.crossRefs}
+                    density={density}
+                    toolbar={<CanvasToolbar onAutolayout={handleAutolayout} />}
+                  />
+                  <DbtChangeLog />
+                  <PageImportWizard
+                    open={pageWizardOpen}
+                    tableCount={pageWizardTableCount}
+                    pages={canvasPages}
+                    onConfirm={(pageIds) => {
+                      handleChangeActivePages(pageIds);
+                      setPageWizardOpen(false);
+                    }}
+                    onDismiss={() => {
+                      useSchemaStore.getState().setActivePageIds([]);
+                      setPageWizardOpen(false);
+                    }}
+                  />
+                </>
+              )}
             </div>
           }
           inspector={
             <Inspector
-              tableMeta={ws.actions.tableMeta}
-              layerOf={ws.layerOf}
-              colorOf={ws.actions.colorOf}
-              onSetColor={ws.actions.onSetColor}
-              layers={ws.layersArr}
-              tables={ws.activeModel.tables}
+              tableMeta={actions.tableMeta}
+              layerOf={layerOf}
+              colorOf={actions.colorOf}
+              onSetColor={actions.onSetColor}
+              layers={layersArr}
+              tables={activeModel.tables}
+              dbml={dbml}
+              onApply={(next) => {
+                markCommitted(next);
+                handleDbmlChange(next);
+              }}
+              lineageFields={activeModel.lineageFields ?? []}
+              problemCount={modelIssues.length}
+              onFocusTable={focusTableWithPan}
+              onSetLayer={actions.onSetLayer}
+              onRenameTable={actions.onRenameTable}
+              onRenameColumn={actions.onRenameColumn}
+              onRemoveTables={handleRemoveTables}
+              onGoToColumn={(table, column) => {
+                selectDrawerTab(codeTab);
+                goToColumn(table, column);
+              }}
+              onAddMapping={handleAddFieldLineage}
+              onUpdateMapping={handleUpdateFieldLineage}
+              onRemoveMapping={(st, sc, tc) => {
+                const tt = useSchemaStore.getState().selectedTable;
+                if (tt) handleRemoveFieldLineage(st, sc, tt, tc);
+              }}
             />
           }
           drawer={
-            <SourceDrawer
-              ref={ws.editorRef}
-              open={ws.sourceDrawerOpen}
-              onOpenChange={ws.setSourceDrawerOpen}
-              value={ws.dbml}
-              onChange={ws.handleDbmlChange}
-              committedValue={ws.committedDbml}
-              savedValue={ws.savedDbml}
-              onCommitted={ws.markCommitted}
-              onTableRenamed={ws.migrateTableId}
-              error={ws.parsed.error}
-              errorLine={ws.parsed.errorLine}
-              onFocusTable={ws.focusTableWithPan}
-              onCursorLine={ws.handleEditorCursorLine}
-              onGoToError={() => ws.setSourceDrawerOpen(true)}
-              onRenameModalOpenChange={ws.setRenameModalOpen}
+            <WorkspaceDrawer
+              open={sourceDrawerOpen}
+              tab={activeDrawerTab}
+              format={documentFormat}
+              onTab={(tab) => {
+                selectDrawerTab(tab);
+                setRecordsPanelOpen(tab === "records");
+              }}
+              code={
+                documentFormat === "dbt" ? (
+                  <DbtCodePanel open={sourceDrawerOpen} />
+                ) : (
+                  <SourceDrawer
+                    ref={assignEditorRef}
+                    open={sourceDrawerOpen}
+                    onOpenChange={setSourceDrawerOpen}
+                    value={dbml}
+                    onChange={handleDbmlChange}
+                    committedValue={committedDbml}
+                    savedValue={savedDbml}
+                    onCommitted={markCommitted}
+                    onTableRenamed={migrateTableId}
+                    error={parsed.error}
+                    errorLine={parsed.errorLine}
+                    onFocusTable={focusTableWithPan}
+                    onCursorLine={handleEditorCursorLine}
+                    onGoToError={() => {
+                      selectDrawerTab("dbml");
+                      setSourceDrawerOpen(true);
+                    }}
+                    onRenameModalOpenChange={setRenameModalOpen}
+                  />
+                )
+              }
+              ddl={documentFormat === "dbt" ? <DdlEditor open={sourceDrawerOpen} /> : null}
+              records={
+                <RecordsPanel
+                  records={activeModel.records}
+                  tables={activeModel.tables}
+                  refs={activeModel.refs}
+                  lineageFields={activeModel.lineageFields}
+                  dbml={dbml}
+                  onApply={(next) => {
+                    markCommitted(next);
+                    handleDbmlChange(next);
+                    useSchemaStore.getState().setSaveState("dirty");
+                  }}
+                  onFocusTable={focusTableWithPan}
+                  open
+                  onOpenChange={(open) => {
+                    if (!open) setSourceDrawerOpen(false);
+                    setRecordsPanelOpen(open);
+                  }}
+                />
+              }
+              diff={
+                documentFormat === "dbt" ? (
+                  <DbtFileDiff open={activeDrawerTab === "diff"} />
+                ) : (
+                  <DbmlDiff
+                    open={activeDrawerTab === "diff"}
+                    saved={savedDbml}
+                    working={dbml}
+                    onClose={() => setSourceDrawerOpen(false)}
+                  />
+                )
+              }
             />
           }
           statusbar={
             <StatusBar
-              problemCount={ws.modelIssues.length}
-              zoomPercent={100}
-              density={ws.density}
-              dbmlOpen={ws.sourceDrawerOpen}
-              onProblemsClick={() => ws.setProblemsPanelOpen(!ws.problemsPanelOpen)}
-              onDbmlToggle={() => ws.setSourceDrawerOpen(!ws.sourceDrawerOpen)}
-              onFitView={ws.bumpFitView}
-              onDensityChange={ws.setDensity}
+              problemCount={modelIssues.length}
+              density={density}
+              dbmlOpen={
+                sourceDrawerOpen && (activeDrawerTab === "dbml" || activeDrawerTab === "dbt")
+              }
+              recordsOpen={sourceDrawerOpen && activeDrawerTab === "records"}
+              problemsContent={
+                <ProblemsPanel
+                  variant="content"
+                  issues={modelIssues}
+                  onFocusTable={focusTableWithPan}
+                  onGoToLine={(line) => {
+                    selectDrawerTab(codeTab);
+                    goToLine(line);
+                  }}
+                  open={problemsOpen}
+                  onOpenChange={(open) => {
+                    setProblemsOpen(open);
+                    setProblemsPanelOpen(open);
+                  }}
+                />
+              }
+              problemsOpen={problemsOpen}
+              onProblemsOpenChange={(open) => {
+                setProblemsOpen(open);
+                setProblemsPanelOpen(open);
+              }}
+              statusLog={<StatusLog status={status} saveState={saveState} logs={logs} />}
+              onDbmlToggle={() => toggleDrawer(codeTab)}
+              onRecordsToggle={() => toggleDrawer("records")}
+              onDensityChange={setDensity}
             />
           }
         />
-        <CommandPalette
-          open={ws.paletteOpen}
-          onOpenChange={ws.setPaletteOpen}
-          context={ws.commandContext}
-        />
-        <ShortcutsOverlay
-          open={ws.helpOpen}
-          onOpenChange={ws.setHelpOpen}
-          context={ws.commandContext}
-        />
-        <DbmlDiff
-          open={diffOpen}
-          saved={ws.savedDbml}
-          working={ws.dbml}
-          onClose={() => setDiffOpen(false)}
-        />
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} context={commandContext} />
+        <ShortcutsOverlay open={helpOpen} onOpenChange={setHelpOpen} context={commandContext} />
       </div>
     </CanvasActionsCtx.Provider>
+  );
+}
+
+function WorkspaceDrawer({
+  open,
+  tab,
+  onTab,
+  format,
+  code,
+  ddl,
+  records,
+  diff,
+}: {
+  open: boolean;
+  tab: DrawerTab;
+  onTab: (tab: DrawerTab) => void;
+  format: "dbml" | "dbt";
+  code: ReactNode;
+  ddl: ReactNode;
+  records: ReactNode;
+  diff: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const dbt = format === "dbt";
+  if (!open) return null;
+  return (
+    <div
+      data-testid="workspace-drawer"
+      className="flex max-h-[50vh] min-h-0 w-full flex-col border-t border-border bg-card pl-[46px]"
+    >
+      <Tabs
+        value={tab}
+        onValueChange={(value) => onTab(value as DrawerTab)}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <TabsList className="h-8 w-full justify-start rounded-none bg-transparent px-2">
+          {dbt ? (
+            <>
+              <TabsTrigger value="dbt" data-testid="drawer-tab-dbt" className="text-xs">
+                {t("shell.dbtTab")}
+              </TabsTrigger>
+              <TabsTrigger value="ddl" data-testid="drawer-tab-ddl" className="text-xs">
+                {t("shell.ddl")}
+              </TabsTrigger>
+            </>
+          ) : (
+            <TabsTrigger value="dbml" data-testid="drawer-tab-dbml" className="text-xs">
+              {t("shell.dbml")}
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="records" data-testid="drawer-tab-records" className="text-xs">
+            {t("shell.records")}
+          </TabsTrigger>
+          <TabsTrigger value="diff" data-testid="drawer-tab-diff" className="text-xs">
+            {t("shell.diff")}
+          </TabsTrigger>
+        </TabsList>
+        {dbt ? (
+          <>
+            <TabsContent value="dbt" className="mt-0 min-h-0 flex-1 overflow-hidden">
+              {tab === "dbt" ? code : null}
+            </TabsContent>
+            <TabsContent value="ddl" className="mt-0 min-h-0 flex-1 overflow-hidden">
+              {tab === "ddl" ? ddl : null}
+            </TabsContent>
+          </>
+        ) : (
+          <TabsContent value="dbml" className="mt-0 min-h-0 flex-1 overflow-hidden">
+            {tab === "dbml" ? code : null}
+          </TabsContent>
+        )}
+        <TabsContent value="records" className="mt-0 min-h-0 flex-1 overflow-auto">
+          {tab === "records" ? records : null}
+        </TabsContent>
+        <TabsContent value="diff" className="mt-0 min-h-0 flex-1 overflow-auto">
+          {tab === "diff" ? diff : null}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
@@ -386,105 +644,14 @@ function WorkspaceShellRail({
         if (item === "tables") {
           setTreeCollapsed(false);
           onTables();
-        } else if (item === "layers") onLayers();
-        else if (item === "lineage") onLineage();
+        } else if (item === "layers") {
+          setTreeCollapsed(false);
+          onLayers();
+        } else if (item === "lineage") onLineage();
         else if (item === "code") onCode();
         else if (item === "search") onSearch();
         else onSettings();
       }}
     />
-  );
-}
-
-function EditorChrome({
-  past,
-  future,
-  saveState,
-  autoSave,
-  saveLabel,
-  onUndo,
-  onRedo,
-  onOrganize,
-  onAddTable,
-  onAddMetadata,
-  onImport,
-  onDiff,
-  onSave,
-  onAutoSave,
-}: {
-  past: number;
-  future: number;
-  saveState: string;
-  autoSave: boolean;
-  saveLabel: string;
-  onUndo: () => void;
-  onRedo: () => void;
-  onOrganize: () => void;
-  onAddTable: () => void;
-  onAddMetadata: () => void;
-  onImport: () => void;
-  onDiff: () => void;
-  onSave: () => void;
-  onAutoSave: () => void;
-}) {
-  const { t } = useTranslation();
-  const btn =
-    "inline-flex h-7 items-center rounded-md px-2 text-2xs text-foreground " +
-    "hover:bg-accent disabled:opacity-40";
-  return (
-    <div className="absolute left-3 top-3 z-20 flex max-w-[min(100%,42rem)] flex-wrap gap-1 rounded-md border border-border bg-card/95 p-1 shadow-md">
-      <button
-        type="button"
-        className={btn}
-        onClick={onUndo}
-        disabled={!past}
-        aria-label={t("shell.undo")}
-      >
-        {t("shell.undo")}
-      </button>
-      <button
-        type="button"
-        className={btn}
-        onClick={onRedo}
-        disabled={!future}
-        aria-label={t("shell.redo")}
-      >
-        {t("shell.redo")}
-      </button>
-      <button type="button" className={btn} onClick={onOrganize}>
-        {t("shell.organizeDbml")}
-      </button>
-      <button type="button" className={btn} onClick={onAddTable}>
-        {t("shell.addTable")}
-      </button>
-      <button type="button" className={btn} onClick={onAddMetadata}>
-        {t("shell.addMetadata")}
-      </button>
-      <button type="button" className={btn} onClick={onImport}>
-        {t("shell.importInput")}
-      </button>
-      <button type="button" className={btn} onClick={onDiff} aria-label={t("shell.diff")}>
-        {t("shell.diff")}
-      </button>
-      <button
-        type="button"
-        className={btn}
-        onClick={onSave}
-        aria-label={t("shell.save")}
-        disabled={saveState === "saving" || saveState === "saved"}
-      >
-        {saveLabel}
-      </button>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={autoSave}
-        aria-label={t("shell.autosave")}
-        className={btn}
-        onClick={onAutoSave}
-      >
-        {t("shell.autosave")}
-      </button>
-    </div>
   );
 }

@@ -1,6 +1,27 @@
 import type { StateCreator } from "zustand";
 import type { LodSlice } from "@/features/canvas/store/lodSlice";
+import { isDetailLevel, type DetailLevel } from "@/features/canvas/utils/lod";
 import type { DocumentSlice } from "./documentSlice";
+
+export const DETAIL_LEVEL_STORAGE_KEY = "strata.detailLevel";
+
+function readStoredDetailLevel(): DetailLevel {
+  try {
+    const raw = localStorage.getItem(DETAIL_LEVEL_STORAGE_KEY);
+    if (isDetailLevel(raw)) return raw;
+  } catch {
+    /* private mode / SSR */
+  }
+  return "keys";
+}
+
+function writeStoredDetailLevel(level: DetailLevel): void {
+  try {
+    localStorage.setItem(DETAIL_LEVEL_STORAGE_KEY, level);
+  } catch {
+    /* private mode */
+  }
+}
 
 export type SelectedColumn = { table: string; column: string } | null;
 
@@ -51,8 +72,6 @@ export type InteractionSlice = {
   relationsVisible: boolean;
   toggleRelationsVisible: () => void;
 
-  fieldLineageVisible: boolean;
-  toggleFieldLineageVisible: () => void;
   focusedFieldMapping: FieldMappingFocus | null;
   setFocusedFieldMapping: (m: InteractionSlice["focusedFieldMapping"]) => void;
   fieldMappingFocusNonce: number;
@@ -60,6 +79,9 @@ export type InteractionSlice = {
   selectFieldLineageMapping: (m: FieldMappingFocus) => void;
   mappingPanelOpen: boolean;
   toggleMappingPanel: () => void;
+
+  detailLevel: DetailLevel;
+  setDetailLevel: (level: DetailLevel) => void;
 };
 
 export const createInteractionSlice: StateCreator<
@@ -151,11 +173,6 @@ export const createInteractionSlice: StateCreator<
       state.relationsVisible = !state.relationsVisible;
     }),
 
-  fieldLineageVisible: false,
-  toggleFieldLineageVisible: () =>
-    set((state) => {
-      state.fieldLineageVisible = !state.fieldLineageVisible;
-    }),
   focusedFieldMapping: null,
   setFocusedFieldMapping: (m) =>
     set((state) => {
@@ -165,17 +182,18 @@ export const createInteractionSlice: StateCreator<
   focusFieldMapping: (m) =>
     set((state) => {
       state.focusedFieldMapping = m;
-      state.fieldLineageVisible = true;
+      state.lineageVisible = true;
       state.fieldMappingFocusNonce = state.fieldMappingFocusNonce + 1;
     }),
   selectFieldLineageMapping: (m) =>
     set((state) => {
       state.selectedTable = m.targetTable;
-      state.selectedTableIds = [m.targetTable];
+      // Leave selectedTableIds alone so React Flow does not mark the table
+      // selected — Delete would then drop the table with the mapping.
       state.selectedColumn = { table: m.targetTable, column: m.targetColumn };
       state.selectedGroup = null;
       state.focusedFieldMapping = m;
-      state.fieldLineageVisible = true;
+      state.lineageVisible = true;
       state.fieldMappingFocusNonce = state.fieldMappingFocusNonce + 1;
       state.mappingPanelOpen = true;
     }),
@@ -184,4 +202,12 @@ export const createInteractionSlice: StateCreator<
     set((state) => {
       state.mappingPanelOpen = !state.mappingPanelOpen;
     }),
+
+  detailLevel: readStoredDetailLevel(),
+  setDetailLevel: (level) => {
+    writeStoredDetailLevel(level);
+    set((state) => {
+      state.detailLevel = level;
+    });
+  },
 });

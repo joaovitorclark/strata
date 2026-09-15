@@ -1,0 +1,27 @@
+version: 2
+models:
+  - name: cliente_unico
+    config:
+      tags:
+        - strata:clientes
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cliente_sk
+        warn_unsupported: false
+    columns:
+      - name: cliente_sk
+        data_type: string
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: email
+        data_type: string

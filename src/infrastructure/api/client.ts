@@ -142,10 +142,22 @@ async function del<T>(url: string): Promise<T> {
 }
 
 export async function loadProject(): Promise<Project> {
-  const res = await fetch('/api/project');
-  const j = (await res.json()) as { dbml: string; canvas: CanvasState };
+  const res = await fetch("/api/project");
+  const j = (await res.json()) as {
+    format?: string;
+    dbml?: string;
+    canvas?: CanvasState;
+    files?: Record<string, string>;
+  };
+  if (j.format === "dbt") {
+    return { format: "dbt", files: j.files ?? {} };
+  }
   const canvas = j.canvas ?? {};
-  return { dbml: normalizeDbmlEol(j.dbml ?? ''), canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) } };
+  return {
+    format: "dbml",
+    dbml: normalizeDbmlEol(j.dbml ?? ""),
+    canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) },
+  };
 }
 
 export async function saveProject(dbml: string, canvas: CanvasState): Promise<void> {
@@ -180,13 +192,36 @@ export const activateProject = (id: string): Promise<void> =>
   post<{ ok: boolean; activeId: string }>(`/api/projects/${id}/activate`, {}).then(() => {});
 
 export async function loadProjectById(id: string): Promise<Project> {
-  const j = await get<{ dbml: string; canvas: CanvasState }>(`/api/projects/${id}`);
+  const j = await get<{
+    format?: string;
+    dbml?: string;
+    canvas?: CanvasState;
+    files?: Record<string, string>;
+  }>(`/api/projects/${id}`);
+  if (j.format === "dbt") {
+    return { format: "dbt", files: j.files ?? {} };
+  }
   const canvas = j.canvas ?? {};
-  return { dbml: normalizeDbmlEol(j.dbml ?? ''), canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) } };
+  return {
+    format: "dbml",
+    dbml: normalizeDbmlEol(j.dbml ?? ""),
+    canvas: { ...canvas, sizes: normalizeSizes(canvas.sizes) },
+  };
 }
 
 export const saveProjectById = (id: string, dbml: string, canvas: CanvasState): Promise<void> =>
   put<{ ok: boolean }>(`/api/projects/${id}`, { dbml, canvas }).then(() => {});
+
+export async function saveDbtChanges(
+  id: string,
+  changes: Record<string, string | null>,
+): Promise<string[]> {
+  const res = await put<{ ok: boolean; written?: string[] }>(`/api/projects/${id}`, {
+    format: "dbt",
+    changes,
+  });
+  return res.written ?? Object.keys(changes);
+}
 
 export const importFromInputForProject = (id: string, dbml: string) =>
   post<{ dbml: string; imported: string[]; lineageFieldCount?: number; warnings?: string[] }>(
@@ -206,6 +241,10 @@ export function exportFormat(
   dialect?: 'spark' | 'oracle',
 ) {
   return post<{ files: string[] }>('/api/export', { dbml, format, dialect });
+}
+
+export function exportSparkSql(project: string, files: Record<string, string>) {
+  return post<{ files: string[] }>('/api/export/spark-sql', { project, files });
 }
 
 export const exportDdl = (dbml: string) => exportFormat(dbml, 'spark-ddl');

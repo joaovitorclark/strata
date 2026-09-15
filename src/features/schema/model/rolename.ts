@@ -15,7 +15,7 @@ function collectFks(src: string): { child: FkChild; parent: FkChild }[] {
   for (const b of blocks) {
     if (b.type === 'ref') {
       // Captura o operador para detectar cardinalidade < (filho à direita)
-      const m = /Ref:?\s*([^\s<>-]+)\s*([<>-]+)\s*([^\s\[]+)/i.exec(b.text.replace(/["`]/g, ''));
+      const m = /Ref:?\s*([^\s<>-]+)\s*([<>-]+)\s*([^\s[]+)/i.exec(b.text.replace(/["`]/g, ''));
       if (m) {
         const left = splitTableColumn(m[1]);
         const right = splitTableColumn(m[3]);

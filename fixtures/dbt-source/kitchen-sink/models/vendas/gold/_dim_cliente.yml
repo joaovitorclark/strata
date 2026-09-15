@@ -1,0 +1,68 @@
+version: 2
+models:
+  - name: dim_cliente
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          group: dimensoes
+          indexes:
+            - columns:
+                - email
+                - nome
+              name: idx_cliente_contato
+      schema: gold
+      materialized: table
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - email
+        warn_unsupported: false
+    columns:
+      - name: id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.stg_cliente.id
+      - name: email
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.stg_cliente.email
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.stg_cliente.nome
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: status
+        data_type: order_status
+        config:
+          meta:
+            strata:
+              enum: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - aberto
+                  - pago
+                  - cancelado

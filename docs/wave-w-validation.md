@@ -1,7 +1,7 @@
 # Wave W — what to validate
 
 **For:** an agent validating Cursor's last migration-era wave. Not the UX work — that is
-[`ux-direction.md`](ux-direction.md) and a different thread.
+[`ux-ui-research.md`](ux-ui-research.md) and a different thread.
 
 **Context:** the migration is finished and the parity inventory closed at 254 ☑ · 0 ☐ · 6 dropped of
 260. Wave W is three tasks left running after that session closed. None of them is design work: two

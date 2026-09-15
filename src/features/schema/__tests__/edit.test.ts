@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendRef, refExists, removeRef, removeTable, setColumnSetting, getColumnSettings,
   renameColumn, addColumn, renameTable, setTableNote, setRecordsNote, setTableOrRecordsNote,
+  setColumnType, setColumnUnique,
 } from '@/features/schema/model/edit';
 import { parseDbml } from '@/features/schema/model/parse';
 
@@ -235,4 +236,44 @@ describe('notas de tabela e records', () => {
     expect(out).not.toContain("'antiga'");
     expect(setTableOrRecordsNote(src, 'loja.cliente', 'via helper')).toContain("Note: 'via helper'");
   });
+});
+
+describe('S10 inspector edit helpers', () => {
+  it('R5: setColumnType keeps notes with brackets/commas, array types and trailing comments', () => {
+    const src = [
+      'Table loja.cliente {',
+      "  id int [pk, note: 'ids [legado], migrados'] // chave antiga",
+      '  tags text[] [not null]',
+      '}',
+      '',
+    ].join('\n');
+    const out = setColumnType(src, 'loja.cliente', 'id', 'bigint');
+    expect(out).toContain("  id bigint [pk, note: 'ids [legado], migrados'] // chave antiga");
+    const arr = setColumnType(src, 'loja.cliente', 'tags', 'varchar[]');
+    expect(arr).toContain('  tags varchar[] [not null]');
+    const uni = setColumnUnique(src, 'loja.cliente', 'id', true);
+    expect(uni).toContain("  id int [pk, note: 'ids [legado], migrados', unique] // chave antiga");
+  });
+
+  it('G8: setColumnType writes the new type and keeps settings', () => {
+    const out = setColumnType(SRC, 'loja.cliente', 'id', 'uuid');
+    expect(out).toMatch(/id uuid \[pk\]/);
+    expect(reparses(out)).toBe(true);
+    const decimal = setColumnType(SRC, 'loja.pedido', 'cliente_id', 'decimal(18,2)');
+    expect(decimal).toMatch(/cliente_id decimal\(18,2\)/);
+    expect(reparses(decimal)).toBe(true);
+  });
+
+  it('G8: setColumnUnique toggles unique on the column', () => {
+    const on = setColumnUnique(SRC, 'loja.cliente', 'nome', true);
+    expect(on).toMatch(/nome string \[unique\]/);
+    expect(reparses(on)).toBe(true);
+    const off = setColumnUnique(on, 'loja.cliente', 'nome', false);
+    expect(off).toMatch(/nome string$/m);
+    expect(off).not.toMatch(/nome string \[unique\]/);
+    expect(reparses(off)).toBe(true);
+    const withPk = setColumnUnique(SRC, 'loja.cliente', 'id', true);
+    expect(withPk).toMatch(/id bigint \[pk, unique\]/);
+  });
+
 });

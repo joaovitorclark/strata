@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: join_aliases
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: score
+        data_type: bigint

@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: expr_two_cols
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: total
+        data_type: bigint

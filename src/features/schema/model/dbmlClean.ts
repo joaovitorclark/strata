@@ -202,7 +202,6 @@ function parseSimpleKv(lines: string[]): Record<string, unknown> {
 }
 
 export type ParsedLayerGroup = { id: string; name: string; color?: string; tables: string[] };
-export type ParsedLineage = { target: string; sources: string[] };
 export type ParsedFieldLineage = {
   sourceTable: string;
   sourceColumn: string;
@@ -223,26 +222,6 @@ export function parseLayerGroup(block: string): ParsedLayerGroup | null {
   const inner = end >= 0 ? body.slice(0, end) : body;
   const tables = inner.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('//'));
   return { id: name.toLowerCase(), name, color, tables };
-}
-
-/** Faz parse de um bloco `Lineage { target < source1, source2 }`. */
-export function parseLineageBlock(block: string): ParsedLineage[] {
-  const h = /Lineage\s*\{/i.exec(block);
-  if (!h) return [];
-  const body = block.slice(h.index + h[0].length);
-  const end = body.lastIndexOf('}');
-  const inner = end >= 0 ? body.slice(0, end) : body;
-  const out: ParsedLineage[] = [];
-  for (const rawLine of inner.split('\n')) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('//')) continue;
-    const m = /^([^\s<]+)\s*<\s*(.+)$/.exec(line);
-    if (!m) continue;
-    const target = m[1].trim();
-    const sources = m[2].split(',').map((s) => s.trim()).filter(Boolean);
-    if (target && sources.length) out.push({ target, sources });
-  }
-  return out;
 }
 
 /** `schema.tabela.coluna` → { table, column }. */
@@ -274,7 +253,7 @@ export function parseLineageFieldsBlock(block: string): ParsedFieldLineage[] {
   for (const rawLine of inner.split('\n')) {
     const line = rawLine.trim();
     if (!line || line.startsWith('//')) continue;
-    const m = /^([^\s<]+)\s*<\s*([^\s\[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(line);
+    const m = /^([^\s<]+)\s*<\s*([^\s[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(line);
     if (!m) continue;
     const target = splitTableColumn(m[1].trim());
     const source = splitTableColumn(m[2].trim());
@@ -347,14 +326,26 @@ export function pinnedByTableFromList(pins: string[]): Record<string, string[]> 
   return out;
 }
 
-const CUSTOM_TYPES = new Set(['records', 'layerGroup', 'lineage', 'lineageFields', 'dbt', 'rolenames', 'colors', 'pins']);
+const CUSTOM_TYPES = new Set([
+  'records',
+  'layerGroup',
+  'lineageFields',
+  'dbt',
+  'rolenames',
+  'colors',
+  'pins',
+  'views',
+]);
+/** Legacy `Lineage {}` is stripped from @dbml/core and dropped on save — never parsed. */
+const DROPPED_TYPES = new Set(['lineage']);
+const STRIP_TYPES = new Set([...CUSTOM_TYPES, ...DROPPED_TYPES]);
 
 /** Remove blocos extras antes do @dbml/core. */
 export function cleanDbml(src: string): string {
   const blocks = splitDbmlBlocks(src);
   const keep: string[] = [];
   for (const b of blocks) {
-    if (!CUSTOM_TYPES.has(b.type) && b.type !== 'blank') keep.push(b.text);
+    if (!STRIP_TYPES.has(b.type) && b.type !== 'blank') keep.push(b.text);
   }
   return keep.join('\n');
 }
@@ -394,7 +385,7 @@ function buildCleanFromBlocks(
   const keepTexts: string[] = [];
   const lineOrigins: number[] = [];
   for (const b of blocks) {
-    if (CUSTOM_TYPES.has(b.type) || b.type === 'blank') continue;
+    if (STRIP_TYPES.has(b.type) || b.type === 'blank') continue;
     const start = b.lineStart ?? 0;
     let blines = b.text.split('\n');
     let origins = blines.map((_, i) => start + i);
@@ -406,12 +397,11 @@ function buildCleanFromBlocks(
   return { clean: keepTexts.join('\n'), mapCleanLineToOriginal };
 }
 
-/** Remove blocos extras e extrai metadados custom (Records, LayerGroup, Lineage, Dbt, …). */
+/** Remove blocos extras e extrai metadados custom (Records, LayerGroup, Dbt, …). */
 export function extractRecords(src: string): {
   clean: string;
   records: ParsedRecords[];
   layerGroups: ParsedLayerGroup[];
-  lineage: ParsedLineage[];
   lineageFields: ParsedFieldLineage[];
   dbtTables: ParsedDbtTable[];
   rolenames: ParsedRolename[];
@@ -422,7 +412,6 @@ export function extractRecords(src: string): {
   const blocks = splitDbmlBlocks(src);
   const records: ParsedRecords[] = [];
   const layerGroups: ParsedLayerGroup[] = [];
-  const lineage: ParsedLineage[] = [];
   const lineageFields: ParsedFieldLineage[] = [];
   const dbtTables: ParsedDbtTable[] = [];
   const rolenames: ParsedRolename[] = [];
@@ -435,8 +424,6 @@ export function extractRecords(src: string): {
     } else if (b.type === 'layerGroup') {
       const lg = parseLayerGroup(b.text);
       if (lg) layerGroups.push(lg);
-    } else if (b.type === 'lineage') {
-      lineage.push(...parseLineageBlock(b.text));
     } else if (b.type === 'lineageFields') {
       lineageFields.push(...parseLineageFieldsBlock(b.text));
     } else if (b.type === 'dbt') {
@@ -452,5 +439,5 @@ export function extractRecords(src: string): {
     }
   }
   const { clean, mapCleanLineToOriginal } = buildCleanFromBlocks(blocks);
-  return { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal };
+  return { clean, records, layerGroups, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal };
 }

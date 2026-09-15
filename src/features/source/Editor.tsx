@@ -24,10 +24,21 @@ type Props = {
   onGoToError?: () => void;
   onCursorLine?: (line0: number) => void;
   onCommit?: () => void;
+  showOutline?: boolean;
 };
 
 export const Editor = forwardRef<EditorHandle, Props>(function Editor(
-  { value, onChange, error, errorLine, onFocusTable, onGoToError, onCursorLine, onCommit },
+  {
+    value,
+    onChange,
+    error,
+    errorLine,
+    onFocusTable,
+    onGoToError,
+    onCursorLine,
+    onCommit,
+    showOutline = true,
+  },
   ref,
 ) {
   const { t } = useTranslation();
@@ -76,7 +87,7 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
-      <Outline dbml={value} onGoToLine={goToLine} onFocusTable={onFocusTable} />
+      {showOutline && <Outline dbml={value} onGoToLine={goToLine} onFocusTable={onFocusTable} />}
       <CodeMirror
         ref={cmRef}
         value={value}

@@ -155,30 +155,5 @@ export function validateModel(parsed: ParseResult, dbml?: string, blocks?: Block
     }
   }
 
-  for (const entry of parsed.lineage) {
-    if (!tableIdSet.has(entry.target)) {
-      issues.push({
-        severity: 'error',
-        message: `Linhagem: destino inexistente "${entry.target}"`,
-        tableId: entry.target,
-      });
-    }
-    for (const src of entry.sources) {
-      if (!tableIdSet.has(src)) {
-        issues.push({
-          severity: 'error',
-          message: `Linhagem: origem inexistente "${src}" → ${entry.target}`,
-          tableId: src,
-        });
-      } else if (src === entry.target) {
-        issues.push({
-          severity: 'warn',
-          message: `Linhagem: self-loop em ${entry.target}`,
-          tableId: entry.target,
-        });
-      }
-    }
-  }
-
   return issues;
 }

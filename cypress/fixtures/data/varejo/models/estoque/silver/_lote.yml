@@ -1,0 +1,65 @@
+version: 2
+models:
+  - name: lote
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - lotes
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - lote_id
+        warn_unsupported: false
+    columns:
+      - name: lote_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.lotes.lote_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.lotes.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: codigo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.lotes.codigo
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_validade
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.lotes.dt_validade

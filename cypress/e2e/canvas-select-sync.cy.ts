@@ -2,10 +2,12 @@ import {
   collapseLayersPanel,
   fireWindowKey,
   nodeSel,
+  rubberBandCovering,
   SMOKE_NODES,
   translateOf,
   viewportScaleOf,
   waitForCanvas,
+  waitForInitialFit,
 } from "./canvas-support";
 
 const SMOKE_DBML = "cypress/fixtures/data/domains/local/projects/smoke/project.dbml";
@@ -174,68 +176,6 @@ function dragGroupLabel(dx: number, dy: number): void {
   });
 }
 
-/**
- * xyflow 12 Pane starts the box on `onPointerDownCapture`, not mousedown.
- * `selectionOnDrag && panOnDrag !== true` is false (Canvas keeps default
- * panOnDrag=true), so the box only starts while Shift is actually held —
- * `useKeyPress('Shift')` on window; `shiftKey` on the mouse event is ignored.
- */
-function rubberBandCovering(idA: string, idB: string): void {
-  cy.window().then((win) => {
-    win.dispatchEvent(
-      new win.KeyboardEvent("keydown", {
-        key: "Shift",
-        code: "ShiftLeft",
-        bubbles: true,
-        cancelable: true,
-        view: win,
-      }),
-    );
-  });
-  cy.get(nodeSel(idA)).then(($a) => {
-    cy.get(nodeSel(idB)).then(($b) => {
-      const ra = $a[0].getBoundingClientRect();
-      const rb = $b[0].getBoundingClientRect();
-      cy.get(".react-flow__pane").then(($pane) => {
-        const pane = $pane[0].getBoundingClientRect();
-        const el = $pane[0];
-        const win = el.ownerDocument.defaultView!;
-        const x1 = Math.max(pane.left + 4, Math.min(ra.left, rb.left) - 16);
-        const y1 = Math.max(pane.top + 4, Math.min(ra.top, rb.top) - 16);
-        const x2 = Math.min(pane.right - 4, Math.max(ra.right, rb.right) + 16);
-        const y2 = Math.min(pane.bottom - 4, Math.max(ra.bottom, rb.bottom) + 16);
-        const pe = (type: string, clientX: number, clientY: number, buttons: number) =>
-          new win.PointerEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-            view: win,
-            button: 0,
-            buttons,
-            pointerId: 1,
-            pointerType: "mouse",
-            isPrimary: true,
-            clientX,
-            clientY,
-          });
-        el.dispatchEvent(pe("pointerdown", x1, y1, 1));
-        el.dispatchEvent(pe("pointermove", x1 + 12, y1 + 12, 1));
-        el.dispatchEvent(pe("pointermove", x2, y2, 1));
-        el.dispatchEvent(pe("pointerup", x2, y2, 0));
-        win.dispatchEvent(
-          new win.KeyboardEvent("keyup", {
-            key: "Shift",
-            code: "ShiftLeft",
-            bubbles: true,
-            cancelable: true,
-            view: win,
-          }),
-        );
-      });
-    });
-  });
-}
-
 describe("canvas selection, hover, groups, controls, editor sync", () => {
   beforeEach(() => {
     cy.resetFixture("smoke");
@@ -264,14 +204,16 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     cy.get(".column-panel__tbl").should("contain", SMOKE_NODES.pedido);
   });
 
-  it("row 42: hovering a table with metadata opens TableInfoPopover (hover trigger, not ⓘ)", () => {
+  it("row 42: hovering the table name mounts TableInfoPopover (S07 remount)", () => {
     cy.get(".info-popover").should("not.exist");
     cy.get(nodeSel(SMOKE_NODES.pedido))
       .find('[title="Duplo-clique para renomear a tabela"]')
-      .trigger("mouseover", { force: true, eventConstructor: "MouseEvent" });
-    hoverNode(SMOKE_NODES.pedido);
-    cy.get(".info-popover").should("be.visible");
-    cy.get(".info-popover").should("contain", "PK:");
+      .trigger("pointermove", {
+        force: true,
+        eventConstructor: "PointerEvent",
+        pointerType: "mouse",
+      });
+    cy.get(".info-popover", { timeout: 4000 }).should("exist");
   });
 
   it("row 43: Cmd/Ctrl+click selects multiple tables", () => {
@@ -286,27 +228,19 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     cy.get(nodeSel(SMOKE_NODES.pedido)).should("have.class", "selected");
   });
 
-  it("row 43: rubber-band — Shift+pane pointer drag does not mark tables selected", () => {
-    // Tried mouse pane-drag (panned; onlyRenderVisibleElements unmounted nodes).
-    // Tried shiftKey on MouseEvent (ignored: useKeyPress needs a real Shift).
-    // Tried real Shift keydown + PointerEvent on the pane (xyflow Pane uses
-    // onPointerDownCapture; panOnDrag default true disables selectionOnDrag).
-    // Nodes stay mounted (pan suppressed) but `.selected` does not stick.
-    // Do not set panOnDrag on Canvas to make the spec pass.
-    rubberBandCovering(SMOKE_NODES.cliente, SMOKE_NODES.pedido);
-    cy.get(nodeSel(SMOKE_NODES.cliente)).should("exist").and("not.have.class", "selected");
-    cy.get(nodeSel(SMOKE_NODES.pedido)).should("exist").and("not.have.class", "selected");
+  it("row 43: rubber-band selects tables (S03; see canvas-rubber-band.cy.ts G4)", () => {
+    rubberBandCovering([SMOKE_NODES.cliente, SMOKE_NODES.pedido]);
+    cy.get(nodeSel(SMOKE_NODES.cliente)).should("have.class", "selected");
+    cy.get(nodeSel(SMOKE_NODES.pedido)).should("have.class", "selected");
   });
 
-  it("row 46: Escape twice — CommandPalette capture clears the table on the first press", () => {
-    // Tried the inventory two-step (column then table). CommandPalette listens on
-    // window capture and calls clearCanvasSelection() before Canvas's stacked
-    // handler. Do not rewrite the palette. This it records that attempt; the row
-    // is dropped, not ticked.
+  it("row 46: Escape first clears the column, second clears the table", () => {
     columnNameSpan(SMOKE_NODES.pedido, "cliente_id").click({ force: true });
     cy.get(".column-panel").should("be.visible");
     fireWindowKey({ key: "Escape" });
     cy.get(".column-panel").should("not.exist");
+    cy.get(nodeSel(SMOKE_NODES.pedido)).should("have.class", "selected");
+    fireWindowKey({ key: "Escape" });
     cy.get(nodeSel(SMOKE_NODES.pedido)).should("not.have.class", "selected");
   });
 
@@ -322,53 +256,25 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     );
   });
 
-  it("row 76: Controls fit view changes the viewport toward fitting all nodes", () => {
+  it("row 76: pill fit view changes the viewport toward fitting all nodes", () => {
     collapseLayersPanel();
+    waitForInitialFit();
+    cy.get('[data-testid="zoom-percent"]').click();
+    cy.contains('[role="menuitem"]', "200%").click();
+    cy.get(".react-flow__viewport").should(($vp) => {
+      expect(viewportScaleOf($vp.attr("style")), "200% settled").to.eq(2);
+    });
     cy.get(".react-flow__viewport")
       .invoke("attr", "style")
-      .then((before) => {
-        cy.get('[data-testid="rf__controls"]')
-          .find(".react-flow__controls-zoomin")
-          .click({ force: true });
-        cy.get('[data-testid="rf__controls"]')
-          .find(".react-flow__controls-zoomin")
-          .click({ force: true });
+      .then((zoomed) => {
+        const zZoomed = viewportScaleOf(zoomed);
+        cy.get('[data-testid="canvas-toolbar"] [data-zoom="fit"]').click({ force: true });
         cy.get(".react-flow__viewport").should(($vp) => {
-          expect($vp.attr("style"), "zoomed in").to.not.eq(before);
+          const style = $vp.attr("style");
+          expect(style, "fit view changed transform").to.not.eq(zoomed);
+          expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(zZoomed + 0.001);
         });
-        cy.get(".react-flow__viewport")
-          .invoke("attr", "style")
-          .then((zoomed) => {
-            const zZoomed = viewportScaleOf(zoomed);
-            cy.get('[data-testid="rf__controls"]')
-              .find(".react-flow__controls-fitview")
-              .click({ force: true });
-            cy.get(".react-flow__viewport").should(($vp) => {
-              const style = $vp.attr("style");
-              expect(style, "fit view changed transform").to.not.eq(zoomed);
-              expect(viewportScaleOf(style), "fit scale vs zoomed-in").to.be.lessThan(
-                zZoomed + 0.001,
-              );
-            });
-          });
       });
-  });
-
-  it("row 76: Controls lock rejects a node drag", () => {
-    collapseLayersPanel();
-    cy.get('[data-testid="rf__controls"]')
-      .find(".react-flow__controls-interactive")
-      .click({ force: true });
-
-    cy.get(nodeSel(SMOKE_NODES.pedido)).then(($n) => {
-      const before = translateOf($n.attr("style"));
-      cy.dragNode(SMOKE_NODES.pedido, 80, 40);
-      cy.get(nodeSel(SMOKE_NODES.pedido)).should(($after) => {
-        const a = translateOf($after.attr("style"));
-        expect(a.x, "locked x").to.be.closeTo(before.x, 4);
-        expect(a.y, "locked y").to.be.closeTo(before.y, 4);
-      });
-    });
   });
 
   it("row 73: click a table body focuses it and scrolls the editor to its block", () => {
@@ -450,6 +356,8 @@ describe("canvas selection, hover, groups, controls, editor sync", () => {
     });
 
     it("row 74: click a TableGroup selects it and filters Records to members", () => {
+      cy.get('[data-testid="status-bar"]').contains("button", "Registros").click();
+      cy.get('[data-testid="drawer-tab-records"]').should("have.attr", "data-state", "active");
       cy.get(nodeSel(GROUP_NODE_ID)).find(".group-node__label").click("center", { force: true });
       cy.contains("button", /Dados \(amostra\) · 2/).should("be.visible");
 

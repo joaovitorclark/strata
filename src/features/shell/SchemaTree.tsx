@@ -1,15 +1,29 @@
-import { useMemo, useState, type UIEvent } from "react";
+import { useMemo, useState, type KeyboardEvent, type MouseEvent, type UIEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
 import { computeVirtualWindow } from "@/features/canvas/hooks/useVirtualWindow";
 import {
   COLUMN_VIRTUAL_OVERSCAN,
   COLUMN_VIRTUAL_ROW_H,
   COLUMN_VIRTUAL_VIEW_ROWS,
 } from "@/features/canvas/utils/scaleLimits";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { useSchemaStore } from "@/features/schema/store";
+import { parseDbml } from "@/features/schema/model/parse";
+import { parseViewsBlock, resolveViewTables, TUDO_VIEW_ID } from "@/features/schema/model/views";
 import { cn } from "@/lib/utils";
 
 const VIEW_H_FALLBACK = COLUMN_VIRTUAL_VIEW_ROWS * COLUMN_VIRTUAL_ROW_H;
+
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+  "focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export type SchemaTreeTable = {
   id: string;
@@ -22,6 +36,8 @@ export type SchemaTreeTable = {
 export type SchemaTreeProps = {
   tables: readonly SchemaTreeTable[];
   layerOf?: (tableId: string) => string | undefined;
+  onFocusTable?: (id: string) => void;
+  onOpenInspector?: () => void;
 };
 
 type FlatRow =
@@ -66,14 +82,74 @@ function flattenTables(tables: readonly SchemaTreeTable[], ungrouped: string): F
   return rows;
 }
 
-export function SchemaTree({ tables, layerOf }: SchemaTreeProps) {
+function HighlightName({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const i = text.toLowerCase().indexOf(query.toLowerCase());
+  if (i < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="rounded-sm bg-primary/25 text-inherit">
+        {text.slice(i, i + query.length)}
+      </mark>
+      {text.slice(i + query.length)}
+    </>
+  );
+}
+
+export function SchemaTree({ tables, layerOf, onFocusTable, onOpenInspector }: SchemaTreeProps) {
   const { t } = useTranslation();
   const selectedTable = useSchemaStore((s) => s.selectedTable);
+  const selectedTableIds = useSchemaStore((s) => s.selectedTableIds);
+  const hiddenTableIds = useSchemaStore((s) => s.hiddenTableIds);
   const selectTable = useSchemaStore((s) => s.selectTable);
+  const setSelectedTableIds = useSchemaStore((s) => s.setSelectedTableIds);
+  const toggleTableHidden = useSchemaStore((s) => s.toggleTableHidden);
+  const setHiddenTables = useSchemaStore((s) => s.setHiddenTables);
+  const showAllTables = useSchemaStore((s) => s.showAllTables);
+  const addTableToActiveView = useSchemaStore((s) => s.addTableToActiveView);
+  const activeViewId = useSchemaStore((s) => s.activeViewId);
+  const dbml = useSchemaStore((s) => s.dbml);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(VIEW_H_FALLBACK);
+  const [filter, setFilter] = useState("");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  const rows = useMemo(() => flattenTables(tables, t("shell.schemaTree.ungrouped")), [tables, t]);
+  const query = filter.trim();
+  const inViewSet = useMemo(() => {
+    if (activeViewId === TUDO_VIEW_ID) return null;
+    const ids = parseDbml(dbml).tables.map((tbl) => tbl.id);
+    const view = parseViewsBlock(dbml).find((v) => v.id === activeViewId);
+    return new Set(view ? resolveViewTables(view, ids) : ids);
+  }, [activeViewId, dbml]);
+
+  const mainTables = useMemo(() => {
+    if (!inViewSet) return tables;
+    return tables.filter((table) => inViewSet.has(table.id));
+  }, [tables, inViewSet]);
+
+  const outsideTables = useMemo(() => {
+    if (!inViewSet) return [];
+    return tables.filter((table) => !inViewSet.has(table.id));
+  }, [tables, inViewSet]);
+
+  const filteredTables = useMemo(() => {
+    if (!query) return mainTables;
+    const q = query.toLowerCase();
+    return mainTables.filter((table) => table.name.toLowerCase().includes(q));
+  }, [mainTables, query]);
+
+  const rows = useMemo(
+    () => flattenTables(filteredTables, t("shell.schemaTree.ungrouped")),
+    [filteredTables, t],
+  );
+
+  const hiddenCount = useMemo(() => {
+    const known = new Set(mainTables.map((table) => table.id));
+    return hiddenTableIds.filter((id) => known.has(id)).length;
+  }, [mainTables, hiddenTableIds]);
+
+  const hiddenSet = useMemo(() => new Set(hiddenTableIds), [hiddenTableIds]);
 
   const win = computeVirtualWindow({
     totalItems: rows.length,
@@ -90,14 +166,70 @@ export function SchemaTree({ tables, layerOf }: SchemaTreeProps) {
     if (h > 0) setViewportHeight(h);
   };
 
+  const revealIfHidden = (id: string) => {
+    if (useSchemaStore.getState().hiddenTableIds.includes(id)) toggleTableHidden(id);
+  };
+
+  const activateTable = (id: string, additive: boolean, pan: boolean) => {
+    revealIfHidden(id);
+    if (additive) {
+      const ids = useSchemaStore.getState().selectedTableIds;
+      if (!ids.includes(id)) setSelectedTableIds([...ids, id]);
+      return;
+    }
+    selectTable(id);
+    if (pan) onFocusTable?.(id);
+  };
+
   return (
     <nav
       data-testid="schema-tree"
       aria-label={t("shell.schemaTree.title")}
       className="flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground"
     >
-      <div className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {t("shell.schemaTree.title")}
+      <div className="flex shrink-0 items-center gap-1 px-1 py-1">
+        <Input
+          data-testid="schema-tree-filter"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={t("shell.schemaTree.filter")}
+          aria-label={t("shell.schemaTree.filter")}
+          className="h-7 px-2 text-xs"
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              data-testid="schema-tree-menu"
+              aria-label={t("shell.schemaTree.menu")}
+              className={cn(
+                FOCUS,
+                "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+              )}
+            >
+              <MoreHorizontal className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => showAllTables()}>
+              {t("shell.schemaTree.showAll")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setHiddenTables(mainTables.map((table) => table.id))}>
+              {t("shell.schemaTree.hideAll")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() =>
+                setHiddenTables(
+                  mainTables
+                    .filter((table) => !selectedTableIds.includes(table.id))
+                    .map((table) => table.id),
+                )
+              }
+            >
+              {t("shell.schemaTree.hideUnselected")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto" onScroll={onScroll}>
         <div style={{ height: win.totalHeight, position: "relative" }}>
@@ -117,12 +249,60 @@ export function SchemaTree({ tables, layerOf }: SchemaTreeProps) {
                   table={row.table}
                   layerId={layerOf?.(row.table.id) ?? row.table.layerId}
                   selected={selectedTable === row.table.id}
-                  onSelect={selectTable}
+                  hidden={hiddenSet.has(row.table.id)}
+                  hovered={hoveredId === row.table.id}
+                  filter={query}
+                  onHover={setHoveredId}
+                  onActivate={activateTable}
+                  onToggleHidden={toggleTableHidden}
+                  onOpenInspector={onOpenInspector}
                 />
               ),
             )}
           </div>
         </div>
+        {outsideTables.length > 0 ? (
+          <details data-testid="schema-tree-outside" className="border-t border-border">
+            <summary className="cursor-pointer px-2 py-1 font-sans text-xs text-muted-foreground">
+              {t("shell.schemaTree.outsideView", { count: outsideTables.length })}
+            </summary>
+            <div>
+              {outsideTables.map((table) => (
+                <div
+                  key={table.id}
+                  className="relative flex items-center"
+                  style={{ height: COLUMN_VIRTUAL_ROW_H }}
+                >
+                  <span className="min-w-0 flex-1 truncate pl-3 pr-8 font-mono text-xs text-muted-foreground">
+                    {table.name}
+                  </span>
+                  <button
+                    type="button"
+                    data-testid={`schema-tree-add-to-view-${table.id}`}
+                    aria-label={t("shell.schemaTree.addToView", { name: table.name })}
+                    className={cn(
+                      FOCUS,
+                      "absolute right-1 top-1/2 z-10 inline-flex size-5 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+                    )}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addTableToActiveView(table.id);
+                    }}
+                  >
+                    <Eye className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </div>
+      <div
+        data-testid="schema-tree-footer"
+        className="shrink-0 px-2 py-1 text-2xs text-muted-foreground"
+      >
+        {t("shell.schemaTree.footer", { total: mainTables.length, hidden: hiddenCount })}
       </div>
     </nav>
   );
@@ -132,38 +312,116 @@ function SchemaTreeRow({
   table,
   layerId,
   selected,
-  onSelect,
+  hidden,
+  hovered,
+  filter,
+  onHover,
+  onActivate,
+  onToggleHidden,
+  onOpenInspector,
 }: {
   table: SchemaTreeTable;
   layerId?: string;
   selected: boolean;
-  onSelect: (id: string | null) => void;
+  hidden: boolean;
+  hovered: boolean;
+  filter: string;
+  onHover: (id: string | null) => void;
+  onActivate: (id: string, additive: boolean, pan: boolean) => void;
+  onToggleHidden: (id: string) => void;
+  onOpenInspector?: () => void;
 }) {
+  const { t } = useTranslation();
+
+  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onActivate(table.id, false, true);
+      return;
+    }
+    if (e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      onToggleHidden(table.id);
+      return;
+    }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const nav = e.currentTarget.closest("[data-testid='schema-tree']");
+    if (!nav) return;
+    const rows = [...nav.querySelectorAll<HTMLButtonElement>("[data-tree-table]")];
+    const i = rows.indexOf(e.currentTarget);
+    const next = e.key === "ArrowDown" ? rows[i + 1] : rows[i - 1];
+    next?.focus();
+  };
+
+  const onClick = (e: MouseEvent<HTMLButtonElement>) => {
+    onActivate(table.id, e.altKey, !e.altKey);
+  };
+
   return (
-    <button
-      type="button"
-      aria-label={table.id}
-      aria-current={selected ? "true" : undefined}
-      onClick={() => onSelect(table.id)}
-      className={cn(
-        "relative flex w-full items-center gap-1 pl-3 pr-2 text-left font-mono text-xs",
-        selected
-          ? "border-l border-l-primary bg-sidebar-accent text-sidebar-accent-foreground"
-          : "border-l border-l-transparent hover:bg-surface-hover",
-      )}
+    <div
+      className="group relative"
       style={{ height: COLUMN_VIRTUAL_ROW_H }}
+      onMouseEnter={() => onHover(table.id)}
+      onMouseLeave={() => onHover(null)}
     >
-      <span
-        aria-hidden
+      <button
+        type="button"
+        data-tree-table={table.id}
+        aria-label={table.id}
+        aria-current={selected ? "true" : undefined}
+        onClick={onClick}
+        onDoubleClick={() => {
+          onActivate(table.id, false, true);
+          onOpenInspector?.();
+        }}
+        onKeyDown={onKeyDown}
         className={cn(
-          "pointer-events-none absolute inset-y-0 left-0 w-[3px]",
-          layerEdgeClass(layerId),
+          FOCUS,
+          "relative flex h-full w-full items-center gap-1 pl-3 pr-2 text-left font-mono text-xs",
+          selected
+            ? "border-l border-l-primary bg-sidebar-accent text-sidebar-accent-foreground"
+            : "border-l border-l-transparent hover:bg-surface-hover",
         )}
-      />
-      <span className="min-w-0 flex-1 truncate font-mono">{table.name}</span>
-      <span className="ml-auto shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
-        {table.columnCount}
-      </span>
-    </button>
+      >
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 w-[3px]",
+            layerEdgeClass(layerId),
+          )}
+        />
+        <span
+          className={cn("min-w-0 flex-1 truncate font-mono", hidden && "text-muted-foreground")}
+        >
+          <HighlightName text={table.name} query={filter} />
+        </span>
+        <span className="ml-auto shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">
+          {table.columnCount}
+        </span>
+      </button>
+      <button
+        type="button"
+        data-testid={`schema-tree-visibility-${table.id}`}
+        aria-label={
+          hidden
+            ? t("shell.schemaTree.showTable", { name: table.name })
+            : t("shell.schemaTree.hideTable", { name: table.name })
+        }
+        tabIndex={-1}
+        className={cn(
+          FOCUS,
+          "absolute right-1 top-1/2 z-10 inline-flex size-5 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+          !(hovered || hidden) && "pointer-events-none opacity-0",
+        )}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleHidden(table.id);
+        }}
+      >
+        {hidden ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+      </button>
+    </div>
   );
 }

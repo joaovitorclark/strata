@@ -1,0 +1,5 @@
+[0m02:15:30  Running with dbt=1.12.4
+[0m02:15:31  Registered adapter: duckdb=1.11.0
+[0m02:15:31  Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m02:15:33  Performance info: ./target/perf_info.json
+exit=0

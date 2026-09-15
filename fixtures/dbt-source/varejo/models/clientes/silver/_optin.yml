@@ -1,0 +1,65 @@
+version: 2
+models:
+  - name: optin
+    config:
+      tags:
+        - strata:clientes
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - optin_id
+        warn_unsupported: false
+    columns:
+      - name: optin_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.optins.optin_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.optins.cliente_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: canal
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.optins.canal
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: aceito
+        data_type: boolean
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.optins.aceito
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_optin
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.optins.dt_optin
+        constraints:
+          - type: not_null
+            warn_unsupported: false

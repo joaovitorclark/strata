@@ -2,13 +2,8 @@
 import { Parser } from '@dbml/core';
 import {
   extractRecords,
-  parseLayerGroup,
-  parseLineageBlock,
-  parseLineageFieldsBlock,
-  splitTableColumn,
   type ParsedFieldLineage,
   type ParsedLayerGroup,
-  type ParsedLineage,
   type ParsedRolename,
 } from './dbmlClean';
 import type { ParsedRecords } from './records';
@@ -19,12 +14,10 @@ import { resolveMemberTableIds, tableIdsMatch } from './tableIdMatch';
 export {
   extractRecords,
   parseLayerGroup,
-  parseLineageBlock,
   parseLineageFieldsBlock,
   splitTableColumn,
   type ParsedFieldLineage,
   type ParsedLayerGroup,
-  type ParsedLineage,
   type ParsedRolename,
 } from './dbmlClean';
 
@@ -68,7 +61,6 @@ export type ParseResult = {
   refs: RefView[];
   records: ParsedRecords[];
   layerGroups: ParsedLayerGroup[];
-  lineage: ParsedLineage[];
   lineageFields: ParsedFieldLineage[];
   rolenames: ParsedRolename[];
   /** Cor por tabela (do bloco Colors {}) — id da tabela -> hex/nome. */
@@ -83,15 +75,76 @@ export type ParseResult = {
 const qualified = (schema: string | undefined, name: string) =>
   schema && schema !== 'public' ? `${schema}.${name}` : name;
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
+type DbmlDiag = {
+  message?: string;
+  location?: { start?: { line?: number } };
+};
+
+type DbmlParseError = {
+  diags?: DbmlDiag[];
+  message?: string;
+};
+
+type DbmlField = {
+  name: string;
+  type: { type_name: string };
+  pk?: boolean;
+  not_null?: boolean;
+  note?: string;
+};
+
+type DbmlIndexColumn = string | { value?: string; name?: string };
+type DbmlIndex = {
+  pk?: boolean;
+  columns?: DbmlIndexColumn[];
+};
+
+type DbmlTable = {
+  name: string;
+  fields: DbmlField[];
+  indexes?: DbmlIndex[];
+  group?: { name?: string };
+  note?: string;
+};
+
+type DbmlRefEndpoint = {
+  relation: string;
+  schemaName?: string;
+  tableName: string;
+  fieldNames: string[];
+};
+
+type DbmlRef = {
+  endpoints: [DbmlRefEndpoint, DbmlRefEndpoint];
+};
+
+type DbmlSchema = {
+  name?: string;
+  tables: DbmlTable[];
+  refs: DbmlRef[];
+};
+
+type ParsedDbml = {
+  schemas: DbmlSchema[];
+};
+
 /** Extrai mensagem e linha do CompilerError do @dbml/core (linha ainda no buffer clean). */
-function formatParseError(e: any): { rawMessage: string; cleanLine0?: number } {
-  const diag = e?.diags?.[0];
+function formatParseError(e: unknown): { rawMessage: string; cleanLine0?: number } {
+  if (!isRecord(e)) {
+    return { rawMessage: 'DBML inválido' };
+  }
+  const err = e as DbmlParseError;
+  const diag = err.diags?.[0];
   if (diag?.message) {
-    const line1 = diag.location?.start?.line as number | undefined;
+    const line1 = diag.location?.start?.line;
     const cleanLine0 = line1 != null ? line1 - 1 : undefined;
     return { rawMessage: diag.message, cleanLine0 };
   }
-  return { rawMessage: e?.message ?? 'DBML inválido' };
+  return { rawMessage: err.message ?? 'DBML inválido' };
 }
 
 function buildParseError(
@@ -177,19 +230,19 @@ function applyTableGroupMembership(dbml: string, tables: TableView[]): void {
 
 export function parseDbml(dbml: string): ParseResult {
   if (!dbml.trim()) {
-    return { tables: [], refs: [], records: [], layerGroups: [], lineage: [], lineageFields: [], rolenames: [], colors: {}, pins: [] };
+    return { tables: [], refs: [], records: [], layerGroups: [], lineageFields: [], rolenames: [], colors: {}, pins: [] };
   }
-  const { clean, records, layerGroups, lineage, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal } =
+  const { clean, records, layerGroups, lineageFields, dbtTables, rolenames, colors, pins, mapCleanLineToOriginal } =
     extractRecords(dbml);
   const colorsMap = Object.fromEntries(colors.map((c) => [c.table, c.color]));
-  let db: any;
+  let db: ParsedDbml;
   try {
-    db = Parser.parse(clean, 'dbml');
-  } catch (e: any) {
+    db = Parser.parse(clean, 'dbml') as unknown as ParsedDbml;
+  } catch (e: unknown) {
     const { rawMessage, cleanLine0 } = formatParseError(e);
     const { message, line } = buildParseError(dbml, rawMessage, cleanLine0, mapCleanLineToOriginal);
     return {
-      tables: [], refs: [], records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins, error: message, errorLine: line,
+      tables: [], refs: [], records, layerGroups, lineageFields, rolenames, colors: colorsMap, pins, error: message, errorLine: line,
     };
   }
 
@@ -200,7 +253,7 @@ export function parseDbml(dbml: string): ParseResult {
     const schemaName = schema.name && schema.name !== 'public' ? schema.name : undefined;
     for (const t of schema.tables) {
       const tableId = qualified(schemaName, t.name);
-      const columns: ColumnView[] = t.fields.map((f: any) => ({
+      const columns: ColumnView[] = t.fields.map((f) => ({
         name: f.name,
         type: f.type.type_name,
         pk: !!f.pk,
@@ -209,8 +262,8 @@ export function parseDbml(dbml: string): ParseResult {
         color: colorsMap[`${tableId}.${f.name}`],
       }));
       const compositePks: string[][] = [];
-      for (const idx of (t as any).indexes ?? []) {
-        const cols = (idx.columns ?? []).map((c: any) =>
+      for (const idx of t.indexes ?? []) {
+        const cols = (idx.columns ?? []).map((c) =>
           typeof c === 'string' ? c : (c.value ?? c.name ?? ''),
         ).filter(Boolean);
         if (idx.pk && cols.length > 1) {
@@ -271,7 +324,7 @@ export function parseDbml(dbml: string): ParseResult {
     }
   }
 
-  return { tables, refs, records, layerGroups, lineage, lineageFields, rolenames, colors: colorsMap, pins };
+  return { tables, refs, records, layerGroups, lineageFields, rolenames, colors: colorsMap, pins };
 }
 
 /** Snippet de colunas de metadados padrão do lakehouse. */

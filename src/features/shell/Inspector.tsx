@@ -1,71 +1,83 @@
-import type { ReactNode } from "react";
-import { X } from "lucide-react";
+import { Table2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { CanvasActions, TableMeta } from "@/features/canvas/actions";
-import { TABLE_COLORS } from "@/features/canvas/tableColors";
-import type { TableView } from "@/features/schema/model/parse";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useSchemaStore } from "@/features/schema/store";
 import { useShellLayout } from "@/features/shell/AppShell";
+import { BatchSection } from "@/features/shell/inspector/BatchSection";
+import { ColumnsSection } from "@/features/shell/inspector/ColumnsSection";
+import { EmptyState } from "@/features/shell/inspector/EmptyState";
+import { LineageSection } from "@/features/shell/inspector/LineageSection";
+import { RelatedTablesSection } from "@/features/shell/inspector/RelatedTablesSection";
+import { RelationsSection } from "@/features/shell/inspector/RelationsSection";
+import { TableSection } from "@/features/shell/inspector/TableSection";
+import { ManagedDrift } from "@/features/shell/inspector/ManagedDrift";
+import {
+  NewModelFromSelection,
+  TransformSection,
+} from "@/features/shell/inspector/TransformSection";
 import { cn } from "@/lib/utils";
 
-const FOCUS =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+import { FOCUS, layerEdgeClass, type InspectorProps } from "./inspector/types";
 
-export type InspectorProps = {
-  tableMeta: CanvasActions["tableMeta"];
-  layerOf: CanvasActions["layerOf"];
-  colorOf: CanvasActions["colorOf"];
-  onSetColor: CanvasActions["onSetColor"];
-  layers: CanvasActions["layers"];
-  tables: TableView[];
-};
+export type { InspectorProps };
 
-function layerEdgeClass(layerId: string | undefined): string {
-  switch ((layerId ?? "").toLowerCase()) {
-    case "bronze":
-      return "bg-layer-bronze";
-    case "silver":
-    case "prata":
-      return "bg-layer-silver";
-    case "gold":
-    case "ouro":
-      return "bg-layer-gold";
-    default:
-      return "bg-layer-raw";
-  }
+function defaultOpen(hasColumn: boolean): string[] {
+  return hasColumn ? ["lineage", "columns"] : ["table", "columns"];
 }
 
-function formatFkTarget(ref: string): string {
-  const i = ref.lastIndexOf(".");
-  if (i <= 0 || i === ref.length - 1) return ref;
-  return `${ref.slice(0, i)}(${ref.slice(i + 1)})`;
-}
-
-function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+function LineageItem({
+  tableId,
+  tables,
+  lineageFields,
+  dbml,
+  onApply,
+  onRenameColumn,
+  onGoToColumn,
+  onAddMapping,
+  onUpdateMapping,
+  onRemoveMapping,
+  onFocusTable,
+}: Pick<
+  InspectorProps,
+  | "onRenameColumn"
+  | "onGoToColumn"
+  | "onAddMapping"
+  | "onUpdateMapping"
+  | "onRemoveMapping"
+  | "onApply"
+  | "onFocusTable"
+> & {
+  tableId: string;
+  tables: InspectorProps["tables"];
+  lineageFields: NonNullable<InspectorProps["lineageFields"]>;
+  dbml?: string;
+}) {
+  const { t } = useTranslation();
   return (
-    <section data-field={id} className="space-y-1.5">
-      <h3 className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function KeyBadge({ kind, name }: { kind: "PK" | "FK"; name: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-sm bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">
-      <span
-        aria-hidden
-        className={cn(
-          "size-1.5 shrink-0 rounded-full",
-          kind === "PK" ? "bg-key-pk" : "border border-key-fk bg-transparent",
-        )}
-      />
-      {name}
-      <span>{kind}</span>
-    </span>
+    <AccordionItem value="lineage" data-testid="inspector-section-lineage">
+      <AccordionTrigger className="py-2 text-xs">{t("shell.inspector.lineage")}</AccordionTrigger>
+      <AccordionContent className="px-1">
+        <LineageSection
+          tableId={tableId}
+          tables={tables}
+          lineageFields={lineageFields}
+          dbml={dbml}
+          onApply={onApply}
+          onRenameColumn={onRenameColumn}
+          onGoToColumn={onGoToColumn}
+          onAddMapping={onAddMapping}
+          onUpdateMapping={onUpdateMapping}
+          onRemoveMapping={onRemoveMapping}
+          onFocusTable={onFocusTable}
+        />
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -76,47 +88,84 @@ export function Inspector({
   onSetColor,
   layers,
   tables,
+  dbml,
+  onApply,
+  lineageFields = [],
+  problemCount = 0,
+  onFocusTable,
+  onSetLayer,
+  onRenameTable,
+  onRenameColumn,
+  onRemoveTables,
+  onGoToColumn,
+  onAddMapping,
+  onUpdateMapping,
+  onRemoveMapping,
 }: InspectorProps) {
   const { t } = useTranslation();
   const { setInspectorCollapsed } = useShellLayout();
   const selectedTable = useSchemaStore((s) => s.selectedTable);
+  const selectedTableIds = useSchemaStore((s) => s.selectedTableIds);
   const selectedColumn = useSchemaStore((s) => s.selectedColumn);
 
+  const multi = selectedTableIds.length > 1;
   const tableId = selectedTable;
   const table = tableId ? tables.find((item) => item.id === tableId) : undefined;
-  const meta: TableMeta | null = tableId ? tableMeta(tableId) : null;
+  const meta = tableId ? tableMeta(tableId) : null;
   const layerId = tableId ? layerOf(tableId) : undefined;
   const layer = layers.find((item) => item.id === layerId);
   const currentColor = tableId ? colorOf(tableId) : undefined;
-  const columnCount = table?.columns.length ?? 0;
-  const selectedColName = selectedColumn?.table === tableId ? selectedColumn.column : null;
-  const selectedColView = selectedColName
-    ? table?.columns.find((c) => c.name === selectedColName)
-    : undefined;
-  const selectedColFk = selectedColName
-    ? meta?.fks.find((f) => f.column === selectedColName)
-    : undefined;
-  const selectedColNote = selectedColName
-    ? meta?.columnNotes.find((n) => n.column === selectedColName)
-    : undefined;
+  const hasColumn = !!selectedColumn && selectedColumn.table === tableId;
+
+  const headerName = table
+    ? table.schema
+      ? `${table.schema}·${table.name}`
+      : table.name
+    : tableId;
 
   return (
     <div
       data-inspector="root"
       data-testid="inspector"
-      className="flex h-full min-h-0 w-64 flex-col border-l border-sidebar-border bg-sidebar text-sidebar-foreground"
+      className="flex h-full min-h-0 w-80 flex-col border-l border-sidebar-border bg-sidebar text-sidebar-foreground"
     >
       <div className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-2">
-        <h2 className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {t("shell.inspector.title")}
-        </h2>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Table2 size={16} strokeWidth={1.5} className="shrink-0 text-muted-foreground" />
+          {headerName ? (
+            <span
+              data-testid="inspector-header-name"
+              title={tableId ?? undefined}
+              className="truncate font-mono text-xs text-foreground"
+            >
+              {headerName}
+              {tableId ? <span className="sr-only"> {tableId}</span> : null}
+            </span>
+          ) : (
+            <h2 className="truncate px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {t("shell.inspector.title")}
+            </h2>
+          )}
+          {tableId && !multi ? (
+            <span
+              data-testid="inspector-layer-chip"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[11px] text-foreground"
+            >
+              <span
+                aria-hidden
+                className={cn("size-2 shrink-0 rounded-full", layerEdgeClass(layerId))}
+              />
+              {layer?.name ?? t("shell.inspector.noLayer")}
+            </span>
+          ) : null}
+        </div>
         <button
           type="button"
           aria-label={t("shell.inspector.close")}
           onClick={() => setInspectorCollapsed(true)}
           className={cn(
             FOCUS,
-            "inline-flex size-7 items-center justify-center rounded-md text-foreground",
+            "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-foreground",
             "hover:bg-accent hover:text-accent-foreground",
           )}
         >
@@ -124,200 +173,120 @@ export function Inspector({
         </button>
       </div>
 
-      {!tableId || !meta ? (
-        <p className="px-3 py-4 text-sm text-muted-foreground">{t("shell.inspector.empty")}</p>
+      {multi ? (
+        <>
+          <BatchSection
+            tableIds={selectedTableIds}
+            layers={layers}
+            dbml={dbml}
+            onApply={onApply}
+            onSetLayer={onSetLayer}
+            onSetColor={onSetColor}
+            onRemoveTables={onRemoveTables}
+          />
+          {/* D4 mount */}
+          <NewModelFromSelection />
+        </>
+      ) : !tableId || !table || !meta ? (
+        <EmptyState
+          tables={tables}
+          lineageFields={lineageFields}
+          problemCount={problemCount}
+          tableMeta={tableMeta}
+        />
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-          <div className="flex flex-col gap-4">
-            <Field id="table" label={t("shell.inspector.table")}>
-              <p className="truncate font-mono text-xs text-foreground">{tableId}</p>
-            </Field>
-
-            <Field id="layer" label={t("shell.inspector.layer")}>
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-1.5 py-0.5 text-xs text-foreground">
-                <span
-                  aria-hidden
-                  className={cn("size-2 shrink-0 rounded-full", layerEdgeClass(layerId))}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Accordion
+            key={`${tableId}:${hasColumn ? "col" : "tbl"}`}
+            type="multiple"
+            defaultValue={defaultOpen(hasColumn)}
+            className="px-2"
+          >
+            {hasColumn ? (
+              <LineageItem
+                tableId={table.id}
+                tables={tables}
+                lineageFields={lineageFields}
+                dbml={dbml}
+                onApply={onApply}
+                onRenameColumn={onRenameColumn}
+                onGoToColumn={onGoToColumn}
+                onAddMapping={onAddMapping}
+                onUpdateMapping={onUpdateMapping}
+                onRemoveMapping={onRemoveMapping}
+                onFocusTable={onFocusTable}
+              />
+            ) : null}
+            <AccordionItem value="table" data-testid="inspector-section-table">
+              <AccordionTrigger className="py-2 text-xs">
+                {t("shell.inspector.table")}
+              </AccordionTrigger>
+              <AccordionContent className="px-1">
+                <TableSection
+                  table={table}
+                  meta={meta}
+                  layerId={layerId}
+                  layerName={layer?.name ?? t("shell.inspector.noLayer")}
+                  currentColor={currentColor}
+                  dbml={dbml}
+                  onApply={onApply}
+                  onSetColor={onSetColor}
+                  onSetLayer={onSetLayer}
+                  onRenameTable={onRenameTable}
+                  layers={layers}
                 />
-                {layer?.name ?? t("shell.inspector.noLayer")}
-              </span>
-            </Field>
-
-            <Field id="columns" label={t("shell.inspector.columns")}>
-              <p className="font-mono text-xs tabular-nums text-foreground">{columnCount}</p>
-            </Field>
-
-            {meta.pks.length > 0 ? (
-              <Field id="pks" label={t("shell.inspector.primaryKey")}>
-                <div className="flex flex-wrap gap-1">
-                  {meta.pks.map((name) => (
-                    <KeyBadge key={name} kind="PK" name={name} />
-                  ))}
-                </div>
-              </Field>
-            ) : null}
-
-            {meta.fks.length > 0 ? (
-              <Field id="fks" label={t("shell.inspector.foreignKeys")}>
-                <ul className="flex flex-col gap-1">
-                  {meta.fks.map((fk) => (
-                    <li key={fk.column} className="font-mono text-xs text-foreground">
-                      {fk.column} → {formatFkTarget(fk.ref)}
-                    </li>
-                  ))}
-                </ul>
-              </Field>
-            ) : null}
-
-            {meta.materialization ? (
-              <Field id="materialization" label={t("shell.inspector.materialization")}>
-                <span className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">
-                  {meta.materialization}
-                </span>
-              </Field>
-            ) : null}
-
-            {meta.tags && meta.tags.length > 0 ? (
-              <Field id="tags" label={t("shell.inspector.tags")}>
-                <div className="flex flex-wrap gap-1">
-                  {meta.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </Field>
-            ) : null}
-
-            {meta.resourceType ? (
-              <Field id="resourceType" label={t("shell.inspector.resourceType")}>
-                <span className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">
-                  {meta.resourceType}
-                </span>
-              </Field>
-            ) : null}
-
-            <Field id="colour" label={t("shell.inspector.colour")}>
-              <div className="grid grid-cols-6 gap-1">
-                {TABLE_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-label={c}
-                    aria-pressed={currentColor === c}
-                    onClick={() => onSetColor(tableId, c)}
-                    className={cn(
-                      FOCUS,
-                      "size-4 rounded-sm ring-1 ring-border",
-                      currentColor === c && "ring-2 ring-ring",
-                    )}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                aria-label={t("shell.inspector.noColour")}
-                onClick={() => onSetColor(tableId, null)}
-                className={cn(
-                  FOCUS,
-                  "mt-1 text-left text-2xs text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t("shell.inspector.noColour")}
-              </button>
-            </Field>
-
-            {meta.sources.length > 0 ? (
-              <Field id="sources" label={t("shell.inspector.sources")}>
-                <p className="text-xs text-foreground">
-                  {t("canvas.edges.derivedFrom")}: {meta.sources.join(", ")}
-                </p>
-              </Field>
-            ) : null}
-
-            {meta.sample ? (
-              <Field id="sample" label={t("shell.inspector.sample")}>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse font-mono text-2xs">
-                    {meta.sample.columns.length > 0 ? (
-                      <thead>
-                        <tr>
-                          {meta.sample.columns.map((col) => (
-                            <th
-                              key={col}
-                              className="border-b border-border px-1 text-left font-medium text-foreground"
-                            >
-                              {col}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                    ) : null}
-                    <tbody>
-                      {meta.sample.rows.slice(0, 5).map((row, i) => (
-                        <tr key={i}>
-                          {row.map((value, j) => (
-                            <td key={j} className="px-1 py-0.5 text-muted-foreground">
-                              {value}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Field>
-            ) : null}
-
-            {meta.refsIn.length > 0 ? (
-              <Field id="refsIn" label={t("shell.inspector.referencedBy")}>
-                <p className="font-mono text-xs text-foreground">{meta.refsIn.join(", ")}</p>
-              </Field>
-            ) : null}
-
-            {meta.note || meta.columnNotes.length > 0 ? (
-              <Field id="note" label={t("shell.inspector.comments")}>
-                {meta.note ? <p className="text-xs text-foreground">{meta.note}</p> : null}
-                {meta.columnNotes.length > 0 ? (
-                  <ul data-field="columnNotes" className="flex flex-col gap-1">
-                    {meta.columnNotes.map((item) => (
-                      <li key={item.column} className="text-xs text-foreground">
-                        <span className="font-mono font-medium">{item.column}:</span> {item.note}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </Field>
-            ) : null}
-
-            {selectedColName ? (
-              <Field id="column" label={t("shell.inspector.column")}>
-                <div className="flex flex-col gap-1">
-                  <p className="font-mono text-xs text-foreground">{selectedColName}</p>
-                  {selectedColView ? (
-                    <p className="font-mono text-2xs text-muted-foreground">
-                      {selectedColView.type}
-                    </p>
-                  ) : null}
-                  {meta.pks.includes(selectedColName) ? (
-                    <KeyBadge kind="PK" name={selectedColName} />
-                  ) : null}
-                  {selectedColFk ? (
-                    <p className="font-mono text-xs text-muted-foreground">
-                      → {formatFkTarget(selectedColFk.ref)}
-                    </p>
-                  ) : null}
-                  {selectedColNote ? (
-                    <p className="text-xs text-foreground">{selectedColNote.note}</p>
-                  ) : null}
-                </div>
-              </Field>
-            ) : null}
-          </div>
+                {/* D5 mount */}
+                <ManagedDrift tableId={table.id} />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="columns" data-testid="inspector-section-columns">
+              <AccordionTrigger className="py-2 text-xs">
+                {t("shell.inspector.columns")}
+              </AccordionTrigger>
+              <AccordionContent className="px-1">
+                <ColumnsSection
+                  table={table}
+                  dbml={dbml}
+                  onApply={onApply}
+                  lineageFields={lineageFields}
+                  onFocusTable={onFocusTable}
+                />
+              </AccordionContent>
+            </AccordionItem>
+            {/* D4 mount */}
+            <TransformSection tableId={table.id} />
+            <AccordionItem value="relations" data-testid="inspector-section-relations">
+              <AccordionTrigger className="py-2 text-xs">
+                {t("shell.inspector.relations")}
+              </AccordionTrigger>
+              <AccordionContent className="px-1">
+                <RelationsSection meta={meta} onFocusTable={onFocusTable} />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="related" data-testid="inspector-section-related">
+              <AccordionTrigger className="py-2 text-xs">
+                {t("shell.inspector.relatedTables")}
+              </AccordionTrigger>
+              <AccordionContent className="px-1">
+                <RelatedTablesSection tableId={table.id} meta={meta} onFocusTable={onFocusTable} />
+              </AccordionContent>
+            </AccordionItem>
+            {hasColumn ? null : (
+              <LineageItem
+                tableId={table.id}
+                tables={tables}
+                lineageFields={lineageFields}
+                dbml={dbml}
+                onApply={onApply}
+                onRenameColumn={onRenameColumn}
+                onGoToColumn={onGoToColumn}
+                onAddMapping={onAddMapping}
+                onUpdateMapping={onUpdateMapping}
+                onRemoveMapping={onRemoveMapping}
+                onFocusTable={onFocusTable}
+              />
+            )}
+          </Accordion>
         </div>
       )}
     </div>

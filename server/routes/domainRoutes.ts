@@ -14,6 +14,7 @@ import {
 import { getStatus, switchBranch, pull, commit, push, remoteUrl, credentialApprove } from '../git.ts';
 import { buildPrUrl } from '../prUrl.ts';
 import { getActiveDomainSlug, setActiveDomainSlug } from '../domainContext.ts';
+import { errorMessage, errorMessageString, isNotFound } from '../unknownError.ts';
 
 type CreateDomainBody = { name?: string };
 type CloneDomainBody = { url?: string; name?: string };
@@ -21,16 +22,6 @@ type AttachGitBody = { remoteUrl?: string };
 type SwitchBranchBody = { branch?: string; create?: boolean };
 type CommitBody = { message?: string };
 type CredentialBody = { host?: string; username?: string; token?: string };
-
-/** Mensagem de erro legível para o usuário (stderr do git tem prioridade). */
-function errorMessage(e: any, fallback: string): string {
-  return e?.stderr || e?.message || fallback;
-}
-
-/** Erros de "não encontrado" vêm de getDomain/attachGitToDomain com esse texto. */
-function isNotFound(e: any): boolean {
-  return typeof e?.message === 'string' && e.message.includes('não encontrado');
-}
 
 export function registerDomainRoutes(app: FastifyInstance): void {
   app.get('/api/domains', async () => {
@@ -53,7 +44,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
       const domain = await cloneDomain(url, req.body?.name?.trim());
       reply.code(201);
       return domain;
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(422).send({ error: errorMessage(e, 'Falha ao clonar repositório.') });
     }
   });
@@ -63,11 +54,11 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     async (req, reply) => {
       try {
         return await attachGitToDomain(req.params.id, req.body?.remoteUrl?.trim() || undefined);
-      } catch (e: any) {
+      } catch (e: unknown) {
         // 404 só quando o domínio de fato não existe. Falha de `git init` /
         // `git remote add` (ex.: origin já configurado) é 422 — o domínio
         // existe, a operação de git é que não deu.
-        if (isNotFound(e)) return reply.code(404).send({ error: e.message });
+        if (isNotFound(e)) return reply.code(404).send({ error: errorMessageString(e) });
         return reply.code(422).send({ error: errorMessage(e, 'Falha ao inicializar o repositório.') });
       }
     },
@@ -77,7 +68,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     try {
       const domain = await activateDomain(req.params.id);
       return { ok: true, domain };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(404).send({ error: errorMessage(e, 'Domínio não encontrado.') });
     }
   });
@@ -86,8 +77,8 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     try {
       await deleteDomain(req.params.id);
       return { ok: true };
-    } catch (e: any) {
-      if (isNotFound(e)) return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) return reply.code(404).send({ error: errorMessageString(e) });
       return reply.code(422).send({ error: errorMessage(e, 'Falha ao remover o domínio.') });
     }
   });
@@ -110,7 +101,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
       try {
         await switchBranch(domain.dir, branch, req.body?.create ?? false);
         return { ok: true, branch };
-      } catch (e: any) {
+      } catch (e: unknown) {
         return reply.code(409).send({ error: errorMessage(e, 'Falha ao trocar de branch.') });
       }
     },
@@ -122,7 +113,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     try {
       await pull(domain.dir);
       return { ok: true };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(409).send({ error: errorMessage(e, 'Falha ao atualizar.') });
     }
   });
@@ -135,7 +126,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     try {
       const result = await commit(domain.dir, message);
       return { ok: true, ...result };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(409).send({ error: errorMessage(e, 'Falha ao commitar.') });
     }
   });
@@ -146,7 +137,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
     try {
       const result = await push(domain.dir);
       return { ok: true, ...result };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(409).send({ error: errorMessage(e, 'Falha ao enviar.') });
     }
   });
@@ -173,7 +164,7 @@ export function registerDomainRoutes(app: FastifyInstance): void {
       try {
         await credentialApprove(domain.dir, { protocol: 'https', host, username, password: token });
         return { ok: true };
-      } catch (e: any) {
+      } catch (e: unknown) {
         return reply.code(422).send({ error: errorMessage(e, 'Falha ao salvar credencial.') });
       }
     },

@@ -25,7 +25,8 @@ export type CanvasActions = {
   onGoToColumn?: (table: string, column: string) => void;
   onRenameTable: (tableId: string, newName: string) => void;
   onRemoveTable: (tableId: string) => void;
-  onAddColumn: (table: string) => void;
+  onAddColumn: (table: string, name?: string, dataType?: string) => void;
+  onRemoveColumn?: (table: string, column: string) => void;
   colorOf: (tableId: string) => string | undefined;
   onSetColor: (tableId: string, color: string | null) => void;
   /** Cor da caixa de um TableGroup. */

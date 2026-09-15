@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,14 @@ export function PageImportWizard({ open, tableCount, pages, onConfirm, onDismiss
   const selectable = useMemo(() => pages.filter((p) => p.id !== ALL_PAGE_ID), [pages]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [showAll, setShowAll] = useState(false);
-
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setSelected(new Set());
       setShowAll(false);
     }
-  }, [open]);
+  }
 
   const toggleAll = (checked: boolean) => {
     setShowAll(checked);

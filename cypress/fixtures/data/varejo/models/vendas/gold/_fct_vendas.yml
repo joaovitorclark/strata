@@ -1,0 +1,109 @@
+version: 2
+models:
+  - name: fct_vendas
+    description: Tabela de negócio fct_vendas no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: pedido
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: gold
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - pedido_id
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - canal_id
+        to: ref('dim_canal')
+        to_columns:
+          - canal_id
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - loja_id
+        to: ref('dim_loja')
+        to_columns:
+          - loja_id
+        warn_unsupported: false
+      - type: foreign_key
+        columns:
+          - pedido_id
+        to: ref('dim_pedido')
+        to_columns:
+          - pedido_id
+        warn_unsupported: false
+    columns:
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.pedido_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.cliente_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.canal_id
+      - name: loja_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.loja_id
+      - name: receita_bruta
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.valor_bruto
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: receita_liquida
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.valor_desconto
+      - name: dt_emissao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.pedido.dt_emissao
+        constraints:
+          - type: not_null
+            warn_unsupported: false

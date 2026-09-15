@@ -79,6 +79,7 @@ export function StatusLog({ status, saveState, logs }: Props) {
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   open && "bg-sidebar-accent",
                 )}
+                data-testid="status-log"
               >
                 <StatusIconView icon={icon} />
                 {text}

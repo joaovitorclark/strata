@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+function requestJsonBody(opts: RequestInit | undefined): string {
+  if (typeof opts?.body !== "string") {
+    throw new Error("expected JSON string body");
+  }
+  return opts.body;
+}
+
 function mockFetchOnce(status: number, body: unknown) {
   vi.stubGlobal(
     "fetch",
@@ -34,9 +41,10 @@ describe("createDomain", () => {
     mockFetchOnce(201, { id: "1", slug: "x", name: "X" });
     const api = await import("@/infrastructure/api");
     await api.createDomain("X");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains");
-    expect(JSON.parse(opts.body)).toEqual({ name: "X" });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({ name: "X" });
   });
 });
 
@@ -45,9 +53,13 @@ describe("cloneDomain", () => {
     mockFetchOnce(201, { id: "1", slug: "x", name: "X" });
     const api = await import("@/infrastructure/api");
     await api.cloneDomain("https://github.com/a/b.git", "X");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/clone");
-    expect(JSON.parse(opts.body)).toEqual({ url: "https://github.com/a/b.git", name: "X" });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({
+      url: "https://github.com/a/b.git",
+      name: "X",
+    });
   });
 });
 
@@ -56,9 +68,10 @@ describe("attachGitToDomain", () => {
     mockFetchOnce(200, { id: "1", slug: "x", name: "X" });
     const api = await import("@/infrastructure/api");
     await api.attachGitToDomain("dom-1", "https://github.com/a/b.git");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/attach-git");
-    expect(JSON.parse(opts.body)).toEqual({ remoteUrl: "https://github.com/a/b.git" });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({ remoteUrl: "https://github.com/a/b.git" });
   });
 });
 
@@ -79,7 +92,8 @@ describe("activateDomain", () => {
     mockFetchOnce(200, { ok: true, domain: { id: "dom-1" } });
     const api = await import("@/infrastructure/api");
     const result = await api.activateDomain("dom-1");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/activate");
     expect(opts.method).toBe("POST");
     expect(result.ok).toBe(true);
@@ -108,17 +122,19 @@ describe("switchGitBranch", () => {
     mockFetchOnce(200, { ok: true, branch: "dev" });
     const api = await import("@/infrastructure/api");
     await api.switchGitBranch("dom-1", "dev");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/git/switch-branch");
-    expect(JSON.parse(opts.body)).toEqual({ branch: "dev", create: false });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({ branch: "dev", create: false });
   });
 
   it("propaga create=true", async () => {
     mockFetchOnce(200, { ok: true, branch: "nova" });
     const api = await import("@/infrastructure/api");
     await api.switchGitBranch("dom-1", "nova", true);
-    const [, opts] = (fetch as any).mock.calls[0];
-    expect(JSON.parse(opts.body)).toEqual({ branch: "nova", create: true });
+    const mocked = vi.mocked(fetch);
+    const [, opts] = mocked.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({ branch: "nova", create: true });
   });
 });
 
@@ -137,9 +153,10 @@ describe("gitCommit", () => {
     mockFetchOnce(200, { ok: true, branch: "main" });
     const api = await import("@/infrastructure/api");
     await api.gitCommit("dom-1", "feat: x");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/git/commit");
-    expect(JSON.parse(opts.body)).toEqual({ message: "feat: x" });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({ message: "feat: x" });
   });
 });
 
@@ -148,9 +165,10 @@ describe("gitPush", () => {
     mockFetchOnce(200, { ok: true, branch: "main" });
     const api = await import("@/infrastructure/api");
     await api.gitPush("dom-1");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/git/push");
-    expect(JSON.parse(opts.body)).toEqual({});
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({});
   });
 });
 
@@ -174,9 +192,14 @@ describe("submitGitCredential", () => {
     mockFetchOnce(200, { ok: true });
     const api = await import("@/infrastructure/api");
     await api.submitGitCredential("dom-1", "github.com", "me", "tok");
-    const [url, opts] = (fetch as any).mock.calls[0];
+    const mocked = vi.mocked(fetch);
+    const [url, opts] = mocked.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/domains/dom-1/git/credential");
-    expect(JSON.parse(opts.body)).toEqual({ host: "github.com", username: "me", token: "tok" });
+    expect(JSON.parse(requestJsonBody(opts))).toEqual({
+      host: "github.com",
+      username: "me",
+      token: "tok",
+    });
   });
 });
 

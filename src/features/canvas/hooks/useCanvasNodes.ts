@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Node } from "@xyflow/react";
 import type { ColumnView, ParseResult, TableView } from '@/features/schema/model/parse';
+import { useSchemaStore } from '@/features/schema/store';
 import type { ExternalLinkBadge, TableMeta, TableNodeData } from '../actions';
 import type { ExternalGroupStub } from '../utils/pageFilter';
 import type { TableSize } from '@/infrastructure/api';
@@ -32,6 +33,25 @@ export type NodeOpts = {
   onToggleGroup: (name: string) => void;
   density?: CanvasDensity;
 };
+
+/** Table ids that should still render on the canvas (not view-hidden / layer-hidden). */
+export function visibleTableIdSet(
+  tableIds: readonly string[],
+  hiddenTableIds: readonly string[],
+  extraHidden?: ReadonlySet<string>,
+): Set<string> {
+  const hidden = new Set(hiddenTableIds);
+  extraHidden?.forEach((id) => hidden.add(id));
+  return new Set(tableIds.filter((id) => !hidden.has(id)));
+}
+
+/** Drop edges whose source or target is not in the visible-id set (for Canvas / S03). */
+export function filterEdgesByVisibleIds<E extends { source: string; target: string }>(
+  edges: readonly E[],
+  visibleIds: ReadonlySet<string>,
+): E[] {
+  return edges.filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target));
+}
 
 const SEP1 = '\u0001';
 const SEP2 = '\u0002';
@@ -131,13 +151,25 @@ export function useCanvasNodes(
   externalStubs: ExternalGroupStub[] = [],
   selectedTableIds: string[] = [],
   sizes: Record<string, TableSize> = {},
-): void {
+): Set<string> {
+  const viewHiddenIds = useSchemaStore((s) => s.hiddenTableIds);
+  const visibleIds = useMemo(
+    () =>
+      visibleTableIdSet(
+        parsed.tables.map((t) => t.id),
+        viewHiddenIds,
+        opts.hiddenTables,
+      ),
+    [parsed.tables, viewHiddenIds, opts.hiddenTables],
+  );
+
   // Cache de `data` por id: preserva a identidade do objeto enquanto a assinatura de
   // conteúdo não muda, permitindo que `React.memo(TableNode)` pule re-renders das
   // tabelas não editadas (ganho decisivo para tabelas/diagramas grandes).
   const dataCache = useRef(new Map<string, { sig: string; data: TableNodeData }>());
 
   useEffect(() => {
+    const viewHidden = new Set(viewHiddenIds);
     setNodes((prev) => {
       const prevPos = new Map(
         prev.filter((n) => n.type === 'table').map((n) => [n.id, n.position] as const),
@@ -175,7 +207,7 @@ export function useCanvasNodes(
           data: entry.data,
           selected: selectedSet.has(t.id),
           deletable: true,
-          hidden: opts.hiddenTables.has(t.id),
+          hidden: opts.hiddenTables.has(t.id) || viewHidden.has(t.id),
           style: {
             ...(opts.dimmedTables.has(t.id) ? { opacity: 0.45 } : {}),
             ...(sizes[t.id]?.width != null ? { width: sizes[t.id].width } : {}),
@@ -195,5 +227,7 @@ export function useCanvasNodes(
       }));
       return [...groupNodes(parsed.tables, posOf, opts, false), ...stubNodes, ...tableNodes];
     });
-  }, [parsed.tables, positions, setNodes, opts, nodeExtras, externalStubs, selectedTableIds, sizes]);
+  }, [parsed.tables, positions, setNodes, opts, nodeExtras, externalStubs, selectedTableIds, sizes, viewHiddenIds]);
+
+  return visibleIds;
 }

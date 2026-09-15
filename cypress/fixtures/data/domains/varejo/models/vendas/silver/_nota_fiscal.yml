@@ -1,0 +1,69 @@
+version: 2
+models:
+  - name: nota_fiscal
+    config:
+      tags:
+        - strata:vendas
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - nfe_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - chave
+        warn_unsupported: false
+    columns:
+      - name: nfe_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.notas_fiscais.nfe_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.notas_fiscais.pedido_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: chave
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.notas_fiscais.chave
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_nfe
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.notas_fiscais.vl_nfe
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_emissao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.notas_fiscais.dt_emissao
+        constraints:
+          - type: not_null
+            warn_unsupported: false

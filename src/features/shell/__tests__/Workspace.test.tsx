@@ -37,6 +37,7 @@ vi.mock("@/infrastructure/api", async (importOriginal) => {
     getMeta: vi.fn(),
     saveProject: vi.fn().mockResolvedValue(undefined),
     saveProjectById: vi.fn().mockResolvedValue(undefined),
+    saveDbtChanges: vi.fn().mockResolvedValue([]),
     exportFormat: vi.fn().mockResolvedValue({ files: ["output/dbt/"] }),
     importFromInput: vi.fn().mockResolvedValue({
       dbml: "",
@@ -207,6 +208,20 @@ describe("AppGate / Workspace cutover", () => {
     await waitFor(() => expect(api.loadProjectById).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("button", { name: "Importar (input/)" }));
     await waitFor(() => expect(api.importFromInputForProject).toHaveBeenCalled());
+  });
+
+  it("keeps the canvas mounted until the project hydrates", () => {
+    vi.mocked(api.loadProjectById).mockReturnValue(new Promise(() => {}));
+    render(<App domain={domain} />);
+    expect(screen.getByTestId("canvas-stub")).toBeTruthy();
+    expect(screen.queryByTestId("workspace-empty-state")).toBeNull();
+  });
+
+  it("G4: mounts EmptyState instead of canvas when the model has zero tables", async () => {
+    vi.mocked(api.loadProjectById).mockResolvedValue({ dbml: "// empty\n", canvas: {} });
+    render(<App domain={domain} />);
+    expect(await screen.findByTestId("workspace-empty-state")).toBeTruthy();
+    expect(screen.queryByTestId("canvas-stub")).toBeNull();
   });
 
   it("mounts GitPanel and loads git status when the domain has git", async () => {

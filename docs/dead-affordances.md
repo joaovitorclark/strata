@@ -25,8 +25,6 @@ Form **(c)** also found unused model helpers (`cleanDbml`, `allLayers`, `addLine
 
 ## (b) Callback declared, never passed (visible control)
 
-- **Schema tree → pan.** Exists: `focusTableWithPan` at `useWorkspace.ts:521`, passed to Layers / Records / Problems / SourceDrawer. Missing: `SchemaTreeProps` (`SchemaTree.tsx:22`) has no `onFocusTable`; the row click calls `selectTable` only (`SchemaTree.tsx:147`); `Workspace.tsx:135` mounts `<SchemaTree tables layerOf />` with no pan callback. User cannot click a table in the schema tree and have the canvas pan to it.
-
 - **Status bar zoom.** Exists: `StatusBar` renders − / % / + (`StatusBar.tsx:32–33`, `StatusBar.tsx:137`, `StatusBar.tsx:162`). Missing: `Workspace.tsx:331` passes `onFitView` and `density` but not `onZoomIn` / `onZoomOut`, and hard-codes `zoomPercent={100}`. User can press −/+ and see “100%”; neither zooms nor reflects the viewport.
 
 - **Navbar Share.** Exists: primary Share button `Navbar.tsx:73` / `Navbar.tsx:240` (`onPrimaryAction`). Missing: `Workspace.tsx:84` does not pass `onPrimaryAction`. User can click Share; nothing happens.

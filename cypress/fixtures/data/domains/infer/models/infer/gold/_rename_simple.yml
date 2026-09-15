@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: rename_simple
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: customer_id
+        data_type: bigint
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: raw.alpha.nome

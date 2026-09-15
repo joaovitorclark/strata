@@ -1,0 +1,75 @@
+version: 2
+models:
+  - name: perda
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - perdas
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      schema: silver
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - perda_id
+        warn_unsupported: false
+    columns:
+      - name: perda_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.perdas.perda_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.perdas.produto_id
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: quantidade
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.perdas.quantidade
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: motivo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.perdas.motivo
+      - name: dt_perda
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.perdas.dt_perda
+        constraints:
+          - type: not_null
+            warn_unsupported: false

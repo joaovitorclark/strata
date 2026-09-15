@@ -20,14 +20,52 @@ export function waitForCanvas(): void {
     .and("match", /scale\(|matrix\(/);
 }
 
-/** Layers panel sits over RF Controls; collapse it so zoom/edge specs can click them. */
-export function collapseLayersPanel(): void {
-  cy.get(".layers-panel").then(($p) => {
-    if (!$p.hasClass("is-collapsed")) {
-      cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-    }
+export function waitForInitialFit(): void {
+  cy.get(".react-flow__viewport").should(($v) => {
+    const style = $v.attr("style") ?? "";
+    const z = viewportScaleOf(style);
+    const t = /translate\(\s*(-?[\d.]+)px,\s*(-?[\d.]+)px\s*\)/.exec(style);
+    const moved = t != null && (Number(t[1]) !== 0 || Number(t[2]) !== 0);
+    const identityMatrix =
+      /matrix\(\s*1(?:\.0+)?,\s*0(?:\.0+)?,\s*0(?:\.0+)?,\s*1(?:\.0+)?,\s*0(?:\.0+)?,\s*0(?:\.0+)?\s*\)/.test(
+        style,
+      );
+    expect(z !== 1 || moved, "initial fit applied").to.eq(true);
+    expect(identityMatrix, "viewport still identity matrix").to.eq(false);
   });
-  cy.get(".layers-panel").should("have.class", "is-collapsed");
+}
+
+/** Layers panel sits in the left tab (S02); kept as a no-op so callers stay valid. */
+export function collapseLayersPanel(): void {
+  /* overlays no longer cover React Flow controls */
+}
+
+export function openLayersTab(): void {
+  cy.get('[data-testid="left-panel-layers"]').click({ force: true });
+  cy.get(".layers-panel").should("be.visible");
+}
+
+export function setEdgeVisibility(kind: "Relações" | "Linhagem", on: boolean): void {
+  cy.get('[data-testid="edge-visibility"]').click();
+  cy.get('[role="menuitemcheckbox"]')
+    .contains(kind)
+    .then(($item) => {
+      const checked =
+        $item.attr("data-state") === "checked" || $item.attr("aria-checked") === "true";
+      if (checked !== on) cy.wrap($item).click();
+      else cy.get("body").type("{esc}");
+    });
+}
+
+export function selectCanvasDetailLevel(
+  label: "Nome" | "Chaves" | "Colunas" | "Documentação",
+): void {
+  cy.get("body").type("{esc}");
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').click({ force: true });
+  cy.get('[role="menuitemradio"]').contains(label).click({ force: true });
+  cy.get('[role="menuitemradio"]').should("not.exist");
+  cy.get('[data-testid="detail-level-select"]').should("contain", label);
 }
 
 export function translateOf(style: string | undefined): { x: number; y: number } {
@@ -46,6 +84,49 @@ export function viewportScaleOf(style: string | undefined): number {
     if (!Number.isNaN(a)) return a;
   }
   return 1;
+}
+
+/**
+ * Left-button rubber-band over the union of the given nodes.
+ * Relies on `selectionOnDrag && panOnDrag !== true` (xyflow Pane uses pointer capture).
+ * Guard: `canvas-rubber-band.cy.ts` forces panOnDrag true and expects zero `.selected`.
+ */
+export function rubberBandCovering(ids: readonly string[]): void {
+  for (const id of ids) {
+    cy.get(nodeSel(id)).should("exist");
+  }
+  cy.get(".react-flow__pane").then(($pane) => {
+    const el = $pane[0];
+    const win = el.ownerDocument.defaultView!;
+    const pane = el.getBoundingClientRect();
+    const rects = ids.map((id) => {
+      const node = el.ownerDocument.querySelector(nodeSel(id));
+      if (!node) throw new Error(`missing node ${id}`);
+      return node.getBoundingClientRect();
+    });
+    const x1 = Math.max(pane.left + 4, Math.min(...rects.map((r) => r.left)) - 16);
+    const y1 = Math.max(pane.top + 4, Math.min(...rects.map((r) => r.top)) - 16);
+    const x2 = Math.min(pane.right - 4, Math.max(...rects.map((r) => r.right)) + 16);
+    const y2 = Math.min(pane.bottom - 4, Math.max(...rects.map((r) => r.bottom)) + 16);
+    const pe = (type: string, clientX: number, clientY: number, buttons: number) =>
+      new win.PointerEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        view: win,
+        button: 0,
+        buttons,
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        clientX,
+        clientY,
+      });
+    el.dispatchEvent(pe("pointerdown", x1, y1, 1));
+    el.dispatchEvent(pe("pointermove", x1 + 12, y1 + 12, 1));
+    el.dispatchEvent(pe("pointermove", x2, y2, 1));
+    el.dispatchEvent(pe("pointerup", x2, y2, 0));
+  });
 }
 
 export function fireWindowKey(init: KeyboardEventInit): void {
@@ -113,6 +194,7 @@ export function zoomUntil(
   direction: "in" | "out",
   remaining = 16,
 ): void {
+  if (remaining === 16) waitForInitialFit();
   cy.get(".react-flow__viewport").then(($vp) => {
     const z = viewportScaleOf($vp.attr("style"));
     if (pred(z)) return;
@@ -120,12 +202,17 @@ export function zoomUntil(
       throw new Error(`zoom ${direction} stuck at scale ${z}`);
     }
     const btn =
-      direction === "out" ? ".react-flow__controls-zoomout" : ".react-flow__controls-zoomin";
-    cy.get('[data-testid="rf__controls"]').find(btn).click({ force: true });
+      direction === "out"
+        ? '[data-testid="canvas-toolbar"] [data-zoom="out"]'
+        : '[data-testid="canvas-toolbar"] [data-zoom="in"]';
+    cy.get(btn).click({ force: true });
+    // S03: zoomIn/Out tween 150ms (scaleBy 1.2). Wait for the step to mostly
+    // settle — a 1px change used to pass with duration 0 and then the next
+    // click cancelled the d3 interpolate.
     cy.get(".react-flow__viewport").should(($next) => {
       const n = viewportScaleOf($next.attr("style"));
-      if (direction === "out") expect(n).to.be.lessThan(z);
-      else expect(n).to.be.greaterThan(z);
+      if (direction === "out") expect(n).to.be.lessThan(z * 0.86);
+      else expect(n).to.be.greaterThan(z * 1.14);
     });
     zoomUntil(pred, direction, remaining - 1);
   });

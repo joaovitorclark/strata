@@ -2,6 +2,8 @@ import {
   animationNameOf,
   fireWindowKey,
   restoreSmoke,
+  selectCanvasDetailLevel,
+  setEdgeVisibility,
   snapshotSmoke,
   waitForCanvas,
   type SmokeSnapshot,
@@ -9,7 +11,7 @@ import {
 
 describe("canvas edges", () => {
   beforeEach(() => {
-    cy.seedProject("smoke");
+    cy.resetFixture("smoke");
     waitForCanvas();
   });
 
@@ -30,19 +32,17 @@ describe("canvas edges", () => {
     });
   });
 
-  it("lineage edge paints when Mostrar linhagem is checked", () => {
-    cy.get(".layers-panel").then(($p) => {
-      if ($p.hasClass("is-collapsed")) {
-        cy.wrap($p).find(".layers-panel__collapse").click({ force: true });
-      }
-    });
-    cy.get(".layers-panel").should("not.have.class", "is-collapsed");
-    cy.contains("label", "Mostrar linhagem").find("input[type=checkbox]").check({ force: true });
-    cy.get(".lineage-port-handle").should("have.length.at.least", 8);
-    cy.get('[data-testid^="rf__edge-lin:"]').should("exist");
+  it("aggregated lineage edge paints when Linhagem is checked", () => {
+    setEdgeVisibility("Linhagem", true);
+    cy.get(".react-flow__pane").click(20, 20, { force: true });
+    selectCanvasDetailLevel("Nome");
+    cy.get('[data-testid^="rf__edge-fla:"]').should("exist");
     cy.get(".edge-path--lineage").should(($path) => {
-      expect($path.length, "lineage path").to.be.at.least(1);
-      expect(animationNameOf($path[0])).to.match(/lineage-flow/);
+      expect($path.length, "aggregated lineage path").to.be.at.least(1);
+      const anim = animationNameOf($path[0]);
+      expect(anim === "none" || anim === "", `S09 rest lineage animation-name was ${anim}`).to.eq(
+        true,
+      );
     });
   });
 

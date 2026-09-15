@@ -7,19 +7,12 @@ import { listDomains, createLocalDomain, cloneDomain, deleteDomain, getDomain } 
 import { listProjects, createProject, ensureRegistry } from '../files.ts';
 import { setActiveDomainSlug } from '../domainContext.ts';
 import type { InstanceManager } from '../controlboardInstances.ts';
+import { errorMessage, errorMessageString, isNotFound } from '../unknownError.ts';
 
 type CreateDomainBody = { name?: string };
 type CloneDomainBody = { url?: string; name?: string };
 type CreateProjectBody = { domainId?: string; name?: string };
 type LaunchBody = { domainId?: string; projectId?: string };
-
-function errorMessage(e: any, fallback: string): string {
-  return e?.stderr || e?.message || fallback;
-}
-
-function isNotFound(e: any): boolean {
-  return typeof e?.message === 'string' && e.message.includes('não encontrado');
-}
 
 /**
  * Lista os projetos de um domínio SEM os efeitos colaterais de
@@ -84,7 +77,7 @@ export function registerControlboardRoutes(app: FastifyInstance, instances: Inst
       const domain = await cloneDomain(url, req.body?.name?.trim());
       reply.code(201);
       return domain;
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(422).send({ error: errorMessage(e, 'Falha ao clonar repositório.') });
     }
   });
@@ -97,8 +90,8 @@ export function registerControlboardRoutes(app: FastifyInstance, instances: Inst
         await deleteDomain(req.params.id);
       });
       return { ok: true };
-    } catch (e: any) {
-      if (isNotFound(e)) return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      if (isNotFound(e)) return reply.code(404).send({ error: errorMessageString(e) });
       return reply.code(422).send({ error: errorMessage(e, 'Falha ao remover o domínio.') });
     }
   });
@@ -111,8 +104,8 @@ export function registerControlboardRoutes(app: FastifyInstance, instances: Inst
     let domain;
     try {
       domain = await getDomain(domainId);
-    } catch (e: any) {
-      return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      return reply.code(404).send({ error: errorMessageString(e) });
     }
     return withDomainLock(async () => {
       setActiveDomainSlug(domain.slug);
@@ -139,8 +132,8 @@ export function registerControlboardRoutes(app: FastifyInstance, instances: Inst
     let domain;
     try {
       domain = await getDomain(domainId);
-    } catch (e: any) {
-      return reply.code(404).send({ error: e.message });
+    } catch (e: unknown) {
+      return reply.code(404).send({ error: errorMessageString(e) });
     }
     const projects = await withDomainLock(async () => {
       try {
@@ -160,7 +153,7 @@ export function registerControlboardRoutes(app: FastifyInstance, instances: Inst
       });
       reply.code(201);
       return instance;
-    } catch (e: any) {
+    } catch (e: unknown) {
       return reply.code(500).send({ error: errorMessage(e, 'Falha ao subir a instância.') });
     }
   });

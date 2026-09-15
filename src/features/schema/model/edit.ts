@@ -365,51 +365,6 @@ export function addLayerGroup(src: string, name: string, color: string): string 
   return `${src.replace(/\n+$/, '')}\n\nLayerGroup ${id} [color: ${color}] {\n}\n`;
 }
 
-// ---- Lineage (bloco Lineage no DBML) ----
-
-/** Adiciona um par source→target ao bloco Lineage (cria o bloco se não existir). */
-export function addLineageEntry(src: string, source: string, target: string): string {
-  const blocks = splitDbmlBlocks(src);
-  const linBlock = blocks.find((b) => b.type === 'lineage');
-  if (linBlock) {
-    const lines = linBlock.text.split('\n');
-    const existing = lines.find((l) => {
-      const m = /^(\s*)([^\s<]+)\s*</.exec(l);
-      return m && m[2].trim() === target;
-    });
-    if (existing) {
-      if (existing.includes(source)) return src;
-      const updated = existing.replace(/(<\s*.+)$/, `$1, ${source}`);
-      const newText = linBlock.text.replace(existing, updated);
-      return src.replace(linBlock.text, newText);
-    }
-    const close = linBlock.text.lastIndexOf('}');
-    if (close >= 0) {
-      const newText = linBlock.text.slice(0, close) + `  ${target} < ${source}\n` + linBlock.text.slice(close);
-      return src.replace(linBlock.text, newText);
-    }
-  }
-  return `${src.replace(/\n+$/, '')}\n\nLineage {\n  ${target} < ${source}\n}\n`;
-}
-
-/** Remove um par source→target do bloco Lineage. Remove a linha se ficar sem sources. */
-export function removeLineageEntry(src: string, source: string, target: string): string {
-  const blocks = splitDbmlBlocks(src);
-  const linBlock = blocks.find((b) => b.type === 'lineage');
-  if (!linBlock) return src;
-  const updated = linBlock.text.split('\n').map((line) => {
-    const m = /^(\s*)([^\s<]+)\s*<\s*(.+)$/.exec(line);
-    if (!m || m[2].trim() !== target) return line;
-    const sources = m[3].split(',').map((s) => s.trim()).filter((s) => s !== source);
-    if (!sources.length) return null;
-    return `${m[1]}${m[2]} < ${sources.join(', ')}`;
-  }).filter((l): l is string => l !== null).join('\n');
-  if (!/\S/.test(updated.replace(/Lineage\s*\{/i, '').replace('}', ''))) {
-    return src.replace(linBlock.text, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
-  }
-  return src.replace(linBlock.text, updated);
-}
-
 // ---- LineageFields (mapeamento coluna→coluna) ----
 
 function fieldLineageLine(
@@ -466,7 +421,7 @@ export function removeFieldLineageEntry(
   const prefix = `${targetTable}.${targetColumn} < ${sourceTable}.${sourceColumn}`;
   const updated = block.text
     .split('\n')
-    .filter((l) => !l.trim().startsWith(prefix) && !l.includes(prefix))
+    .filter((l) => !l.trim().startsWith(prefix))
     .join('\n');
   if (!/\S/.test(updated.replace(/LineageFields\s*\{/i, '').replace('}', ''))) {
     return src.replace(block.text, '').replace(/\n{3,}/g, '\n\n').trim() + '\n';
@@ -570,27 +525,6 @@ function pruneGroupMembers(block: string, tableId: string): string {
     .join('\n');
 }
 
-function pruneLineageBlock(block: string, tableId: string): string | null {
-  if (!/Lineage\s*\{/i.test(block)) return block;
-  const bodyLines: string[] = [];
-  for (const line of block.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('//') || /^Lineage\s*\{/i.test(trimmed) || trimmed === '}') {
-      continue;
-    }
-    const m = /^([^\s<]+)\s*<\s*(.+)$/.exec(trimmed);
-    if (!m) continue;
-    const target = m[1].trim();
-    if (tableMatches(target, tableId)) continue;
-    const sources = m[2].split(',').map((s) => s.trim()).filter((s) => !tableMatches(s, tableId));
-    if (!sources.length) continue;
-    const indent = line.match(/^(\s*)/)?.[1] ?? '  ';
-    bodyLines.push(`${indent}${target} < ${sources.join(', ')}`);
-  }
-  if (!bodyLines.length) return null;
-  return `Lineage {\n${bodyLines.join('\n')}\n}\n`;
-}
-
 function pruneLineageFieldsBlock(block: string, tableId: string): string | null {
   if (!/LineageFields\s*\{/i.test(block)) return block;
   const bodyLines: string[] = [];
@@ -599,7 +533,7 @@ function pruneLineageFieldsBlock(block: string, tableId: string): string | null 
     if (!trimmed || trimmed.startsWith('//') || /^LineageFields\s*\{/i.test(trimmed) || trimmed === '}') {
       continue;
     }
-    const m = /^([^\s<]+)\s*<\s*([^\s\[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(trimmed);
+    const m = /^([^\s<]+)\s*<\s*([^\s[]+)(?:\s*\[([^\]]*)\])?\s*$/.exec(trimmed);
     if (!m) continue;
     const target = splitTableColumn(m[1].trim());
     const source = splitTableColumn(m[2].trim());
@@ -661,8 +595,7 @@ export function removeTable(src: string, tableId: string): string {
         return pruneGroupMembers(b.text, id);
       }
       if (b.type === 'lineage') {
-        const pruned = pruneLineageBlock(b.text, id);
-        return pruned ?? '';
+        return '';
       }
       if (b.type === 'lineageFields') {
         const pruned = pruneLineageFieldsBlock(b.text, id);
@@ -829,4 +762,106 @@ export function migrateCanvasPins(src: string, byTable?: Record<string, string[]
     for (const col of cols) out = pinColumn(out, table, col);
   }
   return out;
+}
+
+/**
+ * Splits a field line's `rest` into type, settings body and trailing text, respecting quoted
+ * strings: a `]` or `,` inside `note: '...'` does not end the settings, and a trailing `// comment`
+ * is kept rather than swallowed.
+ */
+function splitFieldRest(rest: string): { type: string; settings: string | null; trailing: string } {
+  let quote: string | null = null;
+  let open = -1;
+  for (let i = 0; i < rest.length; i++) {
+    const ch = rest[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '/' && rest[i + 1] === '/' && open < 0) {
+      return { type: rest.slice(0, i).trim(), settings: null, trailing: rest.slice(i) };
+    }
+    // Settings open after whitespace; `int[]` is an array type, not a settings block.
+    if (ch === '[' && open < 0 && /\s/.test(rest[i - 1] ?? '')) {
+      open = i;
+      continue;
+    }
+    if (ch === ']' && open >= 0) {
+      return {
+        type: rest.slice(0, open).trim(),
+        settings: rest.slice(open + 1, i),
+        trailing: rest.slice(i + 1).trim(),
+      };
+    }
+  }
+  return { type: rest.trim(), settings: null, trailing: '' };
+}
+
+/** Comma-separated setting tokens, ignoring commas inside quoted strings. */
+function splitSettingTokens(body: string): string[] {
+  const out: string[] = [];
+  let quote: string | null = null;
+  let start = 0;
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (quote) {
+      if (ch === '\\') i++;
+      else if (ch === quote) quote = null;
+    } else if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch;
+    } else if (ch === ',') {
+      out.push(body.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  out.push(body.slice(start).trim());
+  return out.filter(Boolean);
+}
+
+function joinFieldRest(type: string, tokens: string[], trailing: string): string {
+  const settings = tokens.length ? ` [${tokens.join(', ')}]` : '';
+  return `${type}${settings}${trailing ? ` ${trailing}` : ''}`;
+}
+
+/** Troca o tipo da coluna, preservando o sufixo `[settings]` e comentário no fim da linha. */
+export function setColumnType(src: string, table: string, column: string, type: string): string {
+  const trimmed = type.trim();
+  if (!trimmed) return src;
+  return mutateTableBlock(src, table, (block) =>
+    block
+      .split('\n')
+      .map((line) => {
+        if (!isFieldLine(line)) return line;
+        const f = parseFieldLine(line);
+        if (!f || f.name !== stripQuotes(column)) return line;
+        const parts = splitFieldRest(f.rest);
+        const tokens = parts.settings === null ? [] : splitSettingTokens(parts.settings);
+        return `${f.indent}${f.name} ${joinFieldRest(trimmed, tokens, parts.trailing)}`;
+      })
+      .join('\n'),
+  );
+}
+
+/** Liga/desliga o token `unique` na coluna, preservando os demais settings. */
+export function setColumnUnique(src: string, table: string, column: string, unique: boolean): string {
+  return mutateTableBlock(src, table, (block) =>
+    block
+      .split('\n')
+      .map((line) => {
+        if (!isFieldLine(line)) return line;
+        const f = parseFieldLine(line);
+        if (!f || f.name !== stripQuotes(column)) return line;
+        const parts = splitFieldRest(f.rest);
+        const existing = parts.settings === null ? [] : splitSettingTokens(parts.settings);
+        const without = existing.filter((tok) => !/^unique$/i.test(tok));
+        const tokens = unique ? [...without, 'unique'] : without;
+        return `${f.indent}${f.name} ${joinFieldRest(parts.type, tokens, parts.trailing)}`;
+      })
+      .join('\n'),
+  );
 }
