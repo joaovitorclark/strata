@@ -1,0 +1,10 @@
+version: 2
+sources:
+  - name: bronze_vendas
+    schema: bronze
+    database: raw_db
+    tables:
+      - name: canais
+        columns:
+          - name: canal_id
+            data_type: bigint

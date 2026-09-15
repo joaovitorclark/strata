@@ -86,6 +86,7 @@ import {
 } from "@/features/shell/workspaceModel";
 import { createDbtSaveQueue } from "@/features/dbt-source/saveQueue";
 import { fromDbtProject, toDisplayDbml, toParseResult } from "@/features/dbt-source";
+import { validateAllTransforms } from "@/features/dbt-source/transform";
 import type { DbtAction } from "@/features/dbt-source/mutations";
 import { pinnedByTableFromList } from "@/features/schema/model/dbmlClean";
 import { toast } from "sonner";
@@ -167,6 +168,9 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
   const dbtParsed = useSchemaStore((s) => s.dbtParsed);
   const dbtPersistGen = useSchemaStore((s) => s.dbtPersistGen);
   const dbtProblems = useSchemaStore((s) => s.dbtProblems);
+  const dbtFiles = useSchemaStore((s) => s.files);
+  const dbtProjectSlug = useSchemaStore((s) => s.dbtProject);
+  const documentFormat = useSchemaStore((s) => s.documentFormat);
   const selectColumn = useSchemaStore((s) => s.selectColumn);
 
   const runDbt = useCallback((action: DbtAction): boolean => {
@@ -562,8 +566,27 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
       message,
     }));
     const dbt = dbtProblems.map((message) => ({ severity: "error" as const, message }));
-    return [...parseIssues, ...fromImport, ...issues, ...dbt];
-  }, [activeModel, dbml, dbmlBlocks, parsed.error, parsed.errorLine, importWarnings, dbtProblems]);
+    const transform =
+      documentFormat === "dbt" && dbtProjectSlug
+        ? validateAllTransforms(dbtFiles, dbtProjectSlug).map((p) => ({
+            severity: "error" as const,
+            message: p.message,
+            tableId: p.tableId,
+          }))
+        : [];
+    return [...parseIssues, ...fromImport, ...issues, ...dbt, ...transform];
+  }, [
+    activeModel,
+    dbml,
+    dbmlBlocks,
+    parsed.error,
+    parsed.errorLine,
+    importWarnings,
+    dbtProblems,
+    documentFormat,
+    dbtProjectSlug,
+    dbtFiles,
+  ]);
 
   const pruneCanvasState = useCallback((removedIds: string[]) => {
     const gone = new Set(removedIds);

@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
+import { writeOutput } from '../files.ts';
 import { runExport, type ExportFormat } from '../exportDispatch.ts';
 import type { Model } from '../model.ts';
 import type { InputDialect } from '../sqlExport.ts';
@@ -75,4 +76,18 @@ export function registerExportRoutes(
     if (!model) return reply;
     return handleExport(model, { format: 'postgres-ddl' });
   });
+
+  app.post<{ Body: { project?: string; files?: Record<string, string> } }>(
+    '/api/export/spark-sql',
+    async (req) => {
+      const project = (req.body?.project ?? 'project').replace(/[^A-Za-z0-9_.-]/g, '_');
+      const files = req.body?.files ?? {};
+      const written: string[] = [];
+      for (const [name, content] of Object.entries(files)) {
+        const safe = name.replace(/[^A-Za-z0-9_.-]/g, '_') || 'model';
+        written.push(await writeOutput(`spark/${project}/${safe}.sql`, content));
+      }
+      return { files: written };
+    },
+  );
 }

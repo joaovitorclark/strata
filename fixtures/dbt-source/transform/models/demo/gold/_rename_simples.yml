@@ -1,0 +1,24 @@
+version: 2
+models:
+  - name: rename_simples
+    config:
+      schema: gold
+      materialized: view
+      tags: [strata:demo, strata:managed]
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              source: [bronze_vendas, canais]
+              alias: s0
+            joins: []
+            group_by: []
+    columns:
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: s0.canal_id

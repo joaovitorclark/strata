@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: stg_pedido
+    config:
+      schema: silver
+      materialized: view
+      tags: [strata:demo]
+    columns:
+      - name: id
+        data_type: bigint
+      - name: cliente_id
+        data_type: bigint
+      - name: valor
+        data_type: decimal(12,2)
+      - name: status
+        data_type: string

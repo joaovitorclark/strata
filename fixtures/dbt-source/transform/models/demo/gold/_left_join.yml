@@ -1,0 +1,35 @@
+version: 2
+models:
+  - name: left_join
+    config:
+      schema: gold
+      materialized: view
+      tags: [strata:demo, strata:managed]
+      meta:
+        strata:
+          managed: true
+          transform:
+            from:
+              ref: stg_pedido
+              alias: p
+            joins:
+              - ref: stg_cliente
+                alias: c
+                type: left
+                on: p.cliente_id = c.id
+            group_by: []
+    columns:
+      - name: id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: p.id
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: c.nome

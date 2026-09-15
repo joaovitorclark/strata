@@ -17,6 +17,7 @@ export {
   importFromInputForProject,
   importFromInput,
   exportFormat,
+  exportSparkSql,
   exportDdl,
   exportDbt,
   exportErwin,

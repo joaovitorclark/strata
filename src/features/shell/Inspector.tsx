@@ -16,6 +16,10 @@ import { LineageSection } from "@/features/shell/inspector/LineageSection";
 import { RelatedTablesSection } from "@/features/shell/inspector/RelatedTablesSection";
 import { RelationsSection } from "@/features/shell/inspector/RelationsSection";
 import { TableSection } from "@/features/shell/inspector/TableSection";
+import {
+  NewModelFromSelection,
+  TransformSection,
+} from "@/features/shell/inspector/TransformSection";
 import { cn } from "@/lib/utils";
 
 import { FOCUS, layerEdgeClass, type InspectorProps } from "./inspector/types";
@@ -169,15 +173,19 @@ export function Inspector({
       </div>
 
       {multi ? (
-        <BatchSection
-          tableIds={selectedTableIds}
-          layers={layers}
-          dbml={dbml}
-          onApply={onApply}
-          onSetLayer={onSetLayer}
-          onSetColor={onSetColor}
-          onRemoveTables={onRemoveTables}
-        />
+        <>
+          <BatchSection
+            tableIds={selectedTableIds}
+            layers={layers}
+            dbml={dbml}
+            onApply={onApply}
+            onSetLayer={onSetLayer}
+            onSetColor={onSetColor}
+            onRemoveTables={onRemoveTables}
+          />
+          {/* D4 mount */}
+          <NewModelFromSelection />
+        </>
       ) : !tableId || !table || !meta ? (
         <EmptyState
           tables={tables}
@@ -242,6 +250,8 @@ export function Inspector({
                 />
               </AccordionContent>
             </AccordionItem>
+            {/* D4 mount */}
+            <TransformSection tableId={table.id} />
             <AccordionItem value="relations" data-testid="inspector-section-relations">
               <AccordionTrigger className="py-2 text-xs">
                 {t("shell.inspector.relations")}
