@@ -84,6 +84,7 @@ import {
   SAMPLE_DBML,
   useStable,
 } from "@/features/shell/workspaceModel";
+import { createDbtSaveQueue } from "@/features/dbt-source/saveQueue";
 import { fromDbtProject, toDisplayDbml, toParseResult } from "@/features/dbt-source";
 import type { DbtAction } from "@/features/dbt-source/mutations";
 import { pinnedByTableFromList } from "@/features/schema/model/dbmlClean";
@@ -513,16 +514,28 @@ export function useWorkspace({ domain, onBackToDomains, onRepoChanged }: Workspa
     setCommittedDbml(next);
   }, []);
 
+  // One serial queue per project: writes never overlap (an older PUT cannot land after a newer one)
+  // and changes are bound to the project they were made in, even if the user switches mid-flight.
+  const dbtSaveQueues = useRef(new Map<string, ReturnType<typeof createDbtSaveQueue>>());
   useEffect(() => {
     const s = useSchemaStore.getState();
     if (s.documentFormat !== "dbt" || !s.currentProjectId) return;
-    const changes = s.lastDbtChanges;
-    if (!changes || !Object.keys(changes).length) return;
-    s.setSaveState("saving");
-    void api
-      .saveDbtChanges(s.currentProjectId, changes)
-      .then(() => useSchemaStore.getState().setSaveState("saved"))
-      .catch(() => useSchemaStore.getState().setSaveState("error"));
+    const changes = s.takeDbtChanges();
+    if (!Object.keys(changes).length) return;
+    const projectId = s.currentProjectId;
+    let queue = dbtSaveQueues.current.get(projectId);
+    if (!queue) {
+      queue = createDbtSaveQueue(
+        (batch) => api.saveDbtChanges(projectId, batch),
+        (state) => {
+          if (useSchemaStore.getState().currentProjectId === projectId) {
+            useSchemaStore.getState().setSaveState(state);
+          }
+        },
+      );
+      dbtSaveQueues.current.set(projectId, queue);
+    }
+    void queue.enqueue(changes);
   }, [dbtPersistGen]);
 
   const mutateDbml = useCallback(

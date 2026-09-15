@@ -50,4 +50,44 @@ describe("D2 G6 atomic writeDbtChanges", () => {
     };
     await expect(writeDbtChanges("/domain", { "../secret": "x" }, io)).rejects.toThrow(/unsafe/);
   });
+
+  it("R4: refuses paths outside the dbt project area and writes nothing", async () => {
+    const written: string[] = [];
+    const io: DbtFs = {
+      mkdir: async () => undefined,
+      writeFile: async (p) => {
+        written.push(String(p));
+      },
+      rename: async (_from, to) => {
+        written.push(String(to));
+      },
+      unlink: async (p) => {
+        written.push(String(p));
+      },
+    };
+    for (const rel of [
+      ".git/hooks/pre-commit",
+      ".github/workflows/ci.yml",
+      "package.json",
+      "notes.txt",
+    ]) {
+      await expect(
+        writeDbtChanges("/domain", { "models/ok.yml": "x\n", [rel]: "evil" }, io),
+      ).rejects.toThrow(/outside the writable project area/);
+    }
+    expect(written).toEqual([]);
+    await expect(
+      writeDbtChanges(
+        "/domain",
+        {
+          "models/v/a.yml": "a",
+          "seeds/v/s.csv": "s",
+          ".strata/v/canvas.yml": "c",
+          ".gitattributes": "g",
+          "dbt_project.yml": "d",
+        },
+        io,
+      ),
+    ).resolves.toHaveLength(5);
+  });
 });

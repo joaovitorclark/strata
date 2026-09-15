@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.nota_fiscal
-          layer: silver
-          schema: silver
-          pk:
-            - nfe_id
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -30,7 +24,6 @@ models:
             strata:
               lineage:
                 - from: bronze.notas_fiscais.nfe_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -41,7 +34,6 @@ models:
             strata:
               lineage:
                 - from: bronze.notas_fiscais.pedido_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -52,8 +44,6 @@ models:
             strata:
               lineage:
                 - from: bronze.notas_fiscais.chave
-              not_null: true
-              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -64,7 +54,6 @@ models:
             strata:
               lineage:
                 - from: bronze.notas_fiscais.vl_nfe
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -75,7 +64,6 @@ models:
             strata:
               lineage:
                 - from: bronze.notas_fiscais.dt_emissao
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

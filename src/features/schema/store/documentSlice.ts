@@ -74,6 +74,8 @@ export type DocumentSlice = {
   setHydratedProjectId: (id: string | null) => void;
   setReadOnly: (value: boolean) => void;
   applyDbtOp: (action: DbtAction) => void;
+  /** Returns every file change not yet handed to the save queue and clears it. */
+  takeDbtChanges: () => Record<string, string | null>;
   hydrateDocument: (next: {
     dbml: string;
     positions: Positions;
@@ -152,7 +154,7 @@ export const createDocumentSlice: StateCreator<
   [["zustand/immer", never]],
   [],
   DocumentSlice
-> = (set) => ({
+> = (set, get) => ({
   dbml: "",
   positions: {},
   sizes: {},
@@ -236,6 +238,14 @@ export const createDocumentSlice: StateCreator<
     set((state) => {
       state.readOnly = value;
     }),
+  takeDbtChanges: () => {
+    const pending = get().lastDbtChanges;
+    if (!Object.keys(pending).length) return {};
+    set((state) => {
+      state.lastDbtChanges = {};
+    });
+    return { ...pending };
+  },
   applyDbtOp: (action) =>
     set((state) => {
       if (state.documentFormat !== "dbt") return;
@@ -289,7 +299,7 @@ export const createDocumentSlice: StateCreator<
           else nextFiles[p] = content;
         }
         state.files = nextFiles;
-        state.lastDbtChanges = prev.before;
+        state.lastDbtChanges = { ...state.lastDbtChanges, ...prev.before };
         state.dbtPersistGen += 1;
         state.dbtProblems = [];
         syncDbtDerived(state);
@@ -321,7 +331,7 @@ export const createDocumentSlice: StateCreator<
           else nextFiles[p] = content;
         }
         state.files = nextFiles;
-        state.lastDbtChanges = next.after;
+        state.lastDbtChanges = { ...state.lastDbtChanges, ...next.after };
         state.dbtPersistGen += 1;
         syncDbtDerived(state);
         return;

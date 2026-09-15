@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:clientes
-      meta:
-        strata:
-          table_id: silver.cliente_unico
-          layer: silver
-          schema: silver
-          pk:
-            - cliente_sk
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -21,19 +15,11 @@ models:
     columns:
       - name: cliente_sk
         data_type: string
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: cliente_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

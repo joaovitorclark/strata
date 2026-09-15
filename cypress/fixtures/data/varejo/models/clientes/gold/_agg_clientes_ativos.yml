@@ -5,13 +5,7 @@ models:
     config:
       tags:
         - strata:clientes
-      meta:
-        strata:
-          table_id: gold.agg_clientes_ativos
-          layer: gold
-          schema: gold
-          pk:
-            - status
+      schema: gold
       contract:
         enforced: true
     constraints:
@@ -22,10 +16,6 @@ models:
     columns:
       - name: status
         data_type: string
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

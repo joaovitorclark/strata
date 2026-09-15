@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.frete
-          layer: silver
-          schema: silver
-          pk:
-            - pedido_id
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -21,10 +15,6 @@ models:
     columns:
       - name: pedido_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

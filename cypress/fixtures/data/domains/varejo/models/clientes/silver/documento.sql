@@ -1,1 +1,1 @@
-select * from {{ source('bronze_clientes', 'documentos') }}
+select * from {{ source('bronze', 'documentos') }}

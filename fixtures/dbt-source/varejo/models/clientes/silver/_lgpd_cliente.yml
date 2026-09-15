@@ -4,13 +4,7 @@ models:
     config:
       tags:
         - strata:clientes
-      meta:
-        strata:
-          table_id: silver.lgpd_cliente
-          layer: silver
-          schema: silver
-          pk:
-            - cliente_id
+      schema: silver
       contract:
         enforced: true
     constraints:
@@ -21,10 +15,6 @@ models:
     columns:
       - name: cliente_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

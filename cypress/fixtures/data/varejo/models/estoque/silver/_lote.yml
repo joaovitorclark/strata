@@ -5,25 +5,12 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      meta:
-        strata:
-          table_id: silver.lote
-          layer: silver
-          schema: silver
-          pk:
-            - lote_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_estoque
-                - lotes
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -37,7 +24,6 @@ models:
             strata:
               lineage:
                 - from: bronze.lotes.lote_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,7 +34,6 @@ models:
             strata:
               lineage:
                 - from: bronze.lotes.produto_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -59,7 +44,6 @@ models:
             strata:
               lineage:
                 - from: bronze.lotes.codigo
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

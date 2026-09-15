@@ -6,23 +6,12 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      meta:
-        strata:
-          table_id: gold.dim_produto
-          layer: gold
-          schema: gold
-          pk:
-            - produto_id
-          managed: true
-          transform:
-            from:
-              ref: produto
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: gold
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -36,7 +25,6 @@ models:
             strata:
               lineage:
                 - from: silver.produto.produto_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

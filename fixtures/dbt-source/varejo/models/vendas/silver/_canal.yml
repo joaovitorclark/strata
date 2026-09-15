@@ -6,25 +6,12 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      meta:
-        strata:
-          table_id: silver.canal
-          layer: silver
-          schema: silver
-          pk:
-            - canal_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_vendas
-                - canais
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -42,7 +29,6 @@ models:
             strata:
               lineage:
                 - from: bronze.canais.canal_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -54,8 +40,6 @@ models:
               lineage:
                 - from: bronze.canais.codigo
               enum: canal_venda
-              not_null: true
-              unique: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -74,7 +58,6 @@ models:
             strata:
               lineage:
                 - from: bronze.canais.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

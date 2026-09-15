@@ -6,23 +6,12 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      meta:
-        strata:
-          table_id: gold.fct_devolucao
-          layer: gold
-          schema: gold
-          pk:
-            - devolucao_id
-          managed: true
-          transform:
-            from:
-              ref: devolucao
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: gold
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -36,7 +25,6 @@ models:
             strata:
               lineage:
                 - from: silver.devolucao.devolucao_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -47,7 +35,6 @@ models:
             strata:
               lineage:
                 - from: silver.devolucao.pedido_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

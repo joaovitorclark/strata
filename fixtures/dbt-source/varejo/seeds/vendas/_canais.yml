@@ -1,7 +1,3 @@
 version: 2
 seeds:
   - name: canais
-    config:
-      meta:
-        strata:
-          table_id: bronze.canais

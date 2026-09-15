@@ -5,25 +5,12 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      meta:
-        strata:
-          table_id: silver.fornecedor
-          layer: silver
-          schema: silver
-          pk:
-            - fornecedor_id
-          managed: true
-          transform:
-            from:
-              source:
-                - bronze_estoque
-                - fornecedores
-              alias: s0
-            joins: []
-            where: ""
-            group_by: []
+      schema: silver
       contract:
         enforced: true
+      meta:
+        strata:
+          managed: true
     constraints:
       - type: primary_key
         columns:
@@ -41,7 +28,6 @@ models:
             strata:
               lineage:
                 - from: bronze.fornecedores.fornecedor_id
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -52,7 +38,6 @@ models:
             strata:
               lineage:
                 - from: bronze.fornecedores.nome
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -63,4 +48,3 @@ models:
             strata:
               lineage:
                 - from: bronze.fornecedores.cnpj
-              unique: true
