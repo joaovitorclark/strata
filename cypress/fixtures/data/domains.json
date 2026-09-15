@@ -13,6 +13,13 @@
       "name": "dbt-demo",
       "createdAt": "2026-09-14T20:00:00.000Z",
       "updatedAt": "2026-09-14T20:00:00.000Z"
+    },
+    {
+      "id": "varejo0000000001",
+      "slug": "varejo",
+      "name": "varejo",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
     }
   ]
 }

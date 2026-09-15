@@ -1,0 +1,80 @@
+version: 2
+models:
+  - name: cupom
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.cupom
+          layer: silver
+          schema: silver
+          pk:
+            - cupom_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - cupons
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cupom_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - codigo
+        warn_unsupported: false
+    columns:
+      - name: cupom_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cupons.cupom_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: codigo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cupons.codigo
+              not_null: true
+              unique: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: tipo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cupons.tipo
+      - name: vl_desconto
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cupons.vl_desconto
+      - name: dt_validade
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cupons.dt_validade

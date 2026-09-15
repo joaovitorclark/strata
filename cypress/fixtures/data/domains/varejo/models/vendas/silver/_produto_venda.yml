@@ -1,0 +1,84 @@
+version: 2
+models:
+  - name: produto_venda
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.produto_venda
+          layer: silver
+          schema: silver
+          pk:
+            - produto_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - produtos_venda
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - sku
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos_venda.produto_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: sku
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos_venda.sku
+              not_null: true
+              unique: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos_venda.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: categoria
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos_venda.categoria
+      - name: vl_tabela
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.produtos_venda.vl_tabela

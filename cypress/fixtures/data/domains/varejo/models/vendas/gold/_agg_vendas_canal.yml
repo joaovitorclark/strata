@@ -1,0 +1,33 @@
+version: 2
+models:
+  - name: agg_vendas_canal
+    description: Tabela de negócio agg_vendas_canal no domínio varejo.
+    config:
+      tags:
+        - strata:vendas
+      meta:
+        strata:
+          table_id: gold.agg_vendas_canal
+          layer: gold
+          schema: gold
+          pk:
+            - canal_id
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - canal_id
+        warn_unsupported: false
+    columns:
+      - name: canal_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: receita_bruta
+        data_type: decimal(18,2)

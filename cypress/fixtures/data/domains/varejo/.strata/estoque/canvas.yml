@@ -1,0 +1,114 @@
+positions:
+  bronze.compras:
+    x: 40
+    y: 40
+  bronze.depositos:
+    x: 40
+    y: 136
+  bronze.fornecedores:
+    x: 40
+    y: 232
+  bronze.inventario:
+    x: 40
+    y: 328
+  bronze.lotes:
+    x: 40
+    y: 424
+  bronze.movimentacoes:
+    x: 40
+    y: 520
+  bronze.perdas:
+    x: 40
+    y: 616
+  bronze.produtos:
+    x: 40
+    y: 712
+  bronze.transferencias:
+    x: 40
+    y: 808
+  bronze.unidades_medida:
+    x: 40
+    y: 904
+  silver.compra:
+    x: 520
+    y: 40
+  silver.deposito:
+    x: 520
+    y: 136
+  silver.fornecedor:
+    x: 520
+    y: 232
+  silver.inventario_posicao:
+    x: 520
+    y: 328
+  silver.lead_time:
+    x: 520
+    y: 424
+  silver.lote:
+    x: 520
+    y: 520
+  silver.movimentacao:
+    x: 520
+    y: 616
+  silver.perda:
+    x: 520
+    y: 712
+  silver.posicao_estoque:
+    x: 520
+    y: 808
+  silver.produto:
+    x: 520
+    y: 904
+  silver.transferencia:
+    x: 520
+    y: 1000
+  silver.unidade_medida:
+    x: 520
+    y: 1096
+  gold.agg_estoque_diario:
+    x: 1000
+    y: 40
+  gold.dim_deposito:
+    x: 1000
+    y: 136
+  gold.dim_produto:
+    x: 1000
+    y: 232
+  gold.fct_estoque:
+    x: 1000
+    y: 328
+  gold.fct_giro_produto:
+    x: 1000
+    y: 424
+  gold.fct_inventario:
+    x: 1000
+    y: 520
+colors:
+  bronze.produtos: "#a6da95"
+  bronze.fornecedores: "#a6da95"
+  bronze.movimentacoes: "#a6da95"
+  bronze.inventario: "#a6da95"
+  bronze.depositos: "#a6da95"
+  bronze.unidades_medida: "#a6da95"
+  bronze.lotes: "#a6da95"
+  bronze.transferencias: "#a6da95"
+  bronze.perdas: "#a6da95"
+  bronze.compras: "#a6da95"
+  silver.produto: "#a6da95"
+  silver.fornecedor: "#a6da95"
+  silver.movimentacao: "#a6da95"
+  silver.inventario_posicao: "#a6da95"
+  silver.deposito: "#a6da95"
+  silver.unidade_medida: "#a6da95"
+  silver.lote: "#a6da95"
+  silver.transferencia: "#a6da95"
+  silver.perda: "#a6da95"
+  silver.compra: "#a6da95"
+  silver.posicao_estoque: "#a6da95"
+  silver.lead_time: "#a6da95"
+  gold.fct_estoque: "#a6da95"
+  gold.dim_produto: "#a6da95"
+  gold.dim_deposito: "#a6da95"
+  gold.fct_giro_produto: "#a6da95"
+  gold.agg_estoque_diario: "#a6da95"
+  gold.fct_inventario: "#a6da95"

@@ -1,0 +1,21 @@
+views:
+  - id: estoque_operacao
+    name: estoque_operacao
+    tables:
+      - gold.fct_estoque
+      - gold.dim_produto
+      - gold.dim_deposito
+      - gold.fct_giro_produto
+    positions:
+      gold.fct_estoque:
+        x: 1000
+        y: 328
+      gold.dim_produto:
+        x: 1000
+        y: 232
+      gold.dim_deposito:
+        x: 1000
+        y: 136
+      gold.fct_giro_produto:
+        x: 1000
+        y: 424

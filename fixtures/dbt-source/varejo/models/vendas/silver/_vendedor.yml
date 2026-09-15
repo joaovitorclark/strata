@@ -1,0 +1,68 @@
+version: 2
+models:
+  - name: vendedor
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.vendedor
+          layer: silver
+          schema: silver
+          pk:
+            - vendedor_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - vendedores
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - vendedor_id
+        warn_unsupported: false
+    columns:
+      - name: vendedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.vendedores.vendedor_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.vendedores.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: loja_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.vendedores.loja_id
+      - name: ativo
+        data_type: boolean
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.vendedores.ativo

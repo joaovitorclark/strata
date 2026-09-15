@@ -1,0 +1,98 @@
+version: 2
+models:
+  - name: compra
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: silver.compra
+          layer: silver
+          schema: silver
+          pk:
+            - compra_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - compras
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - compra_id
+        warn_unsupported: false
+    columns:
+      - name: compra_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.compra_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: fornecedor_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.fornecedor_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.produto_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: quantidade
+        data_type: decimal(18,3)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.quantidade
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_total
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.vl_total
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_compra
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.compras.dt_compra
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

@@ -1,0 +1,33 @@
+version: 2
+models:
+  - name: agg_clientes_ativos
+    description: Tabela de negócio agg_clientes_ativos no domínio varejo.
+    config:
+      tags:
+        - strata:clientes
+      meta:
+        strata:
+          table_id: gold.agg_clientes_ativos
+          layer: gold
+          schema: gold
+          pk:
+            - status
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - status
+        warn_unsupported: false
+    columns:
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: qtd
+        data_type: bigint

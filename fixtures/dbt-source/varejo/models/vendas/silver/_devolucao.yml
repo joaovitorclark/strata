@@ -1,0 +1,90 @@
+version: 2
+models:
+  - name: devolucao
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: silver.devolucao
+          layer: silver
+          schema: silver
+          pk:
+            - devolucao_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - devolucoes
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - devolucao_id
+        warn_unsupported: false
+    columns:
+      - name: devolucao_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.devolucao_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.pedido_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: item_seq
+        data_type: int
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.item_seq
+      - name: motivo
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.motivo
+      - name: vl_estornado
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.vl_estornado
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: dt_devolucao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.devolucoes.dt_devolucao
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false

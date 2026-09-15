@@ -1,0 +1,500 @@
+version: 2
+sources:
+  - name: bronze_estoque
+    schema: bronze_estoque
+    tables:
+      - name: produtos
+        description: Tabela de negócio produtos no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.produtos
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - produto_id
+        columns:
+          - name: produto_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: sku
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: categoria
+            data_type: string
+          - name: marca
+            data_type: string
+      - name: fornecedores
+        description: Tabela de negócio fornecedores no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.fornecedores
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - fornecedor_id
+        columns:
+          - name: fornecedor_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: cnpj
+            data_type: string
+            config:
+              meta:
+                strata:
+                  unique: true
+            data_tests:
+              - unique
+      - name: movimentacoes
+        description: Tabela de negócio movimentacoes no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.movimentacoes
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - mov_id
+              indexes:
+                - columns:
+                    - produto_id
+                    - dt_movimento
+                  name: idx_mov_produto_dt
+        columns:
+          - name: mov_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: produto_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'produtos')
+                    field: produto_id
+          - name: deposito_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'depositos')
+                    field: deposito_id
+          - name: tipo
+            data_type: string
+            config:
+              meta:
+                strata:
+                  enum: tipo_movimentacao
+                  not_null: true
+            data_tests:
+              - not_null
+              - accepted_values:
+                  arguments:
+                    values:
+                      - entrada
+                      - saida
+                      - ajuste
+                      - transferencia
+          - name: quantidade
+            data_type: decimal(18,3)
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: dt_movimento
+            data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: inventario
+        description: Tabela de negócio inventario no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.inventario
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - inventario_id
+        columns:
+          - name: inventario_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: deposito_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'depositos')
+                    field: deposito_id
+          - name: dt_contagem
+            data_type: date
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: status
+            data_type: string
+      - name: depositos
+        description: Tabela de negócio depositos no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.depositos
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - deposito_id
+        columns:
+          - name: deposito_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: uf
+            data_type: string
+          - name: tipo
+            data_type: string
+      - name: unidades_medida
+        description: Tabela de negócio unidades_medida no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.unidades_medida
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - unidade_id
+        columns:
+          - name: unidade_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: sigla
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+                  unique: true
+            data_tests:
+              - unique
+              - not_null
+          - name: nome
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: lotes
+        description: Tabela de negócio lotes no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.lotes
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - lote_id
+        columns:
+          - name: lote_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: produto_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'produtos')
+                    field: produto_id
+          - name: codigo
+            data_type: string
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: dt_validade
+            data_type: date
+      - name: transferencias
+        description: Tabela de negócio transferencias no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.transferencias
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - transf_id
+        columns:
+          - name: transf_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: deposito_origem_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: deposito_destino_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: dt_transf
+            data_type: timestamp
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: perdas
+        description: Tabela de negócio perdas no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.perdas
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - perda_id
+        columns:
+          - name: perda_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: produto_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'produtos')
+                    field: produto_id
+          - name: quantidade
+            data_type: decimal(18,3)
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: motivo
+            data_type: string
+          - name: dt_perda
+            data_type: date
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+      - name: compras
+        description: Tabela de negócio compras no domínio varejo.
+        config:
+          tags:
+            - strata:estoque
+          meta:
+            strata:
+              table_id: bronze.compras
+              layer: bronze
+              schema: bronze_estoque
+              pk:
+                - compra_id
+        columns:
+          - name: compra_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - unique
+              - not_null
+          - name: fornecedor_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'fornecedores')
+                    field: fornecedor_id
+          - name: produto_id
+            data_type: bigint
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('bronze_estoque', 'produtos')
+                    field: produto_id
+          - name: quantidade
+            data_type: decimal(18,3)
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: vl_total
+            data_type: decimal(18,2)
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null
+          - name: dt_compra
+            data_type: date
+            config:
+              meta:
+                strata:
+                  not_null: true
+            data_tests:
+              - not_null

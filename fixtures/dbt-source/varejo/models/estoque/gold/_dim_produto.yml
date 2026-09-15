@@ -1,0 +1,63 @@
+version: 2
+models:
+  - name: dim_produto
+    description: Tabela de negócio dim_produto no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:estoque
+      meta:
+        strata:
+          table_id: gold.dim_produto
+          layer: gold
+          schema: gold
+          pk:
+            - produto_id
+          managed: true
+          transform:
+            from:
+              ref: produto
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - produto_id
+        warn_unsupported: false
+    columns:
+      - name: produto_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.produto.produto_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: sku
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.produto.sku
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.produto.nome
+      - name: categoria
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.produto.categoria

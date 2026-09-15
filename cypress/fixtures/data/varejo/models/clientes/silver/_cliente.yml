@@ -1,0 +1,92 @@
+version: 2
+models:
+  - name: cliente
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: silver.cliente
+          layer: silver
+          schema: silver
+          pk:
+            - cliente_id
+          managed: true
+          transform:
+            from:
+              source:
+                - bronze_clientes
+                - cadastro
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cliente_id
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - email
+        warn_unsupported: false
+      - type: unique
+        columns:
+          - cpf
+        warn_unsupported: false
+    columns:
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.nome
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: email
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.email
+              unique: true
+      - name: cpf
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.cpf
+              unique: true
+      - name: dt_nascimento
+        data_type: date
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.dt_nascimento
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: bronze.cadastro.status

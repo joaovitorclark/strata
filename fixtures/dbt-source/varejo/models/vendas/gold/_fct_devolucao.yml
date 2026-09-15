@@ -1,0 +1,67 @@
+version: 2
+models:
+  - name: fct_devolucao
+    description: Tabela de negócio fct_devolucao no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:vendas
+      meta:
+        strata:
+          table_id: gold.fct_devolucao
+          layer: gold
+          schema: gold
+          pk:
+            - devolucao_id
+          managed: true
+          transform:
+            from:
+              ref: devolucao
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - devolucao_id
+        warn_unsupported: false
+    columns:
+      - name: devolucao_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.devolucao.devolucao_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: pedido_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.devolucao.pedido_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: vl_estornado
+        data_type: decimal(18,2)
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.devolucao.vl_estornado
+      - name: dt_devolucao
+        data_type: timestamp
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.devolucao.dt_devolucao

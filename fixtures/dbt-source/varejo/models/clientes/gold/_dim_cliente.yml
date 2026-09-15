@@ -1,0 +1,63 @@
+version: 2
+models:
+  - name: dim_cliente
+    description: Tabela de negócio dim_cliente no domínio varejo.
+    config:
+      tags:
+        - strata:managed
+        - strata:clientes
+      meta:
+        strata:
+          table_id: gold.dim_cliente
+          layer: gold
+          schema: gold
+          pk:
+            - cliente_id
+          managed: true
+          transform:
+            from:
+              ref: cliente
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
+    constraints:
+      - type: primary_key
+        columns:
+          - cliente_id
+        warn_unsupported: false
+    columns:
+      - name: cliente_id
+        data_type: bigint
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.cliente.cliente_id
+              not_null: true
+        constraints:
+          - type: not_null
+            warn_unsupported: false
+      - name: nome
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.cliente.nome
+      - name: email
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.cliente.email
+      - name: status
+        data_type: string
+        config:
+          meta:
+            strata:
+              lineage:
+                - from: silver.cliente.status

@@ -1,0 +1,41 @@
+views:
+  - id: vendas_executivo
+    name: vendas_executivo
+    tables:
+      - gold.fct_vendas
+      - gold.agg_vendas_diarias
+      - gold.dim_canal
+      - gold.dim_loja
+    positions:
+      gold.fct_vendas:
+        x: 1000
+        y: 712
+      gold.agg_vendas_diarias:
+        x: 1000
+        y: 136
+      gold.dim_canal:
+        x: 1000
+        y: 232
+      gold.dim_loja:
+        x: 1000
+        y: 424
+  - id: linhagem_receita
+    name: linhagem_receita
+    tables:
+      - bronze.pedidos
+      - silver.pedido
+      - gold.fct_vendas
+      - gold.agg_vendas_diarias
+    positions:
+      bronze.pedidos:
+        x: 40
+        y: 808
+      silver.pedido:
+        x: 520
+        y: 1000
+      gold.fct_vendas:
+        x: 1000
+        y: 712
+      gold.agg_vendas_diarias:
+        x: 1000
+        y: 136
