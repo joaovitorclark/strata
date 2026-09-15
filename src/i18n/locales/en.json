@@ -152,7 +152,12 @@
       "newModelFromSelectionPrompt": "New model name (schema.model):",
       "exportSparkSql": "Export Spark SQL",
       "exportSparkSqlProject": "Export Spark SQL (project)",
-      "exportSparkSqlSelected": "Export Spark SQL (selected)"
+      "exportSparkSqlSelected": "Export Spark SQL (selected)",
+      "driftTitle": "Managed SQL changed outside Strata",
+      "driftBody": "This model is in drift. Make manual keeps the .sql; regenerate discards the edits.",
+      "makeManual": "Make manual",
+      "regenerate": "Regenerate",
+      "regenerateConfirm": "Regenerate discards manual edits to this .sql. Continue?"
     }
   },
   "canvas": {

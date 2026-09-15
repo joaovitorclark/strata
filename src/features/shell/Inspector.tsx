@@ -16,6 +16,7 @@ import { LineageSection } from "@/features/shell/inspector/LineageSection";
 import { RelatedTablesSection } from "@/features/shell/inspector/RelatedTablesSection";
 import { RelationsSection } from "@/features/shell/inspector/RelationsSection";
 import { TableSection } from "@/features/shell/inspector/TableSection";
+import { ManagedDrift } from "@/features/shell/inspector/ManagedDrift";
 import {
   NewModelFromSelection,
   TransformSection,
@@ -234,6 +235,8 @@ export function Inspector({
                   onRenameTable={onRenameTable}
                   layers={layers}
                 />
+                {/* D5 mount */}
+                <ManagedDrift tableId={table.id} />
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="columns" data-testid="inspector-section-columns">

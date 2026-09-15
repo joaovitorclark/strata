@@ -152,7 +152,12 @@
       "newModelFromSelectionPrompt": "Nome do novo model (schema.modelo):",
       "exportSparkSql": "Exportar Spark SQL",
       "exportSparkSqlProject": "Exportar Spark SQL (projeto)",
-      "exportSparkSqlSelected": "Exportar Spark SQL (selecionados)"
+      "exportSparkSqlSelected": "Exportar Spark SQL (selecionados)",
+      "driftTitle": "SQL gerenciado alterado fora do Strata",
+      "driftBody": "Este model está em drift. Tornar manual preserva o .sql; regenerar descarta as edições.",
+      "makeManual": "Tornar manual",
+      "regenerate": "Regenerar",
+      "regenerateConfirm": "Regenerar descarta as edições manuais deste .sql. Continuar?"
     }
   },
   "canvas": {
