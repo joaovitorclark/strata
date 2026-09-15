@@ -5,12 +5,26 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.item_pedido
+          layer: silver
+          schema: silver
+          pk:
+            - pedido_id
+            - item_seq
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - itens_pedido
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -32,6 +46,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.pedido_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -42,6 +57,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.item_seq
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -52,6 +68,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.produto_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -62,6 +79,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.qtd
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -72,6 +90,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.vl_unitario
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -82,6 +101,7 @@ models:
             strata:
               lineage:
                 - from: bronze.itens_pedido.vl_total
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

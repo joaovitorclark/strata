@@ -4,7 +4,13 @@ models:
     config:
       tags:
         - strata:estoque
-      schema: silver
+      meta:
+        strata:
+          table_id: silver.transferencia
+          layer: silver
+          schema: silver
+          pk:
+            - transf_id
       contract:
         enforced: true
     constraints:
@@ -20,6 +26,7 @@ models:
             strata:
               lineage:
                 - from: bronze.transferencias.transf_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -30,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.transferencias.deposito_origem_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -40,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.transferencias.deposito_destino_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -50,6 +59,7 @@ models:
             strata:
               lineage:
                 - from: bronze.transferencias.dt_transf
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

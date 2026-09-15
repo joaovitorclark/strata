@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.pagamento
+          layer: silver
+          schema: silver
+          pk:
+            - pagamento_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - pagamentos
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -28,6 +41,7 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.pagamento_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -38,6 +52,7 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.pedido_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -48,6 +63,7 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.meio
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -58,6 +74,7 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.vl_pago
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -68,6 +85,7 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.dt_pagamento
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -78,3 +96,4 @@ models:
             strata:
               lineage:
                 - from: bronze.pagamentos.nsu
+              unique: true

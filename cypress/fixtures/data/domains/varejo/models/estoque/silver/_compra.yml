@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.compra
+          layer: silver
+          schema: silver
+          pk:
+            - compra_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - compras
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -24,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.compra_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -34,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.fornecedor_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -44,6 +59,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.produto_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -54,6 +70,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.quantidade
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -64,6 +81,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.vl_total
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -74,6 +92,7 @@ models:
             strata:
               lineage:
                 - from: bronze.compras.dt_compra
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

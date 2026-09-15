@@ -4,7 +4,14 @@ models:
     config:
       tags:
         - strata:vendas
-      schema: silver
+      meta:
+        strata:
+          table_id: silver.comissao
+          layer: silver
+          schema: silver
+          pk:
+            - vendedor_id
+            - pedido_id
       contract:
         enforced: true
     constraints:
@@ -16,11 +23,19 @@ models:
     columns:
       - name: vendedor_id
         data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: pedido_id
         data_type: bigint
+        config:
+          meta:
+            strata:
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

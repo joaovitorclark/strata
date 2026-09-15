@@ -4,7 +4,13 @@ models:
     config:
       tags:
         - strata:clientes
-      schema: silver
+      meta:
+        strata:
+          table_id: silver.optin
+          layer: silver
+          schema: silver
+          pk:
+            - optin_id
       contract:
         enforced: true
     constraints:
@@ -20,6 +26,7 @@ models:
             strata:
               lineage:
                 - from: bronze.optins.optin_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -30,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.optins.cliente_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -40,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.optins.canal
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -50,6 +59,7 @@ models:
             strata:
               lineage:
                 - from: bronze.optins.aceito
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -60,6 +70,7 @@ models:
             strata:
               lineage:
                 - from: bronze.optins.dt_optin
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

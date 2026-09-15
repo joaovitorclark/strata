@@ -1,1 +1,1 @@
-select * from {{ source('bronze', 'unidades_medida') }}
+select * from {{ source('bronze_estoque', 'unidades_medida') }}

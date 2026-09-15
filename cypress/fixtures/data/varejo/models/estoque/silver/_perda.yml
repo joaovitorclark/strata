@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:estoque
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.perda
+          layer: silver
+          schema: silver
+          pk:
+            - perda_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_estoque
+                - perdas
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -24,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.perdas.perda_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -34,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.perdas.produto_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -44,6 +59,7 @@ models:
             strata:
               lineage:
                 - from: bronze.perdas.quantidade
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -61,6 +77,7 @@ models:
             strata:
               lineage:
                 - from: bronze.perdas.dt_perda
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

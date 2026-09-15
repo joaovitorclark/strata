@@ -5,12 +5,25 @@ models:
       tags:
         - strata:managed
         - strata:vendas
-      schema: silver
-      contract:
-        enforced: true
       meta:
         strata:
+          table_id: silver.loja
+          layer: silver
+          schema: silver
+          pk:
+            - loja_id
           managed: true
+          transform:
+            from:
+              source:
+                - bronze_vendas
+                - lojas
+              alias: s0
+            joins: []
+            where: ""
+            group_by: []
+      contract:
+        enforced: true
     constraints:
       - type: primary_key
         columns:
@@ -24,6 +37,7 @@ models:
             strata:
               lineage:
                 - from: bronze.lojas.loja_id
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
@@ -34,6 +48,7 @@ models:
             strata:
               lineage:
                 - from: bronze.lojas.nome
+              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
