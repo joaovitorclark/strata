@@ -87,6 +87,7 @@ export function ColumnPanel({
   onRemoveMapping,
   embedded = false,
 }: ColumnPanelProps) {
+  const applyDbt = useSchemaStore((s) => (s.documentFormat === "dbt" ? s.applyDbtOp : null));
   const sel = useSchemaStore((s) => s.selectedColumn);
   const selectColumn = useSchemaStore((s) => s.selectColumn);
   const [nameDraft, setNameDraft] = useState("");
@@ -125,8 +126,50 @@ export function ColumnPanel({
 
   if (!sel || !settings) return null;
 
-  const apply = (patch: ColSettings) =>
+  const apply = (patch: ColSettings) => {
+    if (applyDbt && sel) {
+      if (patch.pk !== undefined)
+        applyDbt({
+          op: "setPrimaryKey",
+          tableId: sel.table,
+          column: sel.column,
+          value: !!patch.pk,
+        });
+      if (patch.notNull !== undefined)
+        applyDbt({
+          op: "setNotNull",
+          tableId: sel.table,
+          column: sel.column,
+          value: !!patch.notNull,
+        });
+      if (patch.default !== undefined)
+        applyDbt({
+          op: "setDefault",
+          tableId: sel.table,
+          column: sel.column,
+          value: patch.default ?? "",
+        });
+      if (patch.note !== undefined)
+        applyDbt({
+          op: "setDescription",
+          tableId: sel.table,
+          column: sel.column,
+          description: patch.note ?? "",
+        });
+      if (patch.refTarget !== undefined && patch.refTarget) {
+        const i = patch.refTarget.lastIndexOf(".");
+        applyDbt({
+          op: "addRef",
+          fromTable: sel.table,
+          fromCol: sel.column,
+          toTable: patch.refTarget.slice(0, i),
+          toCol: patch.refTarget.slice(i + 1),
+        });
+      }
+      return;
+    }
     onApply(setColumnSetting(dbml, sel.table, sel.column, { ...settings, ...patch }));
+  };
 
   const commitRename = () => {
     const v = nameDraft.trim();
@@ -256,7 +299,15 @@ export function ColumnPanel({
                     style={{ backgroundColor: c.value }}
                     title={c.label}
                     aria-label={c.label}
-                    onClick={() => onApply(setColumnColor(dbml, sel.table, sel.column, c.value))}
+                    onClick={() => {
+                      if (applyDbt)
+                        applyDbt({
+                          op: "setColor",
+                          key: `${sel.table}.${sel.column}`,
+                          color: c.value,
+                        });
+                      else onApply(setColumnColor(dbml, sel.table, sel.column, c.value));
+                    }}
                   />
                 ))}
                 {EXTRA_FIELD_COLORS.map((c) => (

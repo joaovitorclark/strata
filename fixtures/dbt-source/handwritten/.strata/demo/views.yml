@@ -1,0 +1,5 @@
+views:
+  - id: core
+    name: core
+    tables:
+      - main.widget

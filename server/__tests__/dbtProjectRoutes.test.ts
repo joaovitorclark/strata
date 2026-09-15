@@ -114,4 +114,38 @@ describe('G8 projectFormat + GET union', () => {
     expect(await fs.readFile(yml, 'utf8')).toBe(before);
     expect(await fs.readFile(path.join(tmpDir, 'dbt_project.yml'), 'utf8')).toBe('name: strata\n');
   });
+
+  it('PUT /api/projects/:id with format dbt writes changes atomically', async () => {
+    const { ensureRegistry, createProject } = await import('../files.ts');
+    await ensureRegistry();
+    const meta = await createProject('vendas');
+    await fs.mkdir(path.join(tmpDir, '.strata', meta.slug), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, '.strata', meta.slug, 'project.yml'),
+      'format_version: 1\nname: vendas\n',
+      'utf8',
+    );
+    await fs.writeFile(path.join(tmpDir, 'dbt_project.yml'), 'name: strata\n', 'utf8');
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: `/api/projects/${meta.id}`,
+      payload: {
+        format: 'dbt',
+        changes: {
+          'models/vendas/gold/_nova.yml': 'version: 2\nmodels:\n  - name: nova\n',
+          'dbt_project.yml': 'name: strata\n',
+        },
+      },
+    });
+    await app.close();
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { ok: boolean; written: string[] };
+    expect(body.ok).toBe(true);
+    expect(body.written).toContain('models/vendas/gold/_nova.yml');
+    expect(await fs.readFile(path.join(tmpDir, 'models/vendas/gold/_nova.yml'), 'utf8')).toContain(
+      'name: nova',
+    );
+  });
 });

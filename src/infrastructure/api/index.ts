@@ -13,6 +13,7 @@ export {
   activateProject,
   loadProjectById,
   saveProjectById,
+  saveDbtChanges,
   importFromInputForProject,
   importFromInput,
   exportFormat,

@@ -71,20 +71,14 @@ function columnStrata(
   if (lin.length) meta.lineage = lin;
   if (col.enumName) meta.enum = col.enumName;
   if (col.default !== undefined) meta.default = col.default;
-  if (col.notNull) meta.not_null = true;
-  if (col.unique) meta.unique = true;
   const role = rolenames.find((r) => r.child.table === table.id && r.child.column === col.name);
   if (role) meta.rolename = `${role.parent.table}.${role.parent.column}`;
   return Object.keys(meta).length ? meta : undefined;
 }
 
-function tableStrata(table: StrataTable): Record<string, unknown> {
-  const meta: Record<string, unknown> = { table_id: table.id };
-  if (table.layer) meta.layer = table.layer;
-  if (table.schema) meta.schema = table.schema;
+function tableStrata(table: StrataTable): Record<string, unknown> | undefined {
+  const meta: Record<string, unknown> = {};
   if (table.group) meta.group = table.group;
-  const pk = pkNames(table);
-  if (pk.length) meta.pk = pk;
   if (table.indexes?.length) {
     meta.indexes = table.indexes.map((idx) => ({
       columns: [...idx.columns],
@@ -92,7 +86,7 @@ function tableStrata(table: StrataTable): Record<string, unknown> {
       ...(idx.unique ? { unique: true } : {}),
     }));
   }
-  return meta;
+  return Object.keys(meta).length ? meta : undefined;
 }
 
 function columnTests(
@@ -102,10 +96,8 @@ function columnTests(
   tables: StrataTable[],
 ): unknown[] {
   const tests: unknown[] = [];
-  const pks = pkNames(table);
-  const composite = pks.length > 1;
-  if (col.unique || (col.pk && !composite)) tests.push("unique");
-  if (col.notNull || col.pk) tests.push("not_null");
+  if (col.unique) tests.push("unique");
+  if (col.notNull) tests.push("not_null");
   if (col.acceptedValues?.length)
     tests.push({ accepted_values: { arguments: { values: col.acceptedValues } } });
   for (const r of outgoingRefs(table, refs)) {
@@ -158,7 +150,7 @@ function columnEntry(
     if (tests.length) entry.data_tests = tests;
   } else {
     const constraints: unknown[] = [];
-    if (col.notNull || col.pk) constraints.push({ type: "not_null", warn_unsupported: false });
+    if (col.notNull) constraints.push({ type: "not_null", warn_unsupported: false });
     if (constraints.length) entry.constraints = constraints;
     if (col.acceptedValues?.length) {
       entry.data_tests = [{ accepted_values: { arguments: { values: col.acceptedValues } } }];
@@ -176,9 +168,11 @@ function tagsOf(table: StrataTable, projeto: string): string[] {
 function tableConfig(table: StrataTable, projeto: string): Record<string, unknown> {
   const config: Record<string, unknown> = {
     tags: tagsOf(table, projeto),
-    meta: { strata: tableStrata(table) },
   };
+  const strata = tableStrata(table);
+  if (strata) config.meta = { strata };
   if (table.kind !== "source") {
+    if (table.schema) config.schema = table.schema;
     if (table.materialization) config.materialized = table.materialization;
     config.contract = { enforced: true };
   }
@@ -251,12 +245,20 @@ export function toDbtProject(model: StrataModel, projeto: string): ProjectFiles 
     const sources = [...bySource.entries()].map(([name, tables]) => ({
       name,
       schema: name,
-      tables: tables.map((t) => ({
-        name: t.name,
-        ...(t.note ? { description: t.note } : {}),
-        config: tableConfig(t, projeto),
-        columns: t.columns.map((c) => columnEntry(t, c, model, all, true)),
-      })),
+      tables: tables.map((t) => {
+        const pks = pkNames(t);
+        return {
+          name: t.name,
+          ...(t.note ? { description: t.note } : {}),
+          config: tableConfig(t, projeto),
+          ...(pks.length
+            ? {
+                constraints: [{ type: "primary_key", columns: pks, warn_unsupported: false }],
+              }
+            : {}),
+          columns: t.columns.map((c) => columnEntry(t, c, model, all, true)),
+        };
+      }),
     }));
     files[file] = dumpYaml({ version: 2, sources });
   }
@@ -297,7 +299,7 @@ export function toDbtProject(model: StrataModel, projeto: string): ProjectFiles 
     files[`seeds/${projeto}/${name}.csv`] = rowsToCsv(rec.columns, rec.rows);
     files[`seeds/${projeto}/_${name}.yml`] = dumpYaml({
       version: 2,
-      seeds: [{ name, config: { meta: { strata: { table_id: table.id } } } }],
+      seeds: [{ name }],
     });
   }
 

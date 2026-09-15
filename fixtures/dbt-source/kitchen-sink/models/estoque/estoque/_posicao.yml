@@ -4,12 +4,7 @@ models:
     config:
       tags:
         - strata:estoque
-      meta:
-        strata:
-          table_id: estoque.posicao
-          schema: estoque
-          pk:
-            - id
+      schema: estoque
       materialized: table
       contract:
         enforced: true
@@ -28,24 +23,13 @@ models:
     columns:
       - name: id
         data_type: bigint
-        constraints:
-          - type: not_null
-            warn_unsupported: false
       - name: pedido_id
         data_type: bigint
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false
       - name: quantidade
         data_type: int
-        config:
-          meta:
-            strata:
-              not_null: true
         constraints:
           - type: not_null
             warn_unsupported: false

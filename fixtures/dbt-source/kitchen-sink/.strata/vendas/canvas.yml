@@ -1,4 +1,3 @@
-# visual: colors, pins, positions — never semantic
 colors:
   gold.dim_cliente: "#b08d57"
   gold.fato_pedido: "#d4af37"

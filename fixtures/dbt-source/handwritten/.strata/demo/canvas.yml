@@ -1,0 +1,9 @@
+# visual only
+positions:
+  main.widget:
+    x: 10
+    y: 20
+colors:
+  main.widget: "#b08d57"
+pins:
+  - main.widget.id

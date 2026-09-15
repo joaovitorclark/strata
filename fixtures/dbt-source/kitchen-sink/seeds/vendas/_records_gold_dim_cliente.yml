@@ -1,7 +1,3 @@
 version: 2
 seeds:
   - name: records_gold_dim_cliente
-    config:
-      meta:
-        strata:
-          table_id: gold.dim_cliente

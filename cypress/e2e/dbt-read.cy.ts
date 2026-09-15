@@ -4,7 +4,6 @@ const AVISO = "Edição de projetos dbt chega na próxima versão";
 const POS_X = 888;
 const POS_Y = 321;
 const DBT_DEMO = "dbt-demo";
-const DATA_ROOT = ".e2e-data-d1/domains/dbt-demo";
 
 type DomainRow = { id: string; slug: string };
 type ProjectRow = { id: string; slug: string };
@@ -90,48 +89,24 @@ describe("D1 dbt read-only", () => {
     });
   });
 
-  it("G11: edits disabled with aviso; dbt files on disk unchanged", () => {
+  it("G11: edits enabled (D2 invert)", () => {
     visitDbtDemo("vendas");
-    cy.task<Record<string, { mtimeMs: number; content: string }>>("snapshotTree", DATA_ROOT).then(
-      (before) => {
-        cy.contains("button", "+ Tabela").should("be.disabled").and("have.attr", "title", AVISO);
+    cy.contains("button", "+ Tabela").should("not.be.disabled");
+    cy.contains("button", "+ Tabela").should("not.have.attr", "title", AVISO);
 
-        cy.window().then((win) => cy.stub(win, "prompt").as("prompt"));
-        cy.get('[data-testid="rf__node-gold.dim_cliente"] .font-medium')
-          .first()
-          .dblclick({ force: true });
-        cy.get("@prompt").should("not.have.been.called");
-        cy.contains(AVISO).should("be.visible");
+    cy.window().then((win) => cy.stub(win, "prompt").as("prompt").returns(null));
+    cy.get('[data-testid="rf__node-gold.dim_cliente"] .font-medium')
+      .first()
+      .dblclick({ force: true });
+    cy.get("@prompt").should("have.been.called");
 
-        cy.get(
-          '[data-testid="rf__node-gold.dim_cliente"] [data-testid="table-menu-trigger"]',
-        ).click({
-          force: true,
-        });
-        cy.contains("[role='menuitem']", "Delete").should("have.attr", "data-disabled");
-        cy.contains("[role='menuitem']", "Delete").click({ force: true });
-        cy.contains(AVISO).should("be.visible");
-        cy.get("body").type("{esc}");
+    cy.get('[data-testid="rf__node-gold.dim_cliente"] [data-testid="table-menu-trigger"]').click({
+      force: true,
+    });
+    cy.contains("[role='menuitem']", "Delete").should("not.have.attr", "data-disabled");
+    cy.get("body").type("{esc}");
 
-        selectCanvasDetailLevel("Colunas");
-        cy.get(".edge-path--fk")
-          .its("length")
-          .then((fkBefore) => {
-            cy.connectHandles("gold.fato_pedido", "s:cliente_id", "raw.cliente", "t:id");
-            cy.get(".edge-path--fk").should("have.length", fkBefore);
-          });
-
-        cy.task<Record<string, { mtimeMs: number; content: string }>>(
-          "snapshotTree",
-          DATA_ROOT,
-        ).then((after) => {
-          expect(Object.keys(after).sort()).to.deep.equal(Object.keys(before).sort());
-          for (const rel of Object.keys(before)) {
-            expect(after[rel].mtimeMs, `mtime ${rel}`).to.eq(before[rel].mtimeMs);
-            expect(after[rel].content, `content ${rel}`).to.eq(before[rel].content);
-          }
-        });
-      },
-    );
+    selectCanvasDetailLevel("Colunas");
+    cy.get('[data-testid="rf__node-gold.dim_cliente"] [data-testid="col-add"]').should("exist");
   });
 });

@@ -95,7 +95,11 @@ function constraintsOf(node: Record<string, unknown> | undefined): Record<string
     .filter((c): c is Record<string, unknown> => !!c);
 }
 
-function parseColumns(rawCols: unknown[], pks: Set<string>): StrataColumn[] {
+function parseColumns(
+  rawCols: unknown[],
+  pks: Set<string>,
+  tableUniques: Set<string>,
+): StrataColumn[] {
   return rawCols.map((raw) => {
     const col = asRecord(raw) ?? {};
     const name = asString(col.name) ?? "";
@@ -103,14 +107,13 @@ function parseColumns(rawCols: unknown[], pks: Set<string>): StrataColumn[] {
     const tests = testsOf(col);
     const colConstraints = constraintsOf(col);
     const hasUniqueTest =
-      tests.some((t) => isTest(t, "unique")) || colConstraints.some((c) => c.type === "unique");
+      tests.some((t) => isTest(t, "unique")) ||
+      colConstraints.some((c) => c.type === "unique") ||
+      tableUniques.has(name);
     const hasNotNullTest =
       tests.some((t) => isTest(t, "not_null")) || colConstraints.some((c) => c.type === "not_null");
-    const notNull =
-      strata.not_null === true ||
-      (strata.not_null === undefined && !pks.has(name) && hasNotNullTest);
-    const unique =
-      strata.unique === true || (strata.unique === undefined && !pks.has(name) && hasUniqueTest);
+    const notNull = hasNotNullTest;
+    const unique = !pks.has(name) && hasUniqueTest;
     const column: StrataColumn = {
       name,
       type: asString(col.data_type) ?? asString(col.dataType) ?? "string",
@@ -128,13 +131,31 @@ function parseColumns(rawCols: unknown[], pks: Set<string>): StrataColumn[] {
   });
 }
 
-function pkSet(node: Record<string, unknown>, strata: Record<string, unknown>): string[] {
-  const fromMeta = asArray(strata.pk).map((x) => String(x));
-  if (fromMeta.length) return fromMeta;
+function pkSet(node: Record<string, unknown>): string[] {
   for (const c of constraintsOf(node)) {
     if (c.type === "primary_key") return asArray(c.columns).map((x) => String(x));
   }
   return [];
+}
+
+function uniqueColsOf(node: Record<string, unknown>): Set<string> {
+  const out = new Set<string>();
+  for (const c of constraintsOf(node)) {
+    if (c.type !== "unique") continue;
+    for (const col of asArray(c.columns)) out.add(String(col));
+  }
+  return out;
+}
+
+function layerFromPath(filePath: string, projeto: string): string | undefined {
+  const m = new RegExp(`^models/${projeto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/([^/]+)/`).exec(
+    filePath,
+  );
+  return m?.[1];
+}
+
+function recordsSeedName(tableId: string): string {
+  return `records_${tableId.replace(/\W+/g, "_")}`;
 }
 
 function indexesOf(strata: Record<string, unknown>): StrataIndex[] | undefined {
@@ -154,15 +175,8 @@ function indexesOf(strata: Record<string, unknown>): StrataIndex[] | undefined {
   return out.length ? out : undefined;
 }
 
-function tableIdOf(
-  node: Record<string, unknown>,
-  fallbackSchema: string | undefined,
-  name: string,
-): string {
-  const strata = strataOf(node);
-  return (
-    asString(strata.table_id) ?? qualifiedTableId(asString(strata.schema) ?? fallbackSchema, name)
-  );
+function tableIdOf(schema: string | undefined, name: string): string {
+  return qualifiedTableId(schema, name);
 }
 
 function collectSqlRefs(sql: string): {
@@ -215,6 +229,8 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
     const doc = asRecord(loadYaml(content));
     if (!doc) continue;
 
+    const folderLayer = layerFromPath(filePath, projeto);
+
     for (const src of asArray(doc.sources)) {
       const source = asRecord(src);
       if (!source) continue;
@@ -224,21 +240,21 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
         if (!node) continue;
         const name = asString(node.name) ?? "";
         const strata = strataOf(node);
-        const pks = pkSet(node, strata);
+        const pks = pkSet(node);
         const pk = new Set(pks);
-        const id = tableIdOf(node, sourceName, name);
+        const id = tableIdOf(sourceName, name);
         const tags = tagsOf(node);
-        const layer = asString(strata.layer);
+        const layer = folderLayer;
         if (layer) {
           const list = layerMembers.get(layer) ?? [];
           list.push(id);
           layerMembers.set(layer, list);
         }
-        const columns = parseColumns(asArray(node.columns), pk);
+        const columns = parseColumns(asArray(node.columns), pk, uniqueColsOf(node));
         tables.push({
           id,
           name,
-          schema: asString(strata.schema) ?? sourceName,
+          schema: sourceName,
           project: projectFromTags(tags) ?? projeto,
           kind: "source",
           layer,
@@ -259,22 +275,23 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
       if (!node) continue;
       const name = asString(node.name) ?? "";
       const strata = strataOf(node);
-      const pks = pkSet(node, strata);
+      const pks = pkSet(node);
       const pk = new Set(pks);
-      const id = tableIdOf(node, asString(strata.schema), name);
+      const config = asRecord(node.config);
+      const schema = asString(config?.schema) ?? folderLayer;
+      const id = tableIdOf(schema, name);
       const tags = tagsOf(node);
-      const layer = asString(strata.layer);
+      const layer = folderLayer;
       if (layer) {
         const list = layerMembers.get(layer) ?? [];
         list.push(id);
         layerMembers.set(layer, list);
       }
-      const columns = parseColumns(asArray(node.columns), pk);
-      const config = asRecord(node.config);
+      const columns = parseColumns(asArray(node.columns), pk, uniqueColsOf(node));
       tables.push({
         id,
         name,
-        schema: asString(strata.schema),
+        schema,
         project: projectFromTags(tags) ?? projeto,
         kind: "model",
         layer,
@@ -299,17 +316,25 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
     if (!filePath.startsWith("models/")) continue;
     const doc = asRecord(loadYaml(content));
     if (!doc) continue;
-    const walkTables = [
-      ...asArray(doc.sources).flatMap((s) => asArray(asRecord(s)?.tables)),
-      ...asArray(doc.models),
-    ];
-    for (const raw of walkTables) {
+    const folderLayer = layerFromPath(filePath, projeto);
+    const walk: Array<{ node: Record<string, unknown>; sourceName?: string }> = [];
+    for (const src of asArray(doc.sources)) {
+      const source = asRecord(src);
+      const sourceName = asString(source?.name) ?? "raw";
+      for (const raw of asArray(source?.tables)) {
+        const node = asRecord(raw);
+        if (node) walk.push({ node, sourceName });
+      }
+    }
+    for (const raw of asArray(doc.models)) {
       const node = asRecord(raw);
-      if (!node) continue;
-      const strata = strataOf(node);
+      if (node) walk.push({ node });
+    }
+    for (const { node, sourceName } of walk) {
       const name = asString(node.name) ?? "";
-      const schemaGuess = asString(strata.schema);
-      const id = tableIdOf(node, schemaGuess, name);
+      const config = asRecord(node.config);
+      const schema = sourceName ?? asString(config?.schema) ?? folderLayer;
+      const id = tableIdOf(schema, name);
       for (const c of constraintsOf(node)) {
         if (c.type !== "foreign_key") continue;
         const cols = asArray(c.columns).map((x) => String(x));
@@ -365,14 +390,8 @@ export function fromDbtProject(files: ProjectFiles, projeto: string): StrataMode
   for (const [filePath, content] of Object.entries(files)) {
     if (!filePath.startsWith(`seeds/${projeto}/`) || !filePath.endsWith(".csv")) continue;
     const base = filePath.slice(filePath.lastIndexOf("/") + 1).replace(/\.csv$/, "");
-    const ymlPath = filePath.replace(/\/([^/]+)\.csv$/, "/_$1.yml");
-    let tableId = base;
-    const yml = files[ymlPath];
-    if (yml) {
-      const doc = asRecord(loadYaml(yml));
-      const seed = asRecord(asArray(doc?.seeds)[0]);
-      tableId = asString(strataOf(seed ?? {}).table_id) ?? tableId;
-    }
+    const matched = tables.find((t) => recordsSeedName(t.id) === base);
+    const tableId = matched?.id ?? base;
     const parsed = csvToRows(content);
     records.push({ table: tableId, columns: parsed.columns, rows: parsed.rows, raw: content });
   }
@@ -523,21 +542,24 @@ function indexDomain(files: ProjectFiles): {
       if (!node) continue;
       const name = asString(node.name) ?? "";
       const strata = strataOf(node);
-      const pks = pkSet(node, strata);
-      const id = tableIdOf(node, asString(strata.schema), name);
+      const pks = pkSet(node);
+      const config = asRecord(node.config);
+      const folderLayer = layerFromPath(filePath, project);
+      const schema = asString(config?.schema) ?? folderLayer;
+      const id = tableIdOf(schema, name);
       const tags = tagsOf(node);
       models.set(name, {
         project,
         table: {
           id,
           name,
-          schema: asString(strata.schema),
+          schema,
           project,
           kind: "model",
-          layer: asString(strata.layer),
+          layer: folderLayer,
           group: asString(strata.group),
           note: asString(node.description),
-          columns: parseColumns(asArray(node.columns), new Set(pks)),
+          columns: parseColumns(asArray(node.columns), new Set(pks), uniqueColsOf(node)),
           compositePks: pks.length > 1 ? [pks] : undefined,
           tags,
           resourceType: "model",

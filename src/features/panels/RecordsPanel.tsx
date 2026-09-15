@@ -216,11 +216,26 @@ export function RecordsPanel({
 
   const applyTableNote = (note: string) => {
     if (!effectiveTableId) return;
+    const s = useSchemaStore.getState();
+    if (s.documentFormat === "dbt") {
+      s.applyDbtOp({ op: "setDescription", tableId: effectiveTableId, description: note });
+      return;
+    }
     onApply(setTableOrRecordsNote(dbml, effectiveTableId, note));
   };
 
   const applyColumnNote = (note: string) => {
     if (!selectedColumn || !columnSettings) return;
+    const s = useSchemaStore.getState();
+    if (s.documentFormat === "dbt") {
+      s.applyDbtOp({
+        op: "setDescription",
+        tableId: selectedColumn.table,
+        column: selectedColumn.column,
+        description: note,
+      });
+      return;
+    }
     onApply(
       setColumnSetting(dbml, selectedColumn.table, selectedColumn.column, {
         ...columnSettings,
