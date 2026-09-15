@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: macro_column
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: computed
+        data_type: string

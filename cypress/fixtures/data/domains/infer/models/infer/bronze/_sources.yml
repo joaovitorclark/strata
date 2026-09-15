@@ -1,0 +1,29 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: alpha
+        config:
+          tags:
+            - strata:infer
+        columns:
+          - name: id
+            data_type: bigint
+          - name: nome
+            data_type: string
+          - name: valor
+            data_type: bigint
+          - name: extra
+            data_type: bigint
+      - name: beta
+        config:
+          tags:
+            - strata:infer
+        columns:
+          - name: id
+            data_type: bigint
+          - name: nome
+            data_type: string
+          - name: score
+            data_type: bigint

@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: cte_chain
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: nome
+        data_type: string

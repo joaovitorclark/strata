@@ -1,0 +1,9 @@
+columns:
+  id:
+    level: parsed
+    from:
+      - raw.alpha.id
+  score:
+    level: parsed
+    from:
+      - raw.beta.score

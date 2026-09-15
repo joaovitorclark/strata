@@ -1,0 +1,46 @@
+positions:
+  raw.alpha:
+    x: 40
+    y: 40
+  raw.beta:
+    x: 40
+    y: 280
+  gold.rename_simple:
+    x: 420
+    y: 40
+  gold.expr_two_cols:
+    x: 420
+    y: 220
+  gold.cte_chain:
+    x: 420
+    y: 400
+  gold.join_aliases:
+    x: 800
+    y: 40
+  gold.subquery_from:
+    x: 800
+    y: 220
+  gold.star_known:
+    x: 800
+    y: 400
+  gold.star_unknown:
+    x: 1180
+    y: 40
+  gold.union_all:
+    x: 1180
+    y: 220
+  gold.macro_column:
+    x: 1180
+    y: 400
+  gold.jinja_if:
+    x: 1560
+    y: 40
+  gold.unparseable:
+    x: 1560
+    y: 220
+  gold.yaml_absent:
+    x: 1560
+    y: 400
+  gold.name_two_upstreams:
+    x: 1940
+    y: 40

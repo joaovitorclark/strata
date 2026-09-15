@@ -1,0 +1,12 @@
+{
+  "activeId": "infer-project-0001",
+  "projects": [
+    {
+      "id": "infer-project-0001",
+      "name": "infer",
+      "slug": "infer",
+      "createdAt": "2026-09-14T20:00:00.000Z",
+      "updatedAt": "2026-09-14T20:00:00.000Z"
+    }
+  ]
+}

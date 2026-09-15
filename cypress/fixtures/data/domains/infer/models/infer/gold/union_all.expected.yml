@@ -1,0 +1,11 @@
+columns:
+  id:
+    level: parsed
+    from:
+      - raw.alpha.id
+      - raw.beta.id
+  nome:
+    level: parsed
+    from:
+      - raw.alpha.nome
+      - raw.beta.nome

@@ -2,6 +2,7 @@ import type { SchemaView } from "@/features/schema/model/views";
 import type { ProjectFiles } from "./model";
 import type { EditResult, TableKind } from "./yamlEdit";
 import * as yamlEdit from "./yamlEdit";
+import * as yamlEditInfer from "./yamlEdit.infer";
 
 export type DbtAction =
   | { op: "addTable"; tableId: string; kind?: TableKind; position?: { x: number; y: number } }
@@ -45,7 +46,16 @@ export type DbtAction =
       indexes: Array<{ columns: string[]; name?: string; unique?: boolean }>;
     }
   | { op: "setRecords"; tableId: string; columns: string[]; rows: string[][] }
-  | { op: "setRolename"; tableId: string; column: string; rolename: string | null };
+  | { op: "setRolename"; tableId: string; column: string; rolename: string | null }
+  // S13 infer ops
+  | {
+      op: "confirmInferredLineage";
+      targetTable: string;
+      targetColumn: string;
+      from: string;
+      inferred: "parsed" | "name";
+    }
+  | { op: "dismissInferredLineage"; targetTable: string; targetColumn: string; from: string };
 
 export function applyDbtAction(
   files: ProjectFiles,
@@ -127,5 +137,10 @@ export function applyDbtAction(
       return yamlEdit.setRecords(files, project, action.tableId, action.columns, action.rows);
     case "setRolename":
       return yamlEdit.setRolename(files, project, action.tableId, action.column, action.rolename);
+    // S13 infer ops
+    case "confirmInferredLineage":
+      return yamlEditInfer.confirmInferredLineage(files, project, action);
+    case "dismissInferredLineage":
+      return yamlEditInfer.dismissInferredLineage(files, project, action);
   }
 }

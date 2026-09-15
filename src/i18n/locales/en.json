@@ -112,6 +112,8 @@
       "relatedTables": "Related tables",
       "lineage": "Lineage",
       "lineageEmpty": "No mappings in this slice",
+      "lineageDeclared": "Declared",
+      "lineageInferred": "Inferred",
       "comesFrom": "Comes from",
       "feeds": "Feeds",
       "trace": "Trace",
@@ -139,6 +141,7 @@
       "edges": "Edges",
       "relations": "Relations",
       "lineage": "Lineage",
+      "inferredLineage": "Inferred lineage",
       "notation": "Notation",
       "notationIe": "IE",
       "notationBarker": "Barker",
@@ -187,7 +190,14 @@
       "derivedFrom": "derived from",
       "fkLabel": "{{from}} → {{to}}",
       "fieldCount": "{{count}} fields",
-      "externalLinks": "{{count}} links → {{label}}"
+      "externalLinks": "{{count}} links → {{label}}",
+      "inferConfirm": "Confirm",
+      "inferDismiss": "Dismiss",
+      "inferLevel": {
+        "parsed": "parsed",
+        "name": "name",
+        "unknown": "unknown"
+      }
     },
     "node": {
       "tableAria": "Table {{name}}, {{count}} columns",

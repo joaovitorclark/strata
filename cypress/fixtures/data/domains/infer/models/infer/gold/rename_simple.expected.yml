@@ -1,0 +1,5 @@
+columns:
+  customer_id:
+    level: parsed
+    from:
+      - raw.alpha.id

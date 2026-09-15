@@ -1,0 +1,10 @@
+columns:
+  id:
+    level: parsed
+    from:
+      - raw.alpha.id
+  total:
+    level: parsed
+    from:
+      - raw.alpha.extra
+      - raw.alpha.valor
