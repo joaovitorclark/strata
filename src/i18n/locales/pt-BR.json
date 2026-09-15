@@ -114,6 +114,8 @@
       "relatedTables": "Tabelas relacionadas",
       "lineage": "Linhagem",
       "lineageEmpty": "Nenhum mapeamento neste recorte",
+      "lineageDeclared": "Declarada",
+      "lineageInferred": "Inferida",
       "comesFrom": "Vem de",
       "feeds": "Alimenta",
       "trace": "Rastrear",
@@ -167,6 +169,7 @@
       "edges": "Arestas",
       "relations": "Relações",
       "lineage": "Linhagem",
+      "inferredLineage": "Linhagem inferida",
       "notation": "Notação",
       "notationIe": "IE",
       "notationBarker": "Barker",
@@ -215,7 +218,14 @@
       "derivedFrom": "derivado de",
       "fkLabel": "{{from}} → {{to}}",
       "fieldCount": "{{count}} campos",
-      "externalLinks": "{{count}} ligações → {{label}}"
+      "externalLinks": "{{count}} ligações → {{label}}",
+      "inferConfirm": "Confirmar",
+      "inferDismiss": "Descartar",
+      "inferLevel": {
+        "parsed": "parsed",
+        "name": "name",
+        "unknown": "unknown"
+      }
     },
     "node": {
       "tableAria": "Tabela {{name}}, {{count}} colunas",

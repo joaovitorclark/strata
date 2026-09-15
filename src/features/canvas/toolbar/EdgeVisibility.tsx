@@ -26,6 +26,8 @@ export function EdgeVisibility() {
   const toggleRelationsVisible = useSchemaStore((s) => s.toggleRelationsVisible);
   const lineageVisible = useSchemaStore((s) => s.lineageVisible);
   const toggleLineageVisible = useSchemaStore((s) => s.toggleLineageVisible);
+  const inferredVisible = useSchemaStore((s) => s.inferredVisible);
+  const toggleInferredVisible = useSchemaStore((s) => s.toggleInferredVisible);
   const [notation, setNotation] = useNotation();
 
   return (
@@ -55,6 +57,12 @@ export function EdgeVisibility() {
           onCheckedChange={() => toggleLineageVisible()}
         >
           {t("canvas.toolbar.lineage")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={inferredVisible}
+          onCheckedChange={() => toggleInferredVisible()}
+        >
+          {t("canvas.toolbar.inferredLineage")}
         </DropdownMenuCheckboxItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger data-testid="notation-menu">

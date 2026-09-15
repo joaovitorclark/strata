@@ -4,6 +4,7 @@ import type { ProjectFiles } from "./model";
 import type { EditResult, TableKind } from "./yamlEdit";
 import * as yamlEdit from "./yamlEdit";
 import * as yamlEditTransform from "./yamlEdit.transform";
+import * as yamlEditInfer from "./yamlEdit.infer";
 import * as managedEdit from "./yamlEdit.managed";
 import type { TransformIR } from "./transform";
 
@@ -62,7 +63,16 @@ export type DbtAction =
     }
   // D5 managed ops
   | { op: "makeManual"; tableId: string }
-  | { op: "regenerate"; tableId: string; confirmed: boolean; sql?: string };
+  | { op: "regenerate"; tableId: string; confirmed: boolean; sql?: string }
+  // S13 infer ops
+  | {
+      op: "confirmInferredLineage";
+      targetTable: string;
+      targetColumn: string;
+      from: string;
+      inferred: "parsed" | "name";
+    }
+  | { op: "dismissInferredLineage"; targetTable: string; targetColumn: string; from: string };
 
 export function applyDbtAction(
   files: ProjectFiles,
@@ -197,5 +207,10 @@ export function applyDbtAction(
         confirmed: action.confirmed,
         sql: action.sql,
       });
+    // S13 infer ops
+    case "confirmInferredLineage":
+      return yamlEditInfer.confirmInferredLineage(files, project, action);
+    case "dismissInferredLineage":
+      return yamlEditInfer.dismissInferredLineage(files, project, action);
   }
 }

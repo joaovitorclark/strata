@@ -1,0 +1,9 @@
+version: 2
+models:
+  - name: unparseable
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint

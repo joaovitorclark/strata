@@ -1,0 +1,11 @@
+version: 2
+models:
+  - name: union_all
+    config:
+      tags:
+        - strata:infer
+    columns:
+      - name: id
+        data_type: bigint
+      - name: nome
+        data_type: string

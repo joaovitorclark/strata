@@ -11,6 +11,8 @@ import {
   type SchemaView,
 } from "@/features/schema/model/views";
 import { createLodSlice, type LodSlice } from "@/features/canvas/store/lodSlice";
+import { attachInferredLineage } from "@/features/dbt-source/infer/attach";
+import { inferSliceDefaults, type InferSlice } from "@/features/dbt-source/infer/slice";
 import { createDocumentSlice, type DocumentSlice, type Positions } from "./documentSlice";
 import { createFocusSlice, type FocusSlice } from "./focusSlice";
 import { createInteractionSlice, type InteractionSlice } from "./interactionSlice";
@@ -18,7 +20,12 @@ import { createViewSlice, type ViewSlice } from "./viewSlice";
 
 enableMapSet();
 
-export type SchemaStore = InteractionSlice & LodSlice & DocumentSlice & ViewSlice & FocusSlice;
+export type SchemaStore = InteractionSlice &
+  LodSlice &
+  DocumentSlice &
+  ViewSlice &
+  FocusSlice &
+  InferSlice;
 
 function applyUpdate<T>(prev: T, update: T | ((prev: T) => T)): T {
   return typeof update === "function" ? (update as (prev: T) => T)(prev) : update;
@@ -56,8 +63,30 @@ export const useSchemaStore = create<SchemaStore>()(
     const rawSetDbml = document.setDbml;
     const rawSetDetailLevel = interaction.setDetailLevel;
     const rawHydrate = document.hydrateDocument;
+    const rawApplyDbtOp = document.applyDbtOp;
+    const rawUndo = document.undo;
+    const rawRedo = document.redo;
     const get = a[1] as () => SchemaStore;
     const set = a[0] as SchemaStoreSetter;
+
+    const applyInference = () => {
+      const s = get();
+      if (s.documentFormat !== "dbt" || !s.dbtProject) {
+        set((state) => {
+          state.inferredLineage = [];
+          state.inferProblems = [];
+        });
+        return;
+      }
+      const attached = attachInferredLineage(s.files, s.dbtProject, s.dbtParsed);
+      set((state) => {
+        state.inferredLineage = attached.inferredLineage;
+        state.inferProblems = attached.inferProblems;
+        state.dbtParsed = attached.parsed;
+        const extra = attached.problemMessages;
+        state.dbtProblems = [...new Set([...(state.dbtProblems ?? []), ...extra])];
+      });
+    };
 
     return {
       ...interaction,
@@ -65,6 +94,11 @@ export const useSchemaStore = create<SchemaStore>()(
       ...document,
       ...view,
       ...focus,
+      ...inferSliceDefaults,
+      toggleInferredVisible: () =>
+        set((state) => {
+          state.inferredVisible = !state.inferredVisible;
+        }),
       setDbml: (update) => {
         if (get().documentFormat === "dbt") return;
         const prev = get().dbml;
@@ -143,6 +177,19 @@ export const useSchemaStore = create<SchemaStore>()(
           state.tudoPositions = { ...next.positions };
           state.hiddenTableIds = [];
         });
+        applyInference();
+      },
+      applyDbtOp: (action) => {
+        rawApplyDbtOp(action);
+        applyInference();
+      },
+      undo: () => {
+        rawUndo();
+        applyInference();
+      },
+      redo: () => {
+        rawRedo();
+        applyInference();
       },
     };
   }),
