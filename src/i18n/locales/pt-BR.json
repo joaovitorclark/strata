@@ -129,7 +129,12 @@
       "batchColour": "Cor",
       "batchHide": "Ocultar",
       "batchRemove": "Remover",
-      "batchRemoveConfirm": "Apagar {{count}} tabela(s) selecionada(s) e refs relacionadas?"
+      "batchRemoveConfirm": "Apagar {{count}} tabela(s) selecionada(s) e refs relacionadas?",
+      "driftTitle": "SQL gerenciado alterado fora do Strata",
+      "driftBody": "Este model está em drift. Tornar manual preserva o .sql; regenerar descarta as edições.",
+      "makeManual": "Tornar manual",
+      "regenerate": "Regenerar",
+      "regenerateConfirm": "Regenerar descarta as edições manuais deste .sql. Continuar?"
     }
   },
   "canvas": {

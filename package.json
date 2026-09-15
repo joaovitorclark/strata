@@ -19,6 +19,7 @@
     "start": "cross-env NODE_ENV=production tsx server/index.ts",
     "e2e:serve": "node scripts/e2e-serve.mjs",
     "fixtures:varejo": "tsx scripts/fixtures/varejo/generate.ts",
+    "strata:verify": "node scripts/strata-verify.mjs",
     "cy:open": "cypress open",
     "cy:run": "cypress run --spec 'cypress/e2e/!(stress-)*.cy.ts'",
     "cy:run:stress": "cypress run --config-file cypress.stress.config.ts"

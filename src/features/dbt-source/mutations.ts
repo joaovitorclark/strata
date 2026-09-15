@@ -1,7 +1,9 @@
 import type { SchemaView } from "@/features/schema/model/views";
+import { findManagedModel } from "./managed";
 import type { ProjectFiles } from "./model";
 import type { EditResult, TableKind } from "./yamlEdit";
 import * as yamlEdit from "./yamlEdit";
+import * as managedEdit from "./yamlEdit.managed";
 
 export type DbtAction =
   | { op: "addTable"; tableId: string; kind?: TableKind; position?: { x: number; y: number } }
@@ -45,7 +47,10 @@ export type DbtAction =
       indexes: Array<{ columns: string[]; name?: string; unique?: boolean }>;
     }
   | { op: "setRecords"; tableId: string; columns: string[]; rows: string[][] }
-  | { op: "setRolename"; tableId: string; column: string; rolename: string | null };
+  | { op: "setRolename"; tableId: string; column: string; rolename: string | null }
+  // D5 managed ops
+  | { op: "makeManual"; tableId: string }
+  | { op: "regenerate"; tableId: string; confirmed: boolean; sql?: string };
 
 export function applyDbtAction(
   files: ProjectFiles,
@@ -53,12 +58,35 @@ export function applyDbtAction(
   action: DbtAction,
 ): EditResult {
   switch (action.op) {
-    case "addTable":
-      return yamlEdit.addTable(files, project, action);
-    case "removeTable":
-      return yamlEdit.removeTable(files, project, action.tableId);
-    case "renameTable":
-      return yamlEdit.renameTable(files, project, action.tableId, action.newId);
+    case "addTable": {
+      const inner = yamlEdit.addTable(files, project, action);
+      if ((action.kind ?? "model") === "source") return inner;
+      return managedEdit.markModelManaged(files, inner.files, project, action.tableId);
+    }
+    case "removeTable": {
+      const loc = findManagedModel(files, project, action.tableId);
+      const inner = yamlEdit.removeTable(files, project, action.tableId);
+      if (!loc) return inner;
+      return managedEdit.commitFiles(
+        files,
+        managedEdit.unstampPath(inner.files, loc.sqlPath),
+        inner.problems,
+      );
+    }
+    case "renameTable": {
+      const oldLoc = findManagedModel(files, project, action.tableId);
+      const inner = yamlEdit.renameTable(files, project, action.tableId, action.newId);
+      if (!oldLoc) return inner;
+      const nextLoc =
+        findManagedModel(inner.files, project, action.newId) ??
+        findManagedModel(inner.files, project, oldLoc.name);
+      if (!nextLoc) return inner;
+      return managedEdit.commitFiles(
+        files,
+        managedEdit.retargetManagedPath(inner.files, oldLoc.sqlPath, nextLoc.sqlPath),
+        inner.problems,
+      );
+    }
     case "addColumn":
       return yamlEdit.addColumn(files, project, action.tableId, action.name, action.dataType);
     case "removeColumn":
@@ -93,8 +121,17 @@ export function applyDbtAction(
       return yamlEdit.removeLineage(files, project, action);
     case "updateLineage":
       return yamlEdit.updateLineage(files, project, action);
-    case "setLayer":
-      return yamlEdit.setLayer(files, project, action.tableId, action.layer);
+    case "setLayer": {
+      const oldLoc = findManagedModel(files, project, action.tableId);
+      const inner = yamlEdit.setLayer(files, project, action.tableId, action.layer);
+      if (!oldLoc) return inner;
+      const nextLoc = findManagedModel(inner.files, project, oldLoc.tableId);
+      if (!nextLoc) return inner;
+      return managedEdit.commitFiles(
+        files,
+        managedEdit.retargetManagedPath(inner.files, oldLoc.sqlPath, nextLoc.sqlPath),
+      );
+    }
     case "addLayerGroup":
     case "organize":
       return { files, changes: {} };
@@ -127,5 +164,12 @@ export function applyDbtAction(
       return yamlEdit.setRecords(files, project, action.tableId, action.columns, action.rows);
     case "setRolename":
       return yamlEdit.setRolename(files, project, action.tableId, action.column, action.rolename);
+    case "makeManual":
+      return managedEdit.makeManual(files, project, action.tableId);
+    case "regenerate":
+      return managedEdit.regenerate(files, project, action.tableId, {
+        confirmed: action.confirmed,
+        sql: action.sql,
+      });
   }
 }
