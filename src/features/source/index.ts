@@ -5,3 +5,6 @@ export type { EditorHandle } from "./Editor";
 export { Outline } from "./Outline";
 export { RenameConfirmModal } from "./RenameConfirmModal";
 export { DbmlDiff } from "./DbmlDiff";
+export { DbtCodePanel } from "./DbtCodePanel";
+export { DdlEditor } from "./DdlEditor";
+export { DbtFileDiff } from "./DbtFileDiff";

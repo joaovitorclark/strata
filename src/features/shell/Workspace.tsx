@@ -28,11 +28,19 @@ import { useUrlSync } from "@/features/shell/useUrlSync";
 import { useWorkspace, type RailItemId, type WorkspaceProps } from "@/features/shell/useWorkspace";
 import { SourceDrawer } from "@/features/source/SourceDrawer";
 import { DbmlDiff } from "@/features/source/DbmlDiff";
+import { DbtCodePanel } from "@/features/source/DbtCodePanel";
+import { DdlEditor } from "@/features/source/DdlEditor";
+import { DbtFileDiff } from "@/features/source/DbtFileDiff";
+import {
+  isTabForFormat,
+  readStoredDrawerTab,
+  writeStoredDrawerTab,
+  type DrawerTab,
+} from "@/features/source/dbtDrawerTab";
+import { noteDbtBaseline } from "@/features/source/dbtBaseline";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type { WorkspaceProps };
-
-type DrawerTab = "dbml" | "records" | "diff";
 
 export function Workspace(props: WorkspaceProps) {
   const { t } = useTranslation();
@@ -131,12 +139,29 @@ export function Workspace(props: WorkspaceProps) {
   useUrlSync({ focusTableWithPan, switchProject });
   const layoutAfterEmptyImport = useRef(false);
   const [leftTab, setLeftTab] = useState<LeftPanelTab>("tables");
-  const [drawerTab, setDrawerTab] = useState<DrawerTab>("dbml");
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>(() => readStoredDrawerTab("dbml"));
   const [problemsOpen, setProblemsOpen] = useState(false);
   const toggleLineageMode = useSchemaStore((s) => s.toggleLineageMode);
   const documentFormat = useSchemaStore((s) => s.documentFormat);
   const dbtPastLen = useSchemaStore((s) => s.dbtPast.length);
   const dbtFutureLen = useSchemaStore((s) => s.dbtFuture.length);
+  const hydratedProjectId = useSchemaStore((s) => s.hydratedProjectId);
+  const dbtFiles = useSchemaStore((s) => s.files);
+  const codeTab: DrawerTab = documentFormat === "dbt" ? "dbt" : "dbml";
+  const activeDrawerTab: DrawerTab = isTabForFormat(drawerTab, documentFormat)
+    ? drawerTab
+    : readStoredDrawerTab(documentFormat);
+
+  useEffect(() => {
+    if (documentFormat !== "dbt" || !hydratedProjectId) return;
+    if (Object.keys(dbtFiles).length === 0) return;
+    noteDbtBaseline(hydratedProjectId, dbtFiles);
+  }, [documentFormat, hydratedProjectId, dbtFiles]);
+
+  const selectDrawerTab = (tab: DrawerTab) => {
+    setDrawerTab(tab);
+    writeStoredDrawerTab(tab);
+  };
 
   const saveLabel =
     saveState === "saving"
@@ -177,13 +202,13 @@ export function Workspace(props: WorkspaceProps) {
   const showEmptyState = dbml.trim() !== "" && activeModel.tables.length === 0;
 
   const openDrawer = (tab: DrawerTab) => {
-    setDrawerTab(tab);
+    selectDrawerTab(tab);
     setSourceDrawerOpen(true);
     setRecordsPanelOpen(tab === "records");
   };
 
   const toggleDrawer = (tab: DrawerTab) => {
-    if (sourceDrawerOpen && drawerTab === tab) {
+    if (sourceDrawerOpen && activeDrawerTab === tab) {
       setSourceDrawerOpen(false);
       setRecordsPanelOpen(false);
       return;
@@ -196,7 +221,7 @@ export function Workspace(props: WorkspaceProps) {
       value={{
         ...actions,
         onGoToColumn: (table, column) => {
-          setDrawerTab("dbml");
+          selectDrawerTab(codeTab);
           actions.onGoToColumn?.(table, column);
         },
       }}
@@ -270,7 +295,7 @@ export function Workspace(props: WorkspaceProps) {
                 setRailItem("lineage");
               }}
               onCode={() => {
-                toggleDrawer("dbml");
+                toggleDrawer(codeTab);
                 setRailItem("code");
               }}
               onSearch={() => {
@@ -343,7 +368,7 @@ export function Workspace(props: WorkspaceProps) {
                     focusNonce={focusNonce}
                     onFocusTableDone={clearFocusTable}
                     onTableClick={(id) => {
-                      setDrawerTab("dbml");
+                      selectDrawerTab(codeTab);
                       focusTableInEditor(id);
                     }}
                     fitViewTrigger={fitViewTrigger}
@@ -391,7 +416,7 @@ export function Workspace(props: WorkspaceProps) {
               onRenameColumn={actions.onRenameColumn}
               onRemoveTables={handleRemoveTables}
               onGoToColumn={(table, column) => {
-                setDrawerTab("dbml");
+                selectDrawerTab(codeTab);
                 goToColumn(table, column);
               }}
               onAddMapping={handleAddFieldLineage}
@@ -405,33 +430,39 @@ export function Workspace(props: WorkspaceProps) {
           drawer={
             <WorkspaceDrawer
               open={sourceDrawerOpen}
-              tab={drawerTab}
+              tab={activeDrawerTab}
+              format={documentFormat}
               onTab={(tab) => {
-                setDrawerTab(tab);
+                selectDrawerTab(tab);
                 setRecordsPanelOpen(tab === "records");
               }}
-              dbml={
-                <SourceDrawer
-                  ref={assignEditorRef}
-                  open={sourceDrawerOpen}
-                  onOpenChange={setSourceDrawerOpen}
-                  value={dbml}
-                  onChange={handleDbmlChange}
-                  committedValue={committedDbml}
-                  savedValue={savedDbml}
-                  onCommitted={markCommitted}
-                  onTableRenamed={migrateTableId}
-                  error={parsed.error}
-                  errorLine={parsed.errorLine}
-                  onFocusTable={focusTableWithPan}
-                  onCursorLine={handleEditorCursorLine}
-                  onGoToError={() => {
-                    setDrawerTab("dbml");
-                    setSourceDrawerOpen(true);
-                  }}
-                  onRenameModalOpenChange={setRenameModalOpen}
-                />
+              code={
+                documentFormat === "dbt" ? (
+                  <DbtCodePanel open={sourceDrawerOpen} />
+                ) : (
+                  <SourceDrawer
+                    ref={assignEditorRef}
+                    open={sourceDrawerOpen}
+                    onOpenChange={setSourceDrawerOpen}
+                    value={dbml}
+                    onChange={handleDbmlChange}
+                    committedValue={committedDbml}
+                    savedValue={savedDbml}
+                    onCommitted={markCommitted}
+                    onTableRenamed={migrateTableId}
+                    error={parsed.error}
+                    errorLine={parsed.errorLine}
+                    onFocusTable={focusTableWithPan}
+                    onCursorLine={handleEditorCursorLine}
+                    onGoToError={() => {
+                      selectDrawerTab("dbml");
+                      setSourceDrawerOpen(true);
+                    }}
+                    onRenameModalOpenChange={setRenameModalOpen}
+                  />
+                )
               }
+              ddl={documentFormat === "dbt" ? <DdlEditor open={sourceDrawerOpen} /> : null}
               records={
                 <RecordsPanel
                   records={activeModel.records}
@@ -453,12 +484,16 @@ export function Workspace(props: WorkspaceProps) {
                 />
               }
               diff={
-                <DbmlDiff
-                  open={drawerTab === "diff"}
-                  saved={savedDbml}
-                  working={dbml}
-                  onClose={() => setSourceDrawerOpen(false)}
-                />
+                documentFormat === "dbt" ? (
+                  <DbtFileDiff open={activeDrawerTab === "diff"} />
+                ) : (
+                  <DbmlDiff
+                    open={activeDrawerTab === "diff"}
+                    saved={savedDbml}
+                    working={dbml}
+                    onClose={() => setSourceDrawerOpen(false)}
+                  />
+                )
               }
             />
           }
@@ -466,15 +501,17 @@ export function Workspace(props: WorkspaceProps) {
             <StatusBar
               problemCount={modelIssues.length}
               density={density}
-              dbmlOpen={sourceDrawerOpen && drawerTab === "dbml"}
-              recordsOpen={sourceDrawerOpen && drawerTab === "records"}
+              dbmlOpen={
+                sourceDrawerOpen && (activeDrawerTab === "dbml" || activeDrawerTab === "dbt")
+              }
+              recordsOpen={sourceDrawerOpen && activeDrawerTab === "records"}
               problemsContent={
                 <ProblemsPanel
                   variant="content"
                   issues={modelIssues}
                   onFocusTable={focusTableWithPan}
                   onGoToLine={(line) => {
-                    setDrawerTab("dbml");
+                    selectDrawerTab(codeTab);
                     goToLine(line);
                   }}
                   open={problemsOpen}
@@ -490,7 +527,7 @@ export function Workspace(props: WorkspaceProps) {
                 setProblemsPanelOpen(open);
               }}
               statusLog={<StatusLog status={status} saveState={saveState} logs={logs} />}
-              onDbmlToggle={() => toggleDrawer("dbml")}
+              onDbmlToggle={() => toggleDrawer(codeTab)}
               onRecordsToggle={() => toggleDrawer("records")}
               onDensityChange={setDensity}
             />
@@ -507,23 +544,28 @@ function WorkspaceDrawer({
   open,
   tab,
   onTab,
-  dbml,
+  format,
+  code,
+  ddl,
   records,
   diff,
 }: {
   open: boolean;
   tab: DrawerTab;
   onTab: (tab: DrawerTab) => void;
-  dbml: ReactNode;
+  format: "dbml" | "dbt";
+  code: ReactNode;
+  ddl: ReactNode;
   records: ReactNode;
   diff: ReactNode;
 }) {
   const { t } = useTranslation();
+  const dbt = format === "dbt";
   if (!open) return null;
   return (
     <div
       data-testid="workspace-drawer"
-      className="flex max-h-[50vh] min-h-0 w-full flex-col border-t border-border bg-card"
+      className="flex max-h-[50vh] min-h-0 w-full flex-col border-t border-border bg-card pl-[46px]"
     >
       <Tabs
         value={tab}
@@ -531,9 +573,20 @@ function WorkspaceDrawer({
         className="flex min-h-0 flex-1 flex-col"
       >
         <TabsList className="h-8 w-full justify-start rounded-none bg-transparent px-2">
-          <TabsTrigger value="dbml" data-testid="drawer-tab-dbml" className="text-xs">
-            {t("shell.dbml")}
-          </TabsTrigger>
+          {dbt ? (
+            <>
+              <TabsTrigger value="dbt" data-testid="drawer-tab-dbt" className="text-xs">
+                {t("shell.dbtTab")}
+              </TabsTrigger>
+              <TabsTrigger value="ddl" data-testid="drawer-tab-ddl" className="text-xs">
+                {t("shell.ddl")}
+              </TabsTrigger>
+            </>
+          ) : (
+            <TabsTrigger value="dbml" data-testid="drawer-tab-dbml" className="text-xs">
+              {t("shell.dbml")}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="records" data-testid="drawer-tab-records" className="text-xs">
             {t("shell.records")}
           </TabsTrigger>
@@ -541,9 +594,20 @@ function WorkspaceDrawer({
             {t("shell.diff")}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="dbml" className="mt-0 min-h-0 flex-1 overflow-hidden">
-          {tab === "dbml" ? dbml : null}
-        </TabsContent>
+        {dbt ? (
+          <>
+            <TabsContent value="dbt" className="mt-0 min-h-0 flex-1 overflow-hidden">
+              {tab === "dbt" ? code : null}
+            </TabsContent>
+            <TabsContent value="ddl" className="mt-0 min-h-0 flex-1 overflow-hidden">
+              {tab === "ddl" ? ddl : null}
+            </TabsContent>
+          </>
+        ) : (
+          <TabsContent value="dbml" className="mt-0 min-h-0 flex-1 overflow-hidden">
+            {tab === "dbml" ? code : null}
+          </TabsContent>
+        )}
         <TabsContent value="records" className="mt-0 min-h-0 flex-1 overflow-auto">
           {tab === "records" ? records : null}
         </TabsContent>
