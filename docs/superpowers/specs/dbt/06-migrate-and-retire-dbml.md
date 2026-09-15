@@ -1,5 +1,7 @@
 # D6 — Migrar projetos DBML e aposentar o DBML
 
+> **Absorvida pela P3·P1** ([`../pr3/01-retire-dbml.md`](../pr3/01-retire-dbml.md)), decisão 0002 §3: sem conversão no app e sem importador DBML. Leia esta spec só pelas §2–§3 que a P1 referencia.
+
 **Onda:** D · **Depende de:** D3, D4, D5 · **Decisão:** 0001 §2.2, §7.4
 
 ## 1. Resultado

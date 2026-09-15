@@ -1,5 +1,7 @@
 # 0001 — O projeto dbt é a fonte da verdade
 
+> **Emendada pela [0002](0002-atrium-shell-and-no-dbml.md):** DBML sai inteiro (inclusive como importador); o drawer segue o protótipo `docs/prototypes/strata-shell.html`.
+
 **Data:** 2026-09-14
 **Status:** **aceita** (2026-09-14), com as decisões complementares de §7. O spike isolado foi
 dispensado; a validação acontece nas fases D1–D6 (`docs/superpowers/specs/dbt/`), começando pelos
